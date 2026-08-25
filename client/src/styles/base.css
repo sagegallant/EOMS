@@ -1,0 +1,28 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; }
+html { font-size: 16px; }
+body {
+  font-family: var(--font);
+  background: var(--surface);
+  color: var(--text-2);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+h1,h2,h3,h4 { color: var(--text-1); line-height: 1.25; letter-spacing: -0.015em; font-weight: 650; }
+a { color: var(--primary); text-decoration: none; }
+button { font: inherit; cursor: pointer; border: 0; background: none; }
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
+
+/* Display scale */
+.display { font-size: 1.875rem; font-weight: 700; }
+.h1 { font-size: 1.375rem; } .h2 { font-size: 1.125rem; }
+.body { font-size: .9375rem; }
+.caption { font-size: .8125rem; }
+.meta { font-size: .75rem; color: var(--text-3); }
+
+/* Signature: press-in interaction */
+.pressable { transition: box-shadow var(--t) var(--ease), transform var(--t) var(--ease); }
+.pressable:active { box-shadow: var(--neo-in-sm) !important; transform: scale(.985); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

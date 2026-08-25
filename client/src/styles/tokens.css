@@ -1,0 +1,42 @@
+:root {
+  /* ── Surfaces ─────────────────────────────── */
+  --surface:        #E9ECF4;
+  --surface-raised: #EDF0F7;
+  --surface-white:  #F8FAFD;
+  --surface-sunken: #E1E5EF;
+
+  /* ── Neumorphic shadow recipes ────────────── */
+  --neo-sm: 3px 3px 7px rgba(163,177,198,.50), -3px -3px 7px rgba(255,255,255,.85);
+  --neo-md: 6px 6px 14px rgba(163,177,198,.50), -6px -6px 14px rgba(255,255,255,.90);
+  --neo-lg: 12px 12px 28px rgba(163,177,198,.42), -12px -12px 28px rgba(255,255,255,.95);
+  --neo-in-sm: inset 2px 2px 5px rgba(163,177,198,.55), inset -2px -2px 5px rgba(255,255,255,.90);
+  --neo-in-md: inset 4px 4px 9px rgba(163,177,198,.50), inset -4px -4px 9px rgba(255,255,255,.85);
+
+  /* ── Brand ────────────────────────────────── */
+  --primary:       #4A5CD8;
+  --primary-hover: #3A4BC4;
+  --primary-soft:  rgba(74,92,216,.12);
+  --primary-ring:  rgba(74,92,216,.35);
+
+  /* ── Text (AA on --surface) ───────────────── */
+  --text-1: #2D3142;   /* headings — ~11:1 */
+  --text-2: #555B75;   /* body — ~6:1 */
+  --text-3: #6F7590;   /* metadata — ~4.6:1 */
+
+  /* ── Status (dark text variants for AA) ───── */
+  --success: #1F7A4D;  --success-bg: rgba(46,158,107,.14);
+  --warning: #8A6116;  --warning-bg: rgba(214,158,46,.16);
+  --danger:  #B23434;  --danger-bg:  rgba(214,69,69,.13);
+  --info:    #3B4BC4;  --info-bg:    rgba(74,92,216,.12);
+  --neutral: #5C6278;  --neutral-bg: rgba(92,98,120,.12);
+
+  /* ── Shape ────────────────────────────────── */
+  --r-sm: 10px; --r-md: 14px; --r-lg: 20px; --r-full: 999px;
+
+  /* ── Space / Type / Motion ────────────────── */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 24px; --sp-6: 32px; --sp-7: 48px; --sp-8: 64px;
+  --font: 'Inter', system-ui, -apple-system, sans-serif;
+  --ease: cubic-bezier(.4, 0, .2, 1); --t: 180ms;
+  --sidebar-w: 248px;
+}
