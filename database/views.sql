@@ -119,3 +119,33 @@ JOIN asset_models am ON am.model_id = a.model_id
 JOIN asset_categories ac ON ac.category_id = am.category_id
 LEFT JOIN asset_allocations aa ON aa.asset_id = a.asset_id AND aa.returned_at IS NULL
 LEFT JOIN employees e ON e.employee_id = aa.employee_id;
+
+-- ---------------------------------------------------------------------
+-- 6. vw_compliance_overview: Mandatory Indian compliance verification metrics
+-- ---------------------------------------------------------------------
+DROP VIEW IF EXISTS `vw_compliance_overview`;
+CREATE VIEW `vw_compliance_overview` AS
+SELECT
+  e.employee_id,
+  CONCAT(e.first_name, ' ', e.last_name) AS employee_name,
+  e.work_email,
+  d.dept_name,
+  COUNT(doc.document_id) AS total_documents_submitted,
+  SUM(CASE WHEN v.status = 'approved' THEN 1 ELSE 0 END) AS approved_documents,
+  SUM(CASE WHEN v.status = 'pending' THEN 1 ELSE 0 END) AS pending_documents,
+  SUM(CASE WHEN v.status = 'requires_resubmission' THEN 1 ELSE 0 END) AS rejected_documents
+FROM employees e
+JOIN positions p ON p.position_id = e.position_id
+JOIN departments d ON d.dept_id = p.dept_id
+LEFT JOIN documents doc ON doc.employee_id = e.employee_id
+LEFT JOIN (
+  SELECT dv1.*
+  FROM document_verifications dv1
+  INNER JOIN (
+    SELECT document_id, MAX(verification_id) AS max_id
+    FROM document_verifications
+    GROUP BY document_id
+  ) dv_latest ON dv1.verification_id = dv_latest.max_id
+) v ON v.document_id = doc.document_id
+GROUP BY e.employee_id, employee_name, e.work_email, d.dept_name;
+
