@@ -46,46 +46,46 @@ export default function ITDashboard() {
         action={<Button size="sm" icon={Plus} onClick={() => setModal(true)}>Register Asset</Button>}
       />
 
-      {/* ── Charts Row ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-4)' }}>
-        <Card style={{ padding: 'var(--sp-5)' }}>
-          <p className="meta" style={{ fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 14 }}>Provisioning Queue</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-            <MiniDonut value={allocated.length} total={queue.length} label={`${allocated.length}`} sublabel="allocated" size={80} color="var(--chart-emerald)" />
+      {/* ── Charts Row (Bento Grid) ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 'var(--sp-5)' }}>
+        <Card $hoverable style={{ gridColumn: 'span 7', padding: 'var(--sp-5)' }}>
+          <p className="meta" style={{ fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 'var(--sp-5)' }}>Provisioning Queue</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+            <MiniDonut value={allocated.length} total={queue.length} label={`${allocated.length}`} sublabel="allocated" size={100} color="var(--chart-emerald)" />
             <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: '0.8125rem' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Allocated</span>
-                <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{allocated.length}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, fontSize: '0.9375rem' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Allocated</span>
+                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{allocated.length}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8125rem' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Pending</span>
-                <span style={{ fontWeight: 500, color: 'var(--warning-text)' }}>{pending.length}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9375rem' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Pending</span>
+                <span style={{ fontWeight: 600, color: 'var(--warning-text)' }}>{pending.length}</span>
               </div>
             </div>
           </div>
         </Card>
-        <Card style={{ padding: 'var(--sp-5)' }}>
-          <p className="meta" style={{ fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>Assets by Hub</p>
+        <Card $hoverable style={{ gridColumn: 'span 5', padding: 'var(--sp-5)' }}>
+          <p className="meta" style={{ fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 'var(--sp-5)' }}>Assets by Hub</p>
           <HorizontalBar items={HUB_ASSETS} colorVar="--chart-blue" />
         </Card>
       </div>
 
       {/* ── Provisioning Queue ── */}
-      <Card>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+      <Card $hoverable style={{ padding: 'var(--sp-5)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--sp-4)' }}>
           <h2 className="h3">Queue</h2>
           <Button variant="ghost" size="sm" onClick={() => navigate('/assets')}>All assets <ChevronRight size={13} /></Button>
         </div>
         <AnimatedList style={{ display: 'grid', gap: 8 }}>
           {visible.map((item, i) => (
             <AnimatedItem key={i}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', flexWrap: 'wrap' }}>
-                <div style={{ width: 32, height: 32, borderRadius: 'var(--r-sm)', background: 'var(--bg-subtle)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-                  <Laptop size={15} style={{ color: 'var(--text-muted)' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 16px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', flexWrap: 'wrap' }}>
+                <div style={{ width: 36, height: 36, borderRadius: 'var(--r-sm)', background: 'var(--bg-subtle)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                  <Laptop size={16} style={{ color: 'var(--text-muted)' }} />
                 </div>
                 <div style={{ flex: '1 1 200px', minWidth: 0 }}>
-                  <div style={{ fontWeight: 500, fontSize: '0.875rem', color: 'var(--text-primary)' }}>{item.employee}</div>
-                  <div className="meta" style={{ color: 'var(--text-muted)' }}>{item.asset} · {item.serial}</div>
+                  <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary)' }}>{item.employee}</div>
+                  <div className="meta" style={{ color: 'var(--text-muted)', marginTop: 2, fontWeight: 500 }}>{item.asset} · {item.serial}</div>
                 </div>
                 <Badge tone={item.tone}>{item.status}</Badge>
                 {item.tone !== 'success' && (
@@ -101,7 +101,7 @@ export default function ITDashboard() {
         </AnimatedList>
         {queue.length > 3 && (
           <button onClick={() => setShowAll(v => !v)}
-            style={{ marginTop: 10, width: '100%', padding: '7px', borderRadius: 'var(--r-md)', border: '1px dashed var(--border-subtle)', background: 'transparent', color: 'var(--text-muted)', fontSize: '0.8125rem', cursor: 'pointer' }}>
+            style={{ marginTop: 12, width: '100%', padding: '8px', borderRadius: 'var(--r-md)', border: '1px dashed var(--border-subtle)', background: 'transparent', color: 'var(--text-muted)', fontSize: '0.875rem', cursor: 'pointer', fontWeight: 500 }}>
             {showAll ? '↑ Collapse' : `+ ${queue.length - 3} more items`}
           </button>
         )}

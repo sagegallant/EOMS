@@ -71,78 +71,70 @@ export default function HRDashboard() {
         }
       />
 
-      {/* ── KPI Row ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--sp-4)' }}>
+      {/* ── KPI Row (Bento Grid) ── */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(12, 1fr)',
+        gap: 'var(--sp-5)'
+      }}>
         {/* Active onboardees with sparkline */}
-        <Card style={{ padding: 'var(--sp-4)' }}>
-          <p className="meta" style={{ fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Active Onboardees</p>
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 }}>
+        <Card $hoverable style={{ gridColumn: 'span 4', padding: 'var(--sp-5)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <p className="meta" style={{ fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Active Onboardees</p>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, marginTop: 'var(--sp-4)' }}>
             <div>
-              <div style={{ fontSize: '2rem', fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1 }}>18</div>
-              <div className="meta" style={{ marginTop: 4, color: 'var(--text-muted)' }}>4 starting this week</div>
+              <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1, letterSpacing: '-0.03em' }}>18</div>
+              <div className="meta" style={{ marginTop: 6, color: 'var(--chart-blue)', fontWeight: 500 }}>4 starting this week</div>
             </div>
-            <div style={{ width: 80, flexShrink: 0 }}>
-              <Sparkline data={SPARK} dataKey="v" color="var(--chart-blue)" height={36} />
+            <div style={{ width: 100, flexShrink: 0 }}>
+              <Sparkline data={SPARK} dataKey="v" color="var(--chart-blue)" height={48} />
             </div>
           </div>
         </Card>
 
         {/* Avg time with donut */}
-        <Card style={{ padding: 'var(--sp-4)' }}>
-          <p className="meta" style={{ fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Avg. Time to 100%</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <MiniDonut value={38} total={45} label="38d" sublabel="/ 45d" size={64} color="var(--chart-emerald)" />
+        <Card $hoverable style={{ gridColumn: 'span 4', padding: 'var(--sp-5)' }}>
+          <p className="meta" style={{ fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 'var(--sp-4)' }}>Avg. Time to 100%</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <MiniDonut value={38} total={45} label="38d" sublabel="/ 45d" size={72} color="var(--chart-emerald)" />
             <div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)' }}>38 days</div>
-              <div className="meta" style={{ color: 'var(--success-text)', marginTop: 2 }}>-7d vs SLA target</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>38 days</div>
+              <div className="meta" style={{ color: 'var(--success-text)', marginTop: 4, fontWeight: 500 }}>-7d vs SLA target</div>
             </div>
           </div>
         </Card>
 
         {/* Compliance donut */}
-        <Card style={{ padding: 'var(--sp-4)' }}>
-          <p className="meta" style={{ fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>POSH & Statutory</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <MiniDonut value={98.2} total={100} label="98%" size={64} color="var(--chart-emerald)" />
+        <Card $hoverable style={{ gridColumn: 'span 4', padding: 'var(--sp-5)' }}>
+          <p className="meta" style={{ fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 'var(--sp-4)' }}>POSH & Statutory</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <MiniDonut value={98.2} total={100} label="98%" size={72} color="var(--chart-violet)" />
             <div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)' }}>98.2%</div>
-              <div className="meta" style={{ color: 'var(--text-muted)', marginTop: 2 }}>+2.4% from last month</div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Pending verifications */}
-        <Card style={{ padding: 'var(--sp-4)' }}>
-          <p className="meta" style={{ fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Pending Verifications</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <MiniDonut value={3} total={18} label="3" size={64} color="var(--warning)" />
-            <div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)' }}>3</div>
-              <div className="meta" style={{ color: 'var(--text-muted)', marginTop: 2 }}>Aadhaar / EPFO queue</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>98.2%</div>
+              <div className="meta" style={{ color: 'var(--text-muted)', marginTop: 4 }}>+2.4% from last month</div>
             </div>
           </div>
         </Card>
       </div>
 
       {/* ── Charts Row ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-4)' }}>
-        <Card>
-          <h2 className="h3" style={{ marginBottom: 16 }}>Cohort by Phase</h2>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 'var(--sp-5)' }}>
+        <Card $hoverable style={{ gridColumn: 'span 8', padding: 'var(--sp-5)' }}>
+          <h2 className="h3" style={{ marginBottom: 'var(--sp-5)' }}>Cohort by Phase</h2>
           <StackedBarChart
             data={PHASE_DATA}
             xKey="name"
             categories={[{ dataKey: 'count', name: 'Employees', color: 'var(--chart-blue)' }]}
-            height={160}
+            height={200}
           />
         </Card>
-        <Card>
-          <h2 className="h3" style={{ marginBottom: 16 }}>Distribution by Hub</h2>
+        <Card $hoverable style={{ gridColumn: 'span 4', padding: 'var(--sp-5)' }}>
+          <h2 className="h3" style={{ marginBottom: 'var(--sp-5)' }}>Distribution by Hub</h2>
           <HorizontalBar items={HUB_DATA} colorVar="--chart-violet" />
         </Card>
       </div>
 
       {/* ── Current Cohort ── */}
-      <Card>
+      <Card $hoverable style={{ gridColumn: 'span 12', padding: 'var(--sp-5)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--sp-4)' }}>
           <h2 className="h3">Current Cohort</h2>
           <Button variant="ghost" size="sm" onClick={() => navigate('/onboarding')}>View all <ChevronRight size={14} /></Button>

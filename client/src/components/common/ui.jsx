@@ -5,14 +5,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 /* ── Card ─────────────────────────────────────────────────── */
 export const Card = styled.section`
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-lg);
+  background: var(--bg-glass-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-xl);
   padding: ${({ $p }) => $p || 'var(--sp-5)'};
-  transition: border-color var(--t-fast) var(--ease);
+  transition: all var(--t-normal) var(--ease-out-expo);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
 
   &:hover {
-    border-color: ${({ $hoverable }) => ($hoverable ? 'var(--border-default)' : 'var(--border-subtle)')};
+    box-shadow: ${({ $hoverable }) => ($hoverable ? 'var(--shadow-glow)' : 'var(--shadow-sm)')};
+    transform: ${({ $hoverable }) => ($hoverable ? 'translateY(-2px)' : 'none')};
+    border-color: ${({ $hoverable }) => ($hoverable ? 'var(--border-focus)' : 'var(--glass-border)')};
   }
 `;
 
@@ -225,26 +232,26 @@ export function StatCard({ icon: IconComponent, label, value, hint, trend, tone 
     primary: { accent: 'var(--primary)', bg: 'var(--primary-light)' },
     success: { accent: 'var(--success)', bg: 'var(--success-bg)' },
     warning: { accent: 'var(--warning)', bg: 'var(--warning-bg)' },
-    info:    { accent: 'var(--chart-blue)', bg: 'var(--info-bg)' },
+    info:    { accent: 'var(--info)',    bg: 'var(--info-bg)' },
   };
   const t = TONE_MAP[tone] || TONE_MAP.primary;
 
   return (
-    <Card style={{ padding: 'var(--sp-4)' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-        <span className="meta" style={{ fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+    <Card style={{ padding: 'var(--sp-5)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <span className="meta" style={{ fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           {label}
         </span>
         {IconComponent && (
-          <div style={{ width: 28, height: 28, borderRadius: 'var(--r-sm)', background: t.bg, color: t.accent, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-            <IconComponent size={14} />
+          <div style={{ width: 36, height: 36, borderRadius: 'var(--r-md)', background: t.bg, color: t.accent, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+            <IconComponent size={18} />
           </div>
         )}
       </div>
-      <div style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1, marginBottom: 4 }}>{value}</div>
+      <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1, letterSpacing: '-0.02em' }}>{value}</div>
       {(hint || trend) && (
-        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', gap: 6, alignItems: 'center' }}>
-          {trend && <span style={{ color: 'var(--success)', fontWeight: 500 }}>{trend}</span>}
+        <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', display: 'flex', gap: 8, alignItems: 'center', marginTop: 'auto' }}>
+          {trend && <span style={{ color: 'var(--success)', fontWeight: 600 }}>{trend}</span>}
           {hint && <span>{hint}</span>}
         </div>
       )}

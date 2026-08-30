@@ -52,6 +52,12 @@ export function MiniDonut({
   return (
     <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
       <PieChart width={size} height={size}>
+        <defs>
+          <filter id={`glow-${color.replace(/[^a-zA-Z0-9]/g, '')}`} x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+        </defs>
         <Pie
           data={data}
           cx={size / 2 - 1}
@@ -64,10 +70,12 @@ export function MiniDonut({
           strokeWidth={0}
           isAnimationActive={true}
           animationBegin={0}
-          animationDuration={800}
+          animationDuration={1000}
           animationEasing="ease-out"
         >
-          {data.map((_, i) => <Cell key={i} fill={COLORS[i]} />)}
+          {data.map((_, i) => (
+            <Cell key={i} fill={COLORS[i]} style={i === 0 ? { filter: `url(#glow-${color.replace(/[^a-zA-Z0-9]/g, '')})` } : {}} />
+          ))}
         </Pie>
       </PieChart>
       <div style={{
@@ -120,10 +128,11 @@ export function Sparkline({
           strokeWidth={strokeWidth}
           fill={`url(#spark-grad-${color.replace(/[^a-zA-Z0-9]/g, '')})`}
           dot={false}
-          activeDot={showDot ? { r: 3, fill: color, strokeWidth: 0 } : false}
+          activeDot={showDot ? { r: 4, fill: color, strokeWidth: 2, stroke: 'var(--bg-surface)' } : false}
           isAnimationActive={true}
           animationBegin={0}
-          animationDuration={800}
+          animationDuration={1000}
+          style={{ filter: `drop-shadow(0px 4px 6px ${color}50)` }}
         />
       </AreaChart>
     </ResponsiveContainer>
@@ -177,13 +186,14 @@ export function TrendChart({
             dataKey={s.dataKey}
             name={s.name || s.dataKey}
             stroke={s.color}
-            strokeWidth={1.5}
+            strokeWidth={2}
             fill={gradientFill ? `url(#${gradIds[i]})` : 'transparent'}
             dot={false}
-            activeDot={{ r: 4, fill: s.color, strokeWidth: 0 }}
+            activeDot={{ r: 5, fill: s.color, strokeWidth: 2, stroke: 'var(--bg-surface)' }}
             isAnimationActive={true}
             animationBegin={0}
-            animationDuration={900}
+            animationDuration={1200}
+            style={{ filter: `drop-shadow(0px 6px 12px ${s.color}40)` }}
           />
         ))}
       </AreaChart>
@@ -294,7 +304,7 @@ export function RadialProgress({
 
   return (
     <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
-      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)', filter: `drop-shadow(0px 4px 8px ${color}40)` }}>
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={trackColor} strokeWidth={strokeWidth} />
         <circle
           cx={size / 2}
@@ -306,7 +316,7 @@ export function RadialProgress({
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={dashOffset}
-          style={{ transition: 'stroke-dashoffset 900ms var(--ease)' }}
+          style={{ transition: 'stroke-dashoffset 1200ms cubic-bezier(0.19, 1, 0.22, 1)' }}
         />
       </svg>
       <div style={{

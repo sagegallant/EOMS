@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { navFor } from '../../utils/navigation';
@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Users, Compass, CheckSquare, FileText,
   GraduationCap, Laptop, Bell, BarChart3, ShieldCheck,
   ListFilter, Settings, HelpCircle, User, Search, LogOut,
-  Menu, X, PanelLeftClose, PanelLeftOpen,
+  Menu, X, PanelLeftClose, PanelLeftOpen, Sun, Moon
 } from 'lucide-react';
 
 const ICON_MAP = {
@@ -29,10 +29,25 @@ export default function AppShell() {
   const [collapsed, setCollapsed] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isDark, setIsDark] = useState(() => {
+    return localStorage.getItem('theme') === 'dark' || 
+           (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  });
+  
   const navigate = useNavigate();
   const location = useLocation();
   const nav = navFor(user?.roles);
   const items = nav.flatMap(s => s.items);
+
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDark]);
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
@@ -148,8 +163,10 @@ export default function AppShell() {
         animate={{ width: sidebarW }}
         transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
         style={{
-          background: 'var(--bg-surface)',
-          borderRight: '1px solid var(--border-subtle)',
+          background: 'var(--bg-glass)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          borderRight: '1px solid var(--glass-border)',
           position: 'sticky',
           top: 0,
           height: '100vh',
@@ -167,8 +184,10 @@ export default function AppShell() {
         {/* ── Topbar ──────────────────────────────────── */}
         <header style={{
           height: 'var(--topbar-h)',
-          background: 'var(--bg-surface)',
-          borderBottom: '1px solid var(--border-subtle)',
+          background: 'var(--bg-glass)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          borderBottom: '1px solid var(--glass-border)',
           padding: '0 var(--sp-5)',
           display: 'flex',
           alignItems: 'center',
@@ -222,6 +241,15 @@ export default function AppShell() {
 
           {/* Right Actions */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button
+              onClick={() => setIsDark(!isDark)}
+              title="Toggle Theme"
+              style={{ width: 32, height: 32, borderRadius: 'var(--r-sm)', display: 'grid', placeItems: 'center', color: 'var(--text-muted)', transition: 'all var(--t-fast)' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-subtle)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}
+            >
+              {isDark ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
             <button
               onClick={() => navigate('/notifications')}
               title="Notifications"
