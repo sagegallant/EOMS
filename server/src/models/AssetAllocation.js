@@ -11,4 +11,4 @@ export const AssetAllocation = sequelize.define('AssetAllocation', {
   acknowledgementStatus: { type: DataTypes.ENUM('pending', 'acknowledged', 'disputed'),
                            allowNull: false, defaultValue: 'pending', field: 'acknowledgement_status' },
   notes:                 { type: DataTypes.TEXT, allowNull: true },
-}, { tableName: 'asset_allocations', updatedAt: false });
+}, { tableName: 'asset_allocations', timestamps: false });

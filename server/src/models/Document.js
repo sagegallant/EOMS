@@ -10,4 +10,4 @@ export const Document = sequelize.define('Document', {
   fileSizeBytes: { type: DataTypes.BIGINT, allowNull: false, defaultValue: 0, field: 'file_size_bytes' },
   mimeType:      { type: DataTypes.STRING(100), allowNull: false, defaultValue: 'application/pdf', field: 'mime_type' },
   uploadedAt:    { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW, field: 'uploaded_at' },
-}, { tableName: 'documents' });
+}, { tableName: 'documents', createdAt: 'uploaded_at', updatedAt: 'updated_at' });

@@ -13,7 +13,7 @@ export const Employee = sequelize.define('Employee', {
   status:       { type: DataTypes.ENUM('onboarding', 'active', 'on_leave', 'terminated'),
                   allowNull: false, defaultValue: 'onboarding' },
   workEmail:    { type: DataTypes.STRING(150), allowNull: true, field: 'work_email' },
-  workLocation: { type: DataTypes.ENUM('Remote', 'Hybrid', 'On-site'), allowNull: true, field: 'work_location' },
+  workLocation: { type: DataTypes.STRING(100), allowNull: true, defaultValue: 'Bengaluru (Hybrid)', field: 'work_location' },
 }, { tableName: 'employees' });
 
 Employee.associate = ({ SystemUser, Position, Employee, OnboardingPlan, Document, TaskProgress,

@@ -108,7 +108,7 @@ CREATE TABLE `employees` (
   `end_date` DATE NULL,
   `status` ENUM('onboarding', 'active', 'on_leave', 'terminated') NOT NULL DEFAULT 'onboarding',
   `work_email` VARCHAR(150) NULL,
-  `work_location` ENUM('Remote', 'Hybrid', 'On-site') NULL DEFAULT 'Hybrid',
+  `work_location` VARCHAR(100) NULL DEFAULT 'Bengaluru (Hybrid)',
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT `fk_emp_user` FOREIGN KEY (`user_id`) REFERENCES `system_users` (`user_id`) ON DELETE CASCADE,

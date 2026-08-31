@@ -9,4 +9,4 @@ export const DocumentVerification = sequelize.define('DocumentVerification', {
                     allowNull: false, defaultValue: 'pending' },
   comments:       { type: DataTypes.TEXT, allowNull: true },
   verifiedAt:     { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW, field: 'verified_at' },
-}, { tableName: 'document_verifications', updatedAt: false });
+}, { tableName: 'document_verifications', timestamps: false });
