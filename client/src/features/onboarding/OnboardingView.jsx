@@ -60,9 +60,9 @@ export default function OnboardingView() {
       />
 
       {/* Phase chart */}
-      <Card>
-        <h2 className="h3" style={{ marginBottom: 14 }}>Cohort by Phase</h2>
-        <StackedBarChart data={PHASE_CHART} xKey="name" categories={[{ dataKey: 'count', name: 'Employees', color: 'var(--chart-blue)' }]} height={120} />
+      <Card $hoverable style={{ padding: 'var(--sp-5)' }}>
+        <h2 className="h3" style={{ marginBottom: 'var(--sp-4)' }}>Cohort by Phase</h2>
+        <StackedBarChart data={PHASE_CHART} xKey="name" categories={[{ dataKey: 'count', name: 'Employees', color: 'var(--chart-blue)' }]} height={140} />
       </Card>
 
       {/* Filters (progressive disclosure) */}
@@ -94,35 +94,35 @@ export default function OnboardingView() {
       )}
 
       {/* Cohort grid */}
-      <AnimatedList style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 'var(--sp-4)' }}>
+      <AnimatedList style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 'var(--sp-5)' }}>
         {filtered.map(c => (
           <AnimatedItem key={c.id}>
-            <Card $hoverable style={{ display: 'grid', gap: 'var(--sp-3)' }}>
+            <Card $hoverable style={{ display: 'grid', gap: 'var(--sp-4)', padding: 'var(--sp-5)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                  <Avatar name={c.name} size={36} />
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <Avatar name={c.name} size={40} />
                   <div>
-                    <div className="h3">{c.name}</div>
-                    <div className="meta" style={{ color: 'var(--text-muted)' }}>{c.role}</div>
+                    <div style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--text-primary)' }}>{c.name}</div>
+                    <div className="meta" style={{ color: 'var(--text-muted)', marginTop: 2, fontWeight: 500 }}>{c.role}</div>
                   </div>
                 </div>
                 <Badge tone={c.tone}>{c.status}</Badge>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                <RadialProgress value={c.progress} size={72} strokeWidth={6} color={c.tone === 'warning' ? 'var(--warning)' : c.tone === 'info' ? 'var(--chart-sky)' : 'var(--chart-emerald)'} label={`${c.progress}%`} />
-                <div style={{ fontSize: '0.8125rem', display: 'grid', gap: 5, flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                <RadialProgress value={c.progress} size={80} strokeWidth={8} color={c.tone === 'warning' ? 'var(--warning)' : c.tone === 'info' ? 'var(--chart-sky)' : 'var(--chart-emerald)'} label={`${c.progress}%`} />
+                <div style={{ fontSize: '0.875rem', display: 'grid', gap: 8, flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: 'var(--text-muted)' }}>Hub</span>
-                    <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{c.hub.split(' ')[0]}</span>
+                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{c.hub.split(' ')[0]}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: 'var(--text-muted)' }}>Phase</span>
-                    <span style={{ fontWeight: 500, color: 'var(--primary)', fontSize: '0.75rem' }}>{c.phase.split(':')[0]}</span>
+                    <span style={{ fontWeight: 600, color: 'var(--primary)', fontSize: '0.8125rem' }}>{c.phase.split(':')[0]}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 3 }}><Calendar size={11} /> {c.startDate}</span>
-                    <Button size="xs" variant="ghost">View <ChevronRight size={11} /></Button>
+                    <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 500 }}><Calendar size={13} /> {c.startDate}</span>
+                    <Button size="xs" variant="ghost">View <ChevronRight size={13} /></Button>
                   </div>
                 </div>
               </div>

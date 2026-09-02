@@ -83,30 +83,30 @@ export default function SettingsView() {
       {SECTIONS.map(section => {
         const Icon = section.icon;
         return (
-          <Card key={section.title}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-              <div style={{ width: 28, height: 28, borderRadius: 'var(--r-sm)', background: 'var(--primary-light)', color: 'var(--primary)', display: 'grid', placeItems: 'center' }}>
-                <Icon size={14} />
+          <Card $hoverable key={section.title} style={{ padding: 'var(--sp-5)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 'var(--sp-4)' }}>
+              <div style={{ width: 36, height: 36, borderRadius: 'var(--r-sm)', background: 'var(--primary-light)', color: 'var(--primary)', display: 'grid', placeItems: 'center' }}>
+                <Icon size={18} />
               </div>
               <h2 className="h3">{section.title}</h2>
             </div>
             <div style={{ display: 'grid', gap: 0 }}>
               {section.settings.map((s, i) => (
-                <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '12px 0', borderTop: i === 0 ? 'none' : '1px solid var(--border-subtle)' }}>
+                <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, padding: '16px 0', borderTop: i === 0 ? 'none' : '1px solid var(--border-subtle)' }}>
                   <div>
-                    <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' }}>{s.label}</div>
-                    <div className="meta" style={{ color: 'var(--text-muted)', marginTop: 2 }}>{s.desc}</div>
+                    <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text-primary)' }}>{s.label}</div>
+                    <div className="meta" style={{ color: 'var(--text-muted)', marginTop: 4, fontWeight: 500 }}>{s.desc}</div>
                   </div>
                   {s.type === 'toggle' ? (
                     <Toggle value={settings[s.id]} onChange={val => updateSetting(s.id, val)} />
                   ) : s.type === 'select' ? (
                     <select value={settings[s.id]} onChange={e => updateSetting(s.id, e.target.value)}
-                      style={{ padding: '5px 10px', fontSize: '0.8125rem', borderRadius: 'var(--r-sm)', border: '1px solid var(--border-default)', background: 'var(--bg-surface)', color: 'var(--text-primary)', flexShrink: 0 }}>
+                      style={{ padding: '8px 12px', fontSize: '0.875rem', borderRadius: 'var(--r-sm)', border: '1px solid var(--border-default)', background: 'var(--bg-surface)', color: 'var(--text-primary)', flexShrink: 0, fontWeight: 500 }}>
                       {s.options.map(o => <option key={o}>{o}</option>)}
                     </select>
                   ) : (
                     <input value={settings[s.id]} onChange={e => updateSetting(s.id, e.target.value)}
-                      style={{ padding: '5px 10px', fontSize: '0.8125rem', borderRadius: 'var(--r-sm)', border: '1px solid var(--border-default)', background: 'var(--bg-surface)', width: 140, outline: 'none' }} />
+                      style={{ padding: '8px 12px', fontSize: '0.875rem', borderRadius: 'var(--r-sm)', border: '1px solid var(--border-default)', background: 'var(--bg-surface)', width: 160, outline: 'none', fontWeight: 500 }} />
                   )}
                 </div>
               ))}

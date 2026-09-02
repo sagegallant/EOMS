@@ -38,30 +38,30 @@ export default function DocumentsView() {
     <div style={{ display: 'grid', gap: 'var(--sp-5)' }}>
       <PageHeader title="Documents" subtitle="Statutory document verification queue for Indian compliance." />
 
-      {/* ── Summary ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-4)' }}>
-        <Card style={{ padding: 'var(--sp-4)' }}>
-          <p className="meta" style={{ fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>Verification Rate</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <MiniDonut value={verified} total={total} label={`${Math.round((verified/total)*100)}%`} size={72} color="var(--chart-emerald)" />
-            <div style={{ fontSize: '0.8125rem', display: 'grid', gap: 6 }}>
-              {STATUS_BARS.map(s => <div key={s.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}><span style={{ color: 'var(--text-muted)' }}>{s.label}</span><span style={{ fontWeight: 500 }}>{s.value}</span></div>)}
+      {/* ── Summary (Bento Grid) ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 'var(--sp-5)' }}>
+        <Card $hoverable style={{ gridColumn: 'span 5', padding: 'var(--sp-5)' }}>
+          <p className="meta" style={{ fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 'var(--sp-4)' }}>Verification Rate</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+            <MiniDonut value={verified} total={total} label={`${Math.round((verified/total)*100)}%`} size={96} color="var(--chart-emerald)" />
+            <div style={{ fontSize: '0.9375rem', display: 'grid', gap: 10, flex: 1 }}>
+              {STATUS_BARS.map(s => <div key={s.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}><span style={{ color: 'var(--text-secondary)' }}>{s.label}</span><span style={{ fontWeight: 600 }}>{s.value}</span></div>)}
             </div>
           </div>
         </Card>
-        <Card style={{ padding: 'var(--sp-4)' }}>
-          <p className="meta" style={{ fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>By Status</p>
+        <Card $hoverable style={{ gridColumn: 'span 7', padding: 'var(--sp-5)' }}>
+          <p className="meta" style={{ fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 'var(--sp-4)' }}>By Status</p>
           <HorizontalBar items={STATUS_BARS} maxValue={total} />
         </Card>
       </div>
 
       {/* ── Doc List ── */}
-      <Card>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <div style={{ display: 'flex', gap: 6 }}>
+      <Card $hoverable style={{ padding: 'var(--sp-5)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--sp-4)' }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {['ALL', 'VERIFIED', 'PENDING', 'REJECTED'].map(f => (
               <button key={f} onClick={() => setFilter(f)}
-                style={{ padding: '4px 10px', borderRadius: 'var(--r-full)', fontSize: '0.75rem', fontWeight: 500, border: '1px solid', cursor: 'pointer', transition: 'all var(--t-fast)',
+                style={{ padding: '6px 12px', borderRadius: 'var(--r-full)', fontSize: '0.8125rem', fontWeight: 500, border: '1px solid', cursor: 'pointer', transition: 'all var(--t-fast)',
                   borderColor: filter === f ? 'var(--primary)' : 'var(--border-default)',
                   background: filter === f ? 'var(--primary-light)' : 'transparent',
                   color: filter === f ? 'var(--primary)' : 'var(--text-muted)',
@@ -71,21 +71,21 @@ export default function DocumentsView() {
             ))}
           </div>
         </div>
-        <AnimatedList style={{ display: 'grid', gap: 6 }}>
+        <AnimatedList style={{ display: 'grid', gap: 8 }}>
           {visible.map(doc => {
             const Icon = STATUS_ICONS[doc.status] || FileWarning;
             return (
               <AnimatedItem key={doc.id}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', flexWrap: 'wrap', transition: 'border-color var(--t-fast)' }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-default)'; }}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 16px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', flexWrap: 'wrap', transition: 'border-color var(--t-fast)' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; }}
                 >
-                  <div style={{ width: 32, height: 32, borderRadius: 'var(--r-sm)', background: `var(--${doc.status === 'VERIFIED' ? 'success' : doc.status === 'PENDING' ? 'warning' : 'danger'}-bg)`, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-                    <Icon size={15} style={{ color: `var(--${doc.status === 'VERIFIED' ? 'success' : doc.status === 'PENDING' ? 'warning' : 'danger'})` }} />
+                  <div style={{ width: 36, height: 36, borderRadius: 'var(--r-sm)', background: `var(--${doc.status === 'VERIFIED' ? 'success' : doc.status === 'PENDING' ? 'warning' : 'danger'}-bg)`, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                    <Icon size={16} style={{ color: `var(--${doc.status === 'VERIFIED' ? 'success' : doc.status === 'PENDING' ? 'warning' : 'danger'})` }} />
                   </div>
                   <div style={{ flex: '1 1 180px', minWidth: 0 }}>
-                    <div style={{ fontWeight: 500, fontSize: '0.875rem', color: 'var(--text-primary)' }}>{doc.type}</div>
-                    <div className="meta" style={{ color: 'var(--text-muted)' }}>{doc.employee} · {doc.date}</div>
+                    <div style={{ fontWeight: 600, fontSize: '0.9375rem', color: 'var(--text-primary)' }}>{doc.type}</div>
+                    <div className="meta" style={{ color: 'var(--text-muted)', marginTop: 2, fontWeight: 500 }}>{doc.employee} · {doc.date}</div>
                   </div>
                   <Badge tone={doc.tone}>{doc.status.charAt(0) + doc.status.slice(1).toLowerCase()}</Badge>
                   {doc.status === 'PENDING' && (

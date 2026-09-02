@@ -53,32 +53,32 @@ export default function EmployeeDirectory() {
         action={<Button size="sm" icon={Plus} onClick={() => setModal(true)}>Add Employee</Button>}
       />
 
-      {/* ── Summary Charts ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-4)' }}>
-        <Card style={{ padding: 'var(--sp-4)' }}>
-          <p className="meta" style={{ fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>Onboarding Status</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <MiniDonut value={onTrack} total={employees.length} label={`${onTrack}`} sublabel="on track" size={72} color="var(--chart-emerald)" />
-            <div style={{ fontSize: '0.8125rem', display: 'grid', gap: 5 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}><span style={{ color: 'var(--text-muted)' }}>On Track</span><span style={{ fontWeight: 500, color: 'var(--success-text)' }}>{onTrack}</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}><span style={{ color: 'var(--text-muted)' }}>Needs Review</span><span style={{ fontWeight: 500, color: 'var(--warning-text)' }}>{employees.filter(e => e.status === 'Needs Review').length}</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}><span style={{ color: 'var(--text-muted)' }}>Just Started</span><span style={{ fontWeight: 500 }}>{employees.filter(e => e.status === 'Just Started').length}</span></div>
+      {/* ── Summary Charts (Bento Grid) ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 'var(--sp-5)' }}>
+        <Card $hoverable style={{ gridColumn: 'span 5', padding: 'var(--sp-5)' }}>
+          <p className="meta" style={{ fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 'var(--sp-4)' }}>Onboarding Status</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+            <MiniDonut value={onTrack} total={employees.length} label={`${onTrack}`} sublabel="on track" size={96} color="var(--chart-emerald)" />
+            <div style={{ fontSize: '0.9375rem', display: 'grid', gap: 10, flex: 1 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}><span style={{ color: 'var(--text-secondary)' }}>On Track</span><span style={{ fontWeight: 600, color: 'var(--success-text)' }}>{onTrack}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}><span style={{ color: 'var(--text-secondary)' }}>Needs Review</span><span style={{ fontWeight: 600, color: 'var(--warning-text)' }}>{employees.filter(e => e.status === 'Needs Review').length}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}><span style={{ color: 'var(--text-secondary)' }}>Just Started</span><span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{employees.filter(e => e.status === 'Just Started').length}</span></div>
             </div>
           </div>
         </Card>
-        <Card style={{ padding: 'var(--sp-4)' }}>
-          <p className="meta" style={{ fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>By Department</p>
+        <Card $hoverable style={{ gridColumn: 'span 7', padding: 'var(--sp-5)' }}>
+          <p className="meta" style={{ fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 'var(--sp-4)' }}>By Department</p>
           <HorizontalBar items={DEPT_BARS} colorVar="--chart-blue" />
         </Card>
       </div>
 
       {/* ── Search + Filter ── */}
-      <Card style={{ padding: 'var(--sp-3) var(--sp-4)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <div style={{ position: 'relative', flex: '1 1 200px' }}>
-            <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+      <Card style={{ padding: 'var(--sp-4)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', flex: '1 1 240px' }}>
+            <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name or role…"
-              style={{ width: '100%', padding: '6px 10px 6px 28px', fontSize: '0.8125rem', borderRadius: 'var(--r-sm)', border: '1px solid var(--border-default)', background: 'var(--bg-subtle)', color: 'var(--text-primary)', outline: 'none' }}
+              style={{ width: '100%', padding: '8px 12px 8px 34px', fontSize: '0.875rem', borderRadius: 'var(--r-sm)', border: '1px solid var(--border-default)', background: 'var(--bg-subtle)', color: 'var(--text-primary)', outline: 'none' }}
               onFocus={e => (e.target.style.borderColor = 'var(--primary)')}
               onBlur={e => (e.target.style.borderColor = 'var(--border-default)')} />
           </div>
@@ -87,38 +87,38 @@ export default function EmployeeDirectory() {
           </Button>
           {showFilters && (
             <select value={filterDept} onChange={e => setFilterDept(e.target.value)}
-              style={{ padding: '5px 10px', fontSize: '0.8125rem', borderRadius: 'var(--r-sm)', border: '1px solid var(--border-default)', background: 'var(--bg-surface)', color: 'var(--text-primary)' }}>
+              style={{ padding: '8px 12px', fontSize: '0.875rem', borderRadius: 'var(--r-sm)', border: '1px solid var(--border-default)', background: 'var(--bg-surface)', color: 'var(--text-primary)' }}>
               <option value="ALL">All Departments</option>
               <option>Platform Engineering</option><option>Product & UI/UX</option>
               <option>Cloud & Infra</option><option>People Ops</option>
             </select>
           )}
           {filterDept !== 'ALL' && (
-            <button onClick={() => setFilterDept('ALL')} style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: '0.8125rem', color: 'var(--danger)', background: 'none', border: 'none', cursor: 'pointer' }}>
-              <X size={12} /> Clear
+            <button onClick={() => setFilterDept('ALL')} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.875rem', color: 'var(--danger)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>
+              <X size={14} /> Clear
             </button>
           )}
         </div>
       </Card>
 
       {/* ── Directory list ── */}
-      <AnimatedList style={{ display: 'grid', gap: 6 }}>
+      <AnimatedList style={{ display: 'grid', gap: 8 }}>
         {filtered.map(emp => (
           <AnimatedItem key={emp.id}>
-            <Card $hoverable style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-              <Avatar name={emp.name} size={38} />
+            <Card $hoverable style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+              <Avatar name={emp.name} size={44} />
               <div style={{ flex: '1 1 200px', minWidth: 0 }}>
-                <div style={{ fontWeight: 500, fontSize: '0.875rem', color: 'var(--text-primary)' }}>{emp.name}</div>
-                <div className="meta" style={{ color: 'var(--text-muted)' }}>{emp.role} · {emp.dept}</div>
+                <div style={{ fontWeight: 600, fontSize: '0.9375rem', color: 'var(--text-primary)' }}>{emp.name}</div>
+                <div className="meta" style={{ color: 'var(--text-muted)', marginTop: 2, fontWeight: 500 }}>{emp.role} · {emp.dept}</div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                <MapPin size={11} />{emp.hub}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8125rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+                <MapPin size={13} />{emp.hub}
               </div>
-              <div style={{ width: 80 }}>
-                <div style={{ height: 3, borderRadius: 'var(--r-full)', background: 'var(--bg-sunken)', overflow: 'hidden' }}>
+              <div style={{ width: 100 }}>
+                <div style={{ height: 4, borderRadius: 'var(--r-full)', background: 'var(--bg-sunken)', overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${emp.progress}%`, background: 'var(--primary)', borderRadius: 'inherit', transition: 'width 600ms var(--ease)' }} />
                 </div>
-                <div className="meta" style={{ marginTop: 2, textAlign: 'right' }}>{emp.progress}%</div>
+                <div className="meta" style={{ marginTop: 4, textAlign: 'right', fontWeight: 500 }}>{emp.progress}%</div>
               </div>
               <Badge tone={emp.tone}>{emp.status}</Badge>
             </Card>

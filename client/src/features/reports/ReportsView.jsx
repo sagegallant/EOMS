@@ -43,26 +43,26 @@ export default function ReportsView() {
         action={<Button variant="secondary" size="sm" icon={Download} onClick={() => exportCSV(VELOCITY_DATA, 'EOMS_Report')}>Export</Button>}
       />
 
-      {/* ── SLA Compliance Donuts ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 'var(--sp-4)' }}>
+      {/* ── SLA Compliance Donuts (Bento Grid) ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 'var(--sp-5)' }}>
         {SLA_METRICS.map(m => (
-          <Card key={m.label} style={{ padding: 'var(--sp-4)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-            <MiniDonut value={m.value} total={100} label={`${m.value}%`} size={72} color={m.color} />
-            <p className="meta" style={{ color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.3 }}>{m.label}</p>
+          <Card $hoverable key={m.label} style={{ gridColumn: 'span 3', padding: 'var(--sp-5)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+            <MiniDonut value={m.value} total={100} label={`${m.value}%`} size={88} color={m.color} />
+            <p className="meta" style={{ color: 'var(--text-secondary)', textAlign: 'center', lineHeight: 1.4, fontWeight: 500 }}>{m.label}</p>
           </Card>
         ))}
       </div>
 
       {/* ── Onboarding Velocity ── */}
-      <Card>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+      <Card $hoverable style={{ padding: 'var(--sp-5)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--sp-5)' }}>
           <div>
             <h2 className="h3">Onboarding Velocity</h2>
-            <p className="meta" style={{ color: 'var(--text-muted)', marginTop: 2 }}>Monthly started vs completed over the last 6 months</p>
+            <p className="meta" style={{ color: 'var(--text-muted)', marginTop: 4, fontWeight: 500 }}>Monthly started vs completed over the last 6 months</p>
           </div>
-          <div style={{ display: 'flex', gap: 12, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}><div style={{ width: 10, height: 2, background: 'var(--chart-blue)', borderRadius: 2 }} />Started</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}><div style={{ width: 10, height: 2, background: 'var(--chart-emerald)', borderRadius: 2 }} />Completed</div>
+          <div style={{ display: 'flex', gap: 16, fontSize: '0.8125rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><div style={{ width: 12, height: 3, background: 'var(--chart-blue)', borderRadius: 2 }} />Started</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><div style={{ width: 12, height: 3, background: 'var(--chart-emerald)', borderRadius: 2 }} />Completed</div>
           </div>
         </div>
         <TrendChart
@@ -72,26 +72,28 @@ export default function ReportsView() {
             { dataKey: 'started',     name: 'Started',    color: 'var(--chart-blue)' },
             { dataKey: 'completions', name: 'Completed',  color: 'var(--chart-emerald)' },
           ]}
-          height={220}
+          height={280}
           showLegend={false}
         />
       </Card>
 
-      {/* ── Dept Breakdown + Heatmap ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-4)' }}>
-        <Card>
-          <h2 className="h3" style={{ marginBottom: 16 }}>By Department</h2>
+      {/* ── Dept Breakdown + Heatmap (Bento Grid) ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 'var(--sp-5)' }}>
+        <Card $hoverable style={{ gridColumn: 'span 5', padding: 'var(--sp-5)' }}>
+          <h2 className="h3" style={{ marginBottom: 'var(--sp-5)' }}>By Department</h2>
           <StackedBarChart
             data={DEPT_DATA}
             xKey="dept"
             categories={[{ dataKey: 'employees', name: 'Employees', color: 'var(--chart-blue)' }]}
-            height={180}
+            height={220}
           />
         </Card>
-        <Card>
-          <h2 className="h3" style={{ marginBottom: 16 }}>Weekly Activity Density</h2>
-          <p className="meta" style={{ color: 'var(--text-muted)', marginBottom: 12 }}>Task completions across the last 12 weeks</p>
-          <HeatmapGrid rows={7} cols={12} label="Days × Weeks" />
+        <Card $hoverable style={{ gridColumn: 'span 7', padding: 'var(--sp-5)' }}>
+          <h2 className="h3" style={{ marginBottom: 4 }}>Weekly Activity Density</h2>
+          <p className="meta" style={{ color: 'var(--text-muted)', marginBottom: 'var(--sp-5)', fontWeight: 500 }}>Task completions across the last 12 weeks</p>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 220 }}>
+            <HeatmapGrid rows={7} cols={12} label="Days × Weeks" />
+          </div>
         </Card>
       </div>
     </div>

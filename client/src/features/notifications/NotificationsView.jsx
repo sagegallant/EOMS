@@ -28,7 +28,7 @@ export default function NotificationsView() {
         }
       />
 
-      <Card>
+      <Card $hoverable style={{ padding: 'var(--sp-5)' }}>
         <ActivityTimeline
           events={notifs.map((n, i) => ({
             ...n,

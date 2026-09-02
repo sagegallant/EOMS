@@ -30,17 +30,17 @@ export default function TrainingView() {
       <PageHeader title="Training" subtitle={`${completed} of ${COURSES.length} courses completed`} />
 
       {/* ── Completion overview ── */}
-      <Card>
-        <h2 className="h3" style={{ marginBottom: 14 }}>Course Completion</h2>
+      <Card $hoverable style={{ padding: 'var(--sp-5)' }}>
+        <h2 className="h3" style={{ marginBottom: 'var(--sp-4)' }}>Course Completion</h2>
         <HorizontalBar items={COMPLETION_BARS} maxValue={100} />
       </Card>
 
       {/* ── Filter + Courses ── */}
-      <Card>
-        <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
+      <Card $hoverable style={{ padding: 'var(--sp-5)' }}>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 'var(--sp-4)', flexWrap: 'wrap' }}>
           {['ALL', 'required', 'Statutory Compliance', 'Technical'].map(f => (
             <button key={f} onClick={() => setFilter(f)}
-              style={{ padding: '4px 10px', borderRadius: 'var(--r-full)', fontSize: '0.75rem', fontWeight: 500, border: '1px solid', cursor: 'pointer', transition: 'all var(--t-fast)',
+              style={{ padding: '6px 12px', borderRadius: 'var(--r-full)', fontSize: '0.8125rem', fontWeight: 500, border: '1px solid', cursor: 'pointer', transition: 'all var(--t-fast)',
                 borderColor: filter === f ? 'var(--primary)' : 'var(--border-default)',
                 background: filter === f ? 'var(--primary-light)' : 'transparent',
                 color: filter === f ? 'var(--primary)' : 'var(--text-muted)',
@@ -52,26 +52,26 @@ export default function TrainingView() {
         <AnimatedList style={{ display: 'grid', gap: 8 }}>
           {visible.map(course => (
             <AnimatedItem key={course.id}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', transition: 'border-color var(--t-fast)' }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-default)'; }}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', transition: 'border-color var(--t-fast)' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; }}
               >
                 <RadialProgress
                   value={course.progress}
-                  size={52}
-                  strokeWidth={5}
+                  size={64}
+                  strokeWidth={6}
                   color={course.progress === 100 ? 'var(--chart-emerald)' : course.progress > 0 ? 'var(--chart-blue)' : 'var(--bg-sunken)'}
                   label={course.progress === 100 ? '✓' : `${course.progress}%`}
                 />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 500, fontSize: '0.875rem', color: 'var(--text-primary)' }}>{course.title}</div>
-                  <div className="meta" style={{ color: 'var(--text-muted)', marginTop: 2 }}>{course.category} · {course.duration}</div>
+                  <div style={{ fontWeight: 600, fontSize: '0.9375rem', color: 'var(--text-primary)' }}>{course.title}</div>
+                  <div className="meta" style={{ color: 'var(--text-muted)', marginTop: 2, fontWeight: 500 }}>{course.category} · {course.duration}</div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   {course.required && <Badge tone="info">Required</Badge>}
                   <Button
                     variant={course.progress === 100 ? 'ghost' : 'soft'}
-                    size="xs"
+                    size="sm"
                     icon={course.progress === 100 ? CheckCircle2 : course.progress === 0 ? PlayCircle : PlayCircle}
                     onClick={() => course.progress < 100 && setActiveCourse(course)}
                   >

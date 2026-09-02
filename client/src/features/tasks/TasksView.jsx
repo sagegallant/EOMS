@@ -37,35 +37,35 @@ export default function TasksView() {
     <div style={{ display: 'grid', gap: 'var(--sp-5)' }}>
       <PageHeader title="Tasks" subtitle={`${pending.length} pending · ${completed.length} completed`} />
 
-      {/* ── Summary Row ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-4)' }}>
-        <Card style={{ padding: 'var(--sp-4)' }}>
-          <p className="meta" style={{ fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>Completion Status</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <MiniDonut value={completed.length} total={tasks.length} label={`${completed.length}`} sublabel={`/ ${tasks.length}`} size={72} color="var(--chart-emerald)" />
-            <div style={{ fontSize: '0.8125rem', display: 'grid', gap: 6 }}>
+      {/* ── Summary Row (Bento Grid) ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 'var(--sp-5)' }}>
+        <Card $hoverable style={{ gridColumn: 'span 5', padding: 'var(--sp-5)' }}>
+          <p className="meta" style={{ fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 'var(--sp-4)' }}>Completion Status</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+            <MiniDonut value={completed.length} total={tasks.length} label={`${completed.length}`} sublabel={`/ ${tasks.length}`} size={88} color="var(--chart-emerald)" />
+            <div style={{ fontSize: '0.9375rem', display: 'grid', gap: 8, flex: 1 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}>
-                <span style={{ color: 'var(--text-muted)' }}>Completed</span><span style={{ fontWeight: 500, color: 'var(--success-text)' }}>{completed.length}</span>
+                <span style={{ color: 'var(--text-secondary)' }}>Completed</span><span style={{ fontWeight: 600, color: 'var(--success-text)' }}>{completed.length}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}>
-                <span style={{ color: 'var(--text-muted)' }}>Pending</span><span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{pending.length}</span>
+                <span style={{ color: 'var(--text-secondary)' }}>Pending</span><span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{pending.length}</span>
               </div>
             </div>
           </div>
         </Card>
-        <Card style={{ padding: 'var(--sp-4)' }}>
-          <p className="meta" style={{ fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>By Category</p>
+        <Card $hoverable style={{ gridColumn: 'span 7', padding: 'var(--sp-5)' }}>
+          <p className="meta" style={{ fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 'var(--sp-4)' }}>By Category</p>
           <HorizontalBar items={CAT_DATA} colorVar="--chart-blue" />
         </Card>
       </div>
 
       {/* ── Task List ── */}
-      <Card>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <div style={{ display: 'flex', gap: 6 }}>
+      <Card $hoverable style={{ padding: 'var(--sp-5)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--sp-4)' }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {['ALL', 'Statutory Compliance', 'Training', 'IT Setup'].map(f => (
               <button key={f} onClick={() => setFilter(f)}
-                style={{ padding: '4px 10px', borderRadius: 'var(--r-full)', fontSize: '0.75rem', fontWeight: 500, border: '1px solid', cursor: 'pointer', transition: 'all var(--t-fast)',
+                style={{ padding: '6px 12px', borderRadius: 'var(--r-full)', fontSize: '0.8125rem', fontWeight: 500, border: '1px solid', cursor: 'pointer', transition: 'all var(--t-fast)',
                   borderColor: filter === f ? 'var(--primary)' : 'var(--border-default)',
                   background: filter === f ? 'var(--primary-light)' : 'transparent',
                   color: filter === f ? 'var(--primary)' : 'var(--text-muted)',
@@ -74,31 +74,31 @@ export default function TasksView() {
               </button>
             ))}
           </div>
-          <button onClick={() => setShowDone(v => !v)} className="meta" style={{ color: 'var(--text-muted)', cursor: 'pointer', background: 'none', border: 'none' }}>
+          <button onClick={() => setShowDone(v => !v)} className="meta" style={{ color: 'var(--text-muted)', cursor: 'pointer', background: 'none', border: 'none', fontWeight: 500 }}>
             {showDone ? 'Hide done' : `${completed.length} done`}
           </button>
         </div>
-        <AnimatedList style={{ display: 'grid', gap: 6 }}>
+        <AnimatedList style={{ display: 'grid', gap: 8 }}>
           {all.map(task => (
             <AnimatedItem key={task.id}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', opacity: task.done ? 0.55 : 1, cursor: 'pointer', transition: 'all var(--t-fast)' }}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 16px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', opacity: task.done ? 0.55 : 1, cursor: 'pointer', transition: 'all var(--t-fast)' }}
                 onClick={() => toggle(task.id)}
-                onMouseEnter={e => { if (!task.done) e.currentTarget.style.borderColor = 'var(--border-default)'; }}
+                onMouseEnter={e => { if (!task.done) e.currentTarget.style.borderColor = 'var(--primary)'; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; }}
               >
-                <div style={{ width: 18, height: 18, borderRadius: 'var(--r-xs)', border: `1.5px solid ${task.done ? 'var(--success)' : 'var(--border-default)'}`, background: task.done ? 'var(--success)' : 'transparent', display: 'grid', placeItems: 'center', flexShrink: 0, transition: 'all var(--t-fast)' }}>
-                  {task.done && <CheckCircle2 size={11} color="#fff" />}
+                <div style={{ width: 20, height: 20, borderRadius: 'var(--r-xs)', border: `2px solid ${task.done ? 'var(--success)' : 'var(--border-default)'}`, background: task.done ? 'var(--success)' : 'transparent', display: 'grid', placeItems: 'center', flexShrink: 0, transition: 'all var(--t-fast)' }}>
+                  {task.done && <CheckCircle2 size={14} color="#fff" />}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '0.875rem', fontWeight: task.done ? 400 : 500, color: task.done ? 'var(--text-muted)' : 'var(--text-primary)', textDecoration: task.done ? 'line-through' : 'none' }}>
+                  <div style={{ fontSize: '0.9375rem', fontWeight: task.done ? 400 : 600, color: task.done ? 'var(--text-muted)' : 'var(--text-primary)', textDecoration: task.done ? 'line-through' : 'none' }}>
                     {task.title}
                   </div>
-                  <div className="meta" style={{ color: 'var(--text-muted)', marginTop: 1 }}>{task.category}</div>
+                  <div className="meta" style={{ color: 'var(--text-muted)', marginTop: 2, fontWeight: 500 }}>{task.category}</div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <Badge tone={PRIO_COLORS[task.priority]}>{task.priority}</Badge>
-                  <span className="meta" style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 3 }}>
-                    <Clock size={11} />{task.due}
+                  <span className="meta" style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 500 }}>
+                    <Clock size={13} />{task.due}
                   </span>
                 </div>
               </div>

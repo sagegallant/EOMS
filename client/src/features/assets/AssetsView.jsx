@@ -45,34 +45,34 @@ export default function AssetsView() {
       <PageHeader title="Assets" subtitle="Hardware provisioning and acknowledgement tracking."
         action={<Button size="sm" icon={Plus} onClick={() => setModal(true)}>Add Asset</Button>} />
 
-      {/* ── Charts ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-4)' }}>
-        <Card>
-          <h2 className="h3" style={{ marginBottom: 14 }}>By Category</h2>
-          <StackedBarChart data={BY_CAT} xKey="name" categories={[{ dataKey: 'count', name: 'Assets', color: 'var(--chart-blue)' }]} height={120} />
+      {/* ── Charts (Bento Grid) ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 'var(--sp-5)' }}>
+        <Card $hoverable style={{ gridColumn: 'span 7', padding: 'var(--sp-5)' }}>
+          <h2 className="h3" style={{ marginBottom: 'var(--sp-4)' }}>By Category</h2>
+          <StackedBarChart data={BY_CAT} xKey="name" categories={[{ dataKey: 'count', name: 'Assets', color: 'var(--chart-blue)' }]} height={140} />
         </Card>
-        <Card style={{ padding: 'var(--sp-4)' }}>
-          <h2 className="h3" style={{ marginBottom: 12 }}>By Tech Hub</h2>
+        <Card $hoverable style={{ gridColumn: 'span 5', padding: 'var(--sp-5)' }}>
+          <h2 className="h3" style={{ marginBottom: 'var(--sp-4)' }}>By Tech Hub</h2>
           <HorizontalBar items={BY_HUB} colorVar="--chart-violet" />
         </Card>
       </div>
 
       {/* ── Asset List ── */}
-      <Card>
-        <h2 className="h3" style={{ marginBottom: 14 }}>Asset Registry</h2>
-        <AnimatedList style={{ display: 'grid', gap: 6 }}>
+      <Card $hoverable style={{ padding: 'var(--sp-5)' }}>
+        <h2 className="h3" style={{ marginBottom: 'var(--sp-4)' }}>Asset Registry</h2>
+        <AnimatedList style={{ display: 'grid', gap: 8 }}>
           {assets.map(asset => (
             <AnimatedItem key={asset.id}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', flexWrap: 'wrap', transition: 'border-color var(--t-fast)' }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-default)'; }}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 16px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', flexWrap: 'wrap', transition: 'border-color var(--t-fast)' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; }}
               >
-                <div style={{ width: 32, height: 32, borderRadius: 'var(--r-sm)', background: 'var(--bg-subtle)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-                  <Laptop size={15} style={{ color: 'var(--text-muted)' }} />
+                <div style={{ width: 36, height: 36, borderRadius: 'var(--r-sm)', background: 'var(--bg-subtle)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                  <Laptop size={16} style={{ color: 'var(--text-muted)' }} />
                 </div>
                 <div style={{ flex: '1 1 200px', minWidth: 0 }}>
-                  <div style={{ fontWeight: 500, fontSize: '0.875rem', color: 'var(--text-primary)' }}>{asset.asset}</div>
-                  <div className="meta" style={{ color: 'var(--text-muted)' }}>{asset.employee} · {asset.serial} · {asset.hub}</div>
+                  <div style={{ fontWeight: 600, fontSize: '0.9375rem', color: 'var(--text-primary)' }}>{asset.asset}</div>
+                  <div className="meta" style={{ color: 'var(--text-muted)', marginTop: 2, fontWeight: 500 }}>{asset.employee} · {asset.serial} · {asset.hub}</div>
                 </div>
                 <Badge tone={asset.tone}>{asset.status}</Badge>
                 {asset.status !== 'Acknowledged' && (

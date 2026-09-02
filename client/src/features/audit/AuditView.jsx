@@ -22,22 +22,24 @@ export default function AuditView() {
     <div style={{ display: 'grid', gap: 'var(--sp-5)' }}>
       <PageHeader title="Audit Log" subtitle="System-wide security and compliance event trail." />
 
-      {/* ── Event frequency chart ── */}
-      <Card>
-        <h2 className="h3" style={{ marginBottom: 14 }}>Event Frequency (7 days)</h2>
-        <TrendChart
-          data={ACTIVITY_TREND}
-          xKey="date"
-          series={[{ dataKey: 'events', name: 'Events', color: 'var(--chart-blue)' }]}
-          height={160}
-        />
-      </Card>
+      {/* ── Event frequency chart + Timeline (Bento Grid) ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 'var(--sp-5)' }}>
+        <Card $hoverable style={{ gridColumn: 'span 5', padding: 'var(--sp-5)' }}>
+          <h2 className="h3" style={{ marginBottom: 'var(--sp-4)' }}>Event Frequency (7 days)</h2>
+          <TrendChart
+            data={ACTIVITY_TREND}
+            xKey="date"
+            series={[{ dataKey: 'events', name: 'Events', color: 'var(--chart-blue)' }]}
+            height={200}
+          />
+        </Card>
 
-      {/* ── Timeline ── */}
-      <Card>
-        <h2 className="h3" style={{ marginBottom: 16 }}>Event Trail</h2>
-        <ActivityTimeline events={AUDIT_EVENTS} maxVisible={20} />
-      </Card>
+        {/* ── Timeline ── */}
+        <Card $hoverable style={{ gridColumn: 'span 7', padding: 'var(--sp-5)' }}>
+          <h2 className="h3" style={{ marginBottom: 'var(--sp-5)' }}>Event Trail</h2>
+          <ActivityTimeline events={AUDIT_EVENTS} maxVisible={20} />
+        </Card>
+      </div>
     </div>
   );
 }
