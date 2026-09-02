@@ -1,51 +1,75 @@
 import { useState } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { navFor } from '../../utils/navigation';
 import { Avatar } from '../common/ui';
+import {
+  LayoutDashboard,
+  Users,
+  Compass,
+  CheckSquare,
+  FileText,
+  GraduationCap,
+  Laptop,
+  Bell,
+  BarChart3,
+  ShieldCheck,
+  ListFilter,
+  Settings,
+  HelpCircle,
+  User,
+  Search,
+  LogOut,
+  Menu,
+  X,
+  Building2,
+  Sparkles,
+} from 'lucide-react';
 
-const ICONS = {
-  grid: '▦',
-  users: '◎',
-  route: '→',
-  check: '✓',
-  file: '▤',
-  cap: '🎓',
-  laptop: '💻',
-  bell: '🔔',
-  chart: '📊',
-  shield: '🛡',
-  list: '☰',
-  gear: '⚙',
-  help: '?',
-  user: '◍',
+const ICON_MAP = {
+  grid: LayoutDashboard,
+  users: Users,
+  route: Compass,
+  check: CheckSquare,
+  file: FileText,
+  cap: GraduationCap,
+  laptop: Laptop,
+  bell: Bell,
+  chart: BarChart3,
+  shield: ShieldCheck,
+  list: ListFilter,
+  gear: Settings,
+  help: HelpCircle,
+  user: User,
 };
-
-const Icon = ({ name }) => <span aria-hidden="true">{ICONS[name] ?? '•'}</span>;
 
 function Logo() {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0 8px 16px 8px' }}>
-      <span
-        aria-hidden="true"
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '4px 8px 24px 8px' }}>
+      <div
         style={{
-          width: 36,
-          height: 36,
-          borderRadius: 12,
-          background: 'var(--surface)',
-          boxShadow: 'var(--neo-md)',
+          width: 38,
+          height: 38,
+          borderRadius: 10,
+          background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
           display: 'grid',
           placeItems: 'center',
-          color: 'var(--primary)',
+          color: '#FFFFFF',
           fontWeight: 800,
-          fontSize: 16,
+          fontSize: '1.2rem',
+          boxShadow: '0 4px 12px rgba(79, 70, 229, 0.35)',
         }}
       >
         E
-      </span>
-      <span style={{ fontWeight: 750, fontSize: '1.1rem', color: 'var(--text-1)', letterSpacing: '-0.02em' }}>
-        EOMS
-      </span>
+      </div>
+      <div>
+        <div style={{ fontWeight: 800, fontSize: '1.15rem', color: '#FFFFFF', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+          EOMS
+        </div>
+        <div style={{ fontSize: '0.68rem', color: '#94A3B8', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+          Enterprise Onboarding
+        </div>
+      </div>
     </div>
   );
 }
@@ -53,234 +77,300 @@ function Logo() {
 export default function AppShell() {
   const { user, logout } = useAuthStore();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { pathname } = useLocation();
+  const [searchQuery, setSearchQuery] = useState('');
+  const location = useLocation();
+  const navigate = useNavigate();
   const nav = navFor(user?.roles);
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   const renderNavList = () => (
-    <nav aria-label="Primary">
+    <nav aria-label="Primary" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       {nav.map(({ section, items }) => (
-        <div key={section} style={{ marginTop: 'var(--sp-4)' }}>
+        <div key={section}>
           <div
-            className="meta"
             style={{
-              padding: '8px 12px',
+              padding: '6px 14px',
+              fontSize: '0.68rem',
               textTransform: 'uppercase',
-              letterSpacing: '.08em',
+              letterSpacing: '0.08em',
               fontWeight: 700,
+              color: '#64748B',
             }}
           >
             {section}
           </div>
-          {items.map(item => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              onClick={() => setDrawerOpen(false)}
-              style={({ isActive }) => ({
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                padding: '10px 14px',
-                marginBottom: 4,
-                borderRadius: 'var(--r-sm)',
-                fontWeight: 500,
-                color: isActive ? 'var(--primary)' : 'var(--text-2)',
-                background: isActive ? 'var(--surface-white)' : 'transparent',
-                boxShadow: isActive ? 'var(--neo-sm)' : 'none',
-              })}
-            >
-              <Icon name={item.icon} /> {item.label}
-            </NavLink>
-          ))}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {items.map(item => {
+              const IconComp = ICON_MAP[item.icon] || LayoutDashboard;
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setDrawerOpen(false)}
+                  style={({ isActive }) => ({
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    padding: '9px 14px',
+                    borderRadius: 'var(--r-sm)',
+                    fontSize: '0.84rem',
+                    fontWeight: isActive ? 600 : 500,
+                    color: isActive ? '#FFFFFF' : '#94A3B8',
+                    background: isActive ? 'rgba(79, 70, 229, 0.22)' : 'transparent',
+                    borderLeft: isActive ? '3px solid #6366F1' : '3px solid transparent',
+                    transition: 'all 150ms ease',
+                  })}
+                >
+                  <IconComp size={17} style={{ flexShrink: 0 }} />
+                  <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {item.label}
+                  </span>
+                </NavLink>
+              );
+            })}
+          </div>
         </div>
       ))}
     </nav>
   );
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--surface)' }}>
-      {/* Desktop Sidebar */}
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-app)' }}>
+      {/* ── Desktop Sidebar ───────────────────────────────────── */}
       <aside
         style={{
           width: 'var(--sidebar-w)',
-          flexShrink: 0,
-          padding: 'var(--sp-5) var(--sp-4)',
+          background: 'var(--bg-sidebar)',
+          borderRight: '1px solid #1E293B',
+          padding: '20px 16px',
+          display: 'flex',
+          flexDirection: 'column',
           position: 'sticky',
           top: 0,
           height: '100vh',
-          overflowY: 'auto',
-          borderRight: '1px solid rgba(163,177,198,.2)',
+          zIndex: 40,
+          flexShrink: 0,
         }}
-        className="eoms-sidebar"
       >
         <Logo />
-        {renderNavList()}
-      </aside>
 
-      {/* Main column */}
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-        <header
-          className="eoms-topbar"
+        <div style={{ flex: 1, overflowY: 'auto', margin: '0 -8px', padding: '0 8px' }}>
+          {renderNavList()}
+        </div>
+
+        {/* Sidebar Footer User Info */}
+        <div
           style={{
-            position: 'sticky',
-            top: 0,
-            zIndex: 20,
+            marginTop: 'auto',
+            paddingTop: 16,
+            borderTop: '1px solid #1E293B',
             display: 'flex',
             alignItems: 'center',
-            gap: 'var(--sp-3)',
-            padding: 'var(--sp-3) var(--sp-5)',
-            background: 'var(--surface)',
-            boxShadow: '0 2px 10px rgba(163,177,198,.2)',
+            justifyContent: 'space-between',
+            gap: 10,
           }}
         >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+            <Avatar name={user?.username || 'User'} size={34} />
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#FFFFFF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {user?.username || 'Employee'}
+              </div>
+              <div style={{ fontSize: '0.7rem', color: '#94A3B8' }}>
+                {user?.roles?.[0] || 'EMPLOYEE'}
+              </div>
+            </div>
+          </div>
           <button
-            className="eoms-menu-btn pressable"
-            aria-label="Open menu"
-            onClick={() => setDrawerOpen(true)}
+            onClick={handleLogout}
+            title="Sign out"
             style={{
-              display: 'inline-flex',
-              padding: '6px 10px',
+              width: 32,
+              height: 32,
               borderRadius: 'var(--r-sm)',
-              boxShadow: 'var(--neo-sm)',
-              fontSize: '1.2rem',
-            }}
-          >
-            ☰
-          </button>
-
-          <nav aria-label="Breadcrumb" className="meta" style={{ marginLeft: 8 }}>
-            Home / {pathname.split('/').filter(Boolean).join(' / ') || 'Dashboard'}
-          </nav>
-
-          <div style={{ flex: 1 }} />
-
-          <input
-            className="eoms-search"
-            type="search"
-            placeholder="Search employees, tasks, documents…  ⌘K"
-            aria-label="Global search"
-            style={{
-              maxWidth: 340,
-              width: '100%',
-              padding: '9px 16px',
-              borderRadius: 'var(--r-full)',
-              background: 'var(--surface-sunken)',
-              boxShadow: 'var(--neo-in-sm)',
-              border: 'none',
-              color: 'var(--text-1)',
-              fontSize: '.875rem',
-            }}
-          />
-
-          <button
-            aria-label={`Notifications (3 unread)`}
-            className="pressable"
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: '50%',
-              boxShadow: 'var(--neo-sm)',
-              position: 'relative',
-              fontSize: 17,
               display: 'grid',
               placeItems: 'center',
+              color: '#94A3B8',
+              transition: 'all 150ms ease',
             }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#EF4444'; e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = '#94A3B8'; e.currentTarget.style.background = 'transparent'; }}
           >
-            🔔
+            <LogOut size={16} />
+          </button>
+        </div>
+      </aside>
+
+      {/* ── Main Content Area ─────────────────────────────────── */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        {/* ── Topbar ─────────────────────────────────────────── */}
+        <header
+          style={{
+            height: 'var(--topbar-h)',
+            background: 'var(--bg-surface)',
+            borderBottom: '1px solid var(--border-subtle)',
+            padding: '0 var(--sp-6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            position: 'sticky',
+            top: 0,
+            zIndex: 30,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, flex: '1 1 360px', maxWidth: 440 }}>
+            {/* Mobile Hamburger */}
+            <button
+              onClick={() => setDrawerOpen(true)}
+              style={{ display: 'none', padding: 6, color: 'var(--text-secondary)' }}
+              className="mobile-hamburger"
+              aria-label="Toggle menu"
+            >
+              <Menu size={22} />
+            </button>
+
+            {/* Quick Search */}
+            <div style={{ position: 'relative', width: '100%' }}>
+              <Search
+                size={16}
+                style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}
+              />
+              <input
+                type="text"
+                placeholder="Search employees, tasks, documents… (Ctrl + K)"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px 8px 36px',
+                  fontSize: '0.8125rem',
+                  borderRadius: 'var(--r-md)',
+                  border: '1px solid var(--border-default)',
+                  background: 'var(--bg-subtle)',
+                  color: 'var(--text-primary)',
+                  outline: 'none',
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Right Topbar Actions */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            {/* Tech Hub Badge */}
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '4px 10px',
+                borderRadius: 'var(--r-full)',
+                background: 'var(--bg-subtle)',
+                border: '1px solid var(--border-subtle)',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                color: 'var(--text-secondary)',
+              }}
+            >
+              <Building2 size={13} style={{ color: 'var(--primary)' }} />
+              <span>Bengaluru Tech HQ 🇮🇳</span>
+            </div>
+
+            {/* Active Role Indicator */}
             <span
               style={{
-                position: 'absolute',
-                top: -2,
-                right: -2,
-                width: 17,
-                height: 17,
-                borderRadius: '50%',
-                background: 'var(--primary)',
-                color: '#fff',
-                fontSize: 10,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                background: 'var(--primary-light)',
+                border: '1px solid rgba(79, 70, 229, 0.2)',
+                color: 'var(--primary)',
+                borderRadius: 'var(--r-full)',
+                padding: '4px 12px',
+                fontSize: '0.72rem',
                 fontWeight: 700,
+                letterSpacing: '0.04em',
+              }}
+            >
+              <Sparkles size={12} />
+              {user?.roles?.[0] || 'EMPLOYEE'}
+            </span>
+
+            {/* Notifications Bell */}
+            <button
+              onClick={() => navigate('/notifications')}
+              title="Notifications"
+              style={{
+                position: 'relative',
+                width: 36,
+                height: 36,
+                borderRadius: 'var(--r-md)',
                 display: 'grid',
                 placeItems: 'center',
+                color: 'var(--text-secondary)',
+                background: 'var(--bg-subtle)',
+                border: '1px solid var(--border-subtle)',
+                transition: 'all var(--t-fast) var(--ease)',
               }}
             >
-              3
-            </span>
-          </button>
-
-          <button
-            className="pressable"
-            style={{
-              padding: '8px 16px',
-              borderRadius: 'var(--r-sm)',
-              boxShadow: 'var(--neo-sm)',
-              fontWeight: 600,
-              fontSize: '.875rem',
-              color: 'var(--primary)',
-            }}
-          >
-            + Quick Action
-          </button>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 8 }}>
-            <Avatar name={user?.username || 'User'} size={38} />
-            <div className="eoms-user-meta">
-              <div style={{ fontWeight: 600, fontSize: '.875rem', color: 'var(--text-1)' }}>
-                {user?.username || 'Guest'}
-              </div>
-              <div className="meta">{user?.roles?.[0]?.replaceAll('_', ' ') || 'Guest'}</div>
-            </div>
-            <button
-              onClick={logout}
-              className="caption pressable"
-              aria-label="Log out"
-              style={{
-                color: 'var(--text-3)',
-                padding: '6px 10px',
-                borderRadius: 'var(--r-sm)',
-                boxShadow: 'var(--neo-sm)',
-                marginLeft: 4,
-              }}
-            >
-              Log out
+              <Bell size={17} />
+              <span
+                style={{
+                  position: 'absolute',
+                  top: 7,
+                  right: 8,
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  background: 'var(--danger)',
+                  boxShadow: '0 0 0 2px var(--bg-surface)',
+                }}
+              />
             </button>
           </div>
         </header>
 
-        <main
-          style={{
-            flex: 1,
-            padding: 'var(--sp-5) var(--sp-6)',
-            maxWidth: 1440,
-            width: '100%',
-            margin: '0 auto',
-          }}
-        >
+        {/* ── Main Page Content ───────────────────────────────── */}
+        <main style={{ flex: 1, padding: 'var(--sp-6)', maxWidth: 1400, width: '100%', margin: '0 auto' }}>
           <Outlet />
         </main>
       </div>
 
-      {/* Mobile drawer */}
+      {/* ── Mobile Drawer ─────────────────────────────────────── */}
       {drawerOpen && (
         <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Navigation menu"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 100,
+            background: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(4px)',
+          }}
           onClick={() => setDrawerOpen(false)}
-          style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(45,49,66,.4)' }}
         >
           <div
-            onClick={e => e.stopPropagation()}
             style={{
               width: 280,
               height: '100%',
-              background: 'var(--surface)',
-              boxShadow: 'var(--neo-lg)',
-              padding: 'var(--sp-5) var(--sp-4)',
-              overflowY: 'auto',
+              background: 'var(--bg-sidebar)',
+              padding: 20,
+              display: 'flex',
+              flexDirection: 'column',
             }}
+            onClick={e => e.stopPropagation()}
           >
-            <Logo />
-            {renderNavList()}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <Logo />
+              <button onClick={() => setDrawerOpen(false)} style={{ color: '#94A3B8' }}>
+                <X size={20} />
+              </button>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              {renderNavList()}
+            </div>
           </div>
         </div>
       )}
