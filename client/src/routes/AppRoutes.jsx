@@ -7,24 +7,58 @@ import EmployeeDashboard from '../features/dashboard/employee/EmployeeDashboard'
 import ManagerDashboard from '../features/dashboard/manager/ManagerDashboard';
 import ITDashboard from '../features/dashboard/it/ITDashboard';
 import EmployeeDirectory from '../features/employees/EmployeeDirectory';
+import OnboardingView from '../features/onboarding/OnboardingView';
+import TasksView from '../features/tasks/TasksView';
+import DocumentsView from '../features/documents/DocumentsView';
+import TrainingView from '../features/training/TrainingView';
+import AssetsView from '../features/assets/AssetsView';
+import NotificationsView from '../features/notifications/NotificationsView';
+import ReportsView from '../features/reports/ReportsView';
+import AuditView from '../features/audit/AuditView';
+import SettingsView from '../features/settings/SettingsView';
+import ProfileView from '../features/profile/ProfileView';
 import { useAuthStore } from '../store/authStore';
-import { Card, EmptyState, Button } from '../components/common/ui';
+import { Card, Button } from '../components/common/ui';
+import { HelpCircle, Mail, Phone, ExternalLink } from 'lucide-react';
 
-function PlaceholderView({ title, icon, description }) {
+function HelpView() {
   return (
-    <div style={{ display: 'grid', gap: 'var(--sp-5)' }}>
+    <div style={{ display: 'grid', gap: 'var(--sp-6)', maxWidth: 840 }} className="animate-fade-in">
       <header>
-        <h1 className="display" style={{ fontSize: '1.6rem' }}>{title}</h1>
-        <p className="body" style={{ color: 'var(--text-3)' }}>{description}</p>
+        <h1 className="display">EOMS Help &amp; Support Portal</h1>
+        <p className="body" style={{ color: 'var(--text-muted)', marginTop: 4 }}>
+          Assistance with Indian corporate onboarding, IT hardware provisioning, and statutory compliance.
+        </p>
       </header>
-      <Card>
-        <EmptyState
-          icon={icon}
-          title={`${title} Module`}
-          hint="This feature module is connected to the EOMS backend data pipeline."
-          action={<Button size="md" variant="soft">Refresh Data</Button>}
-        />
-      </Card>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 'var(--sp-4)' }}>
+        <Card style={{ display: 'grid', gap: 10 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 'var(--r-md)', background: 'var(--primary-light)', color: 'var(--primary)', display: 'grid', placeItems: 'center' }}>
+            <Mail size={18} />
+          </div>
+          <h3 className="h3">People Operations Desk</h3>
+          <p className="caption" style={{ color: 'var(--text-muted)' }}>Questions regarding offer letter, PF / UAN transfer, or medical insurance.</p>
+          <a href="mailto:peopleops@eoms.in" style={{ fontWeight: 600, fontSize: '0.84rem' }}>peopleops@eoms.in →</a>
+        </Card>
+
+        <Card style={{ display: 'grid', gap: 10 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 'var(--r-md)', background: 'var(--warning-bg)', color: 'var(--warning)', display: 'grid', placeItems: 'center' }}>
+            <HelpCircle size={18} />
+          </div>
+          <h3 className="h3">POSH Internal Committee</h3>
+          <p className="caption" style={{ color: 'var(--text-muted)' }}>Confidential grievance redressal under the POSH Act 2013 guidelines.</p>
+          <a href="mailto:icc.complaints@eoms.in" style={{ fontWeight: 600, fontSize: '0.84rem' }}>icc.complaints@eoms.in →</a>
+        </Card>
+
+        <Card style={{ display: 'grid', gap: 10 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 'var(--r-md)', background: 'var(--info-bg)', color: 'var(--info)', display: 'grid', placeItems: 'center' }}>
+            <Phone size={18} />
+          </div>
+          <h3 className="h3">IT &amp; Systems Helpdesk</h3>
+          <p className="caption" style={{ color: 'var(--text-muted)' }}>Hardware setup, VPN configuration, and Google Workspace 2FA assistance.</p>
+          <a href="mailto:it-support@eoms.in" style={{ fontWeight: 600, fontSize: '0.84rem' }}>it-support@eoms.in →</a>
+        </Card>
+      </div>
     </div>
   );
 }
@@ -32,7 +66,7 @@ function PlaceholderView({ title, icon, description }) {
 function DashboardRouter() {
   const { user } = useAuthStore();
   const role = user?.roles?.[0] || 'EMPLOYEE';
-  if (role === 'HR_ADMIN' || role === 'SYSTEM_ADMIN') return <HRDashboard />;
+  if (role === 'HR_ADMIN' || role === 'SYSTEM_ADMIN' || role === 'HR_SPECIALIST') return <HRDashboard />;
   if (role === 'DEPARTMENT_MANAGER') return <ManagerDashboard />;
   if (role === 'IT_ADMIN') return <ITDashboard />;
   return <EmployeeDashboard />;
@@ -46,18 +80,18 @@ export default function AppRoutes() {
         <Route element={<AppShell />}>
           <Route path="/dashboard" element={<DashboardRouter />} />
           <Route path="/employees" element={<EmployeeDirectory />} />
-          <Route path="/onboarding" element={<PlaceholderView title="Onboarding Plans" icon="🗺️" description="Configure and monitor 30-60-90 day employee journey plans." />} />
-          <Route path="/tasks" element={<PlaceholderView title="Tasks & Checklists" icon="✓" description="Kanban boards and phase checklist assignments." />} />
-          <Route path="/documents" element={<PlaceholderView title="Document Repository" icon="▤" description="Employee compliance verification queue and uploaded documents." />} />
-          <Route path="/training" element={<PlaceholderView title="Training & Compliance" icon="🎓" description="Interactive courses, quizzes, and completion records." />} />
-          <Route path="/assets" element={<PlaceholderView title="Asset Provisioning" icon="💻" description="Hardware inventory, allocations, and handover acknowledgements." />} />
-          <Route path="/notifications" element={<PlaceholderView title="Notifications" icon="🔔" description="System alerts, email dispatch logs, and pending reminders." />} />
-          <Route path="/reports" element={<PlaceholderView title="Reports & Analytics" icon="📊" description="Cohort progress rates, SLA compliance, and document metrics." />} />
-          <Route path="/admin/*" element={<PlaceholderView title="Administration" icon="🛡️" description="User management, role assignment, and RBAC matrix." />} />
-          <Route path="/audit" element={<PlaceholderView title="Audit Logs" icon="☰" description="Immutable system audit trail for security and compliance." />} />
-          <Route path="/settings" element={<PlaceholderView title="System Settings" icon="⚙" description="Platform configuration and notification policies." />} />
-          <Route path="/profile" element={<PlaceholderView title="My Profile" icon="👤" description="Personal details, emergency contacts, and job profile." />} />
-          <Route path="/help" element={<PlaceholderView title="Help & Support" icon="❓" description="EOMS onboarding documentation and support portal." />} />
+          <Route path="/onboarding" element={<OnboardingView />} />
+          <Route path="/tasks" element={<TasksView />} />
+          <Route path="/documents" element={<DocumentsView />} />
+          <Route path="/training" element={<TrainingView />} />
+          <Route path="/assets" element={<AssetsView />} />
+          <Route path="/notifications" element={<NotificationsView />} />
+          <Route path="/reports" element={<ReportsView />} />
+          <Route path="/admin/*" element={<AuditView />} />
+          <Route path="/audit" element={<AuditView />} />
+          <Route path="/settings" element={<SettingsView />} />
+          <Route path="/profile" element={<ProfileView />} />
+          <Route path="/help" element={<HelpView />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
       </Route>
