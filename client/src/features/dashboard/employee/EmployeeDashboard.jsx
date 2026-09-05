@@ -1,167 +1,285 @@
-import { Card, Button, Badge, Progress, Avatar } from '../../../components/common/ui';
+import { useState } from 'react';
+import { Card, Button, Badge, Progress, Avatar, Modal } from '../../../components/common/ui';
+import { useNavigate } from 'react-router-dom';
+import { CheckCircle2, Clock, Calendar, ArrowRight, ShieldCheck, Laptop, GraduationCap, FileText, Sparkles } from 'lucide-react';
 
-const NEXT_STEPS = [
-  { icon:'●', status:'In progress', tone:'info',    title:'Complete security training',
-    priority:'High', due:'Due tomorrow', time:'45 min', cta:'Continue' },
-  { icon:'○', status:'Not started', tone:'neutral', title:'Meet your manager — 1:1 intro',
-    priority:'Medium', due:'Due Mar 14', time:'30 min', cta:'Schedule' },
-  { icon:'○', status:'Not started', tone:'neutral', title:'Collect laptop from IT',
-    priority:'Medium', due:'Due Mar 15', time:'15 min', cta:'View details' },
+const INITIAL_STEPS = [
+  { id: 1, title: 'Complete POSH Sensitization & Certification Quiz', category: 'Statutory Compliance', due: 'Due tomorrow', time: '45 mins', cta: 'Continue', done: false, route: '/training' },
+  { id: 2, title: '1:1 Milestone Check-in with Vikram Malhotra (Director)', category: 'Manager 1:1', due: 'Due Mar 25', time: '30 mins', cta: 'Schedule', done: false, route: '/tasks' },
+  { id: 3, title: 'Verify MacBook Pro 16" & YubiKey Asset Allocation', category: 'IT Hardware', due: 'Due this week', time: '15 mins', cta: 'Acknowledge', done: true, route: '/assets' },
 ];
 
 export default function EmployeeDashboard() {
+  const [steps, setSteps] = useState(INITIAL_STEPS);
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleStepClick = step => {
+    if (step.cta === 'Schedule') {
+      setScheduleModalOpen(true);
+    } else {
+      navigate(step.route);
+    }
+  };
+
   return (
-    <div style={{ display:'grid', gap:'var(--sp-6)' }}>
-
-      {/* ── Greeting + progress identity ── */}
-      <header style={{ display:'flex', gap:'var(--sp-6)', alignItems:'center',
-        flexWrap:'wrap' }}>
-        <Avatar name="Alex Johnson" size={56} />
-        <div style={{ flex:'1 1 260px' }}>
-          <h1 className="display" style={{ fontSize:'1.6rem' }}>Good morning, Alex 👋</h1>
-          <p className="body" style={{ color:'var(--text-3)' }}>
-            Wednesday, March 12 · Software Engineer · Engineering</p>
-        </div>
-        <ProgressRing value={72} />
-        <div style={{ maxWidth:220 }}>
-          <div className="h2">72% Onboarding Complete</div>
-          <p className="caption" style={{ color:'var(--text-3)', marginTop:4 }}>
-            You're on track to complete onboarding by <strong>March 28</strong>.</p>
-        </div>
-      </header>
-
-      {/* ── Next steps: max 3, one primary action each ── */}
-      <Card>
-        <CardHeader title="Next Steps" hint="3 items need your attention"
-                    action={<Button variant="ghost" size="sm">View all tasks →</Button>} />
-        <div style={{ display:'grid', gap:'var(--sp-3)' }}>
-          {NEXT_STEPS.map(t => (
-            <div key={t.title} style={{ display:'flex', alignItems:'center', gap:'var(--sp-4)',
-              padding:'var(--sp-3) var(--sp-4)', borderRadius:'var(--r-md)',
-              background:'var(--surface-white)', boxShadow:'var(--neo-sm)',
-              flexWrap:'wrap' }}>
-              <span aria-hidden="true" style={{ fontSize:18 }}>{t.icon}</span>
-              <div style={{ flex:'1 1 220px' }}>
-                <div style={{ fontWeight:600, color:'var(--text-1)' }}>{t.title}</div>
-                <div className="meta" style={{ marginTop:2 }}>
-                  {t.priority} priority · {t.due} · ~{t.time}</div>
+    <div style={{ display: 'grid', gap: 'var(--sp-6)' }} className="animate-fade-in">
+      {/* ── Greeting Header with Progress Identity ── */}
+      <Card style={{ padding: 'var(--sp-6)' }}>
+        <div style={{ display: 'flex', gap: 24, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+            <Avatar name="Aarav Sharma" size={64} />
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <h1 className="display" style={{ fontSize: '1.6rem' }}>Namaste, Aarav 👋</h1>
+                <Badge tone="success" icon={Sparkles}>Week 3 Active</Badge>
               </div>
-              <Badge tone={t.tone} icon={t.icon}>{t.status}</Badge>
-              <Button size="sm">{t.cta}</Button>
+              <p className="body" style={{ color: 'var(--text-muted)', marginTop: 2 }}>
+                Senior Software Engineer (SDE-II) · Platform Engineering · Bengaluru Hub (Bellandur)
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+            <ProgressRing value={72} />
+            <div style={{ maxWidth: 220 }}>
+              <div className="h2" style={{ color: 'var(--text-primary)' }}>72% Complete</div>
+              <p className="caption" style={{ color: 'var(--text-muted)', marginTop: 2 }}>
+                On track for full 90-day milestone sign-off by <strong>April 12, 2026</strong>.
+              </p>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* ── Next Steps Action Card ── */}
+      <Card>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--sp-4)', flexWrap: 'wrap', gap: 10 }}>
+          <div>
+            <h2 className="h2">Your Immediate Next Steps</h2>
+            <p className="meta">High-priority items requiring action this week</p>
+          </div>
+          <Button variant="ghost" size="sm" onClick={() => navigate('/tasks')}>
+            View All Tasks →
+          </Button>
+        </div>
+
+        <div style={{ display: 'grid', gap: 10 }}>
+          {steps.map(s => (
+            <div
+              key={s.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 16,
+                padding: '12px 16px',
+                borderRadius: 'var(--r-md)',
+                background: s.done ? 'var(--bg-subtle)' : 'var(--bg-surface)',
+                border: '1px solid var(--border-subtle)',
+                boxShadow: 'var(--shadow-xs)',
+                flexWrap: 'wrap',
+              }}
+            >
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: '50%',
+                  background: s.done ? 'var(--success-bg)' : 'var(--primary-light)',
+                  color: s.done ? 'var(--success)' : 'var(--primary)',
+                  display: 'grid',
+                  placeItems: 'center',
+                }}
+              >
+                {s.done ? <CheckCircle2 size={18} /> : <Clock size={18} />}
+              </div>
+
+              <div style={{ flex: '1 1 240px' }}>
+                <div style={{ fontWeight: 600, color: s.done ? 'var(--text-muted)' : 'var(--text-primary)' }}>
+                  {s.title}
+                </div>
+                <div className="meta" style={{ marginTop: 2 }}>
+                  {s.category} · {s.due} · ~{s.time}
+                </div>
+              </div>
+
+              <Badge tone={s.done ? 'success' : 'warning'}>
+                {s.done ? 'Completed' : 'Pending'}
+              </Badge>
+
+              <Button
+                size="sm"
+                variant={s.done ? 'secondary' : 'primary'}
+                onClick={() => handleStepClick(s)}
+              >
+                {s.cta}
+              </Button>
             </div>
           ))}
         </div>
       </Card>
 
-      {/* ── 30/60/90 journey ── */}
+      {/* ── 30/60/90 Journey Timeline ── */}
       <Card>
-        <CardHeader title="Your Onboarding Journey" hint="Day 1 → 90 Days" />
-        <Timeline current={2} stages={[
-          { label:'Day 1',    date:'Jan 12', done:true },
-          { label:'Week 1',   date:'Jan 19', done:true },
-          { label:'30 Days',  date:'Feb 11', done:true },
-          { label:'60 Days',  date:'Mar 13', done:false, current:true },
-          { label:'90 Days',  date:'Apr 12', done:false },
-        ]} />
+        <h2 className="h2" style={{ marginBottom: 4 }}>Your Onboarding Roadmap</h2>
+        <p className="meta" style={{ marginBottom: 20 }}>Day 1 through 90 Days to Full Contributor Independence</p>
+        <Timeline
+          current={3}
+          stages={[
+            { label: 'Day 1', date: 'Jan 12', desc: 'Orientation & Laptop Setup', done: true },
+            { label: 'Week 1', date: 'Jan 19', desc: 'Team & Security Setup', done: true },
+            { label: '30 Days', date: 'Feb 11', desc: 'First Pull Request & POSH', done: true },
+            { label: '60 Days', date: 'Mar 15', desc: 'Project Ownership Sign-off', current: true, done: false },
+            { label: '90 Days', date: 'Apr 12', desc: 'Full Performance Evaluation', done: false },
+          ]}
+        />
       </Card>
 
-      {/* ── Documents + Training: two calm summaries ── */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(320px,1fr))',
-        gap:'var(--sp-5)' }}>
-        <Card>
-          <CardHeader title="My Documents" hint="4 of 6 approved"
-            action={<Button variant="ghost" size="sm">Open →</Button>} />
-          <Progress value={67} label="Document completion" showValue={false} />
-          <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginTop:'var(--sp-3)' }}>
-            <Badge tone="success" icon="✓">4 Approved</Badge>
-            <Badge tone="info" icon="◐">1 Under Review</Badge>
-            <Badge tone="warning" icon="!" >1 Required</Badge>
+      {/* ── 2 Summary Widgets: Documents & Training ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 'var(--sp-5)' }}>
+        <Card style={{ display: 'grid', gap: 14 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h2 className="h2">My Statutory Documents</h2>
+              <p className="meta">4 of 5 Indian compliance records approved</p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/documents')}>
+              Open →
+            </Button>
+          </div>
+          <Progress value={80} label="Document compliance" />
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <Badge tone="success" icon={CheckCircle2}>4 Verified</Badge>
+            <Badge tone="warning" icon={Clock}>1 POSH Sign-off in Queue</Badge>
           </div>
         </Card>
-        <Card>
-          <CardHeader title="My Training" hint="1 course due soon"
-            action={<Button variant="ghost" size="sm">Open →</Button>} />
-          <TrainingRow title="Security Awareness" progress={64} due="Tomorrow"
-                       tag="Mandatory" />
-          <TrainingRow title="Code of Conduct" progress={100} due="Completed"
-                       tag="Mandatory" done />
+
+        <Card style={{ display: 'grid', gap: 14 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h2 className="h2">My Training Courses</h2>
+              <p className="meta">3 mandatory modules completed</p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/training')}>
+              Catalog →
+            </Button>
+          </div>
+          <div style={{ display: 'grid', gap: 10, fontSize: '0.84rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+              <div>
+                <strong>POSH Act 2013 Sensitization</strong>
+                <div className="meta">64% completed · Due tomorrow</div>
+              </div>
+              <Button size="xs" variant="soft" onClick={() => navigate('/training')}>Continue</Button>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0' }}>
+              <div>
+                <strong>InfoSec &amp; DPDP Act Compliance</strong>
+                <div className="meta">100% completed · Score 92%</div>
+              </div>
+              <Badge tone="success">Passed</Badge>
+            </div>
+          </div>
         </Card>
       </div>
-    </div>
-  );
-}
 
-/* ── helpers ── */
-function CardHeader({ title, hint, action }) {
-  return (
-    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center',
-      marginBottom:'var(--sp-4)', gap:'var(--sp-3)' }}>
-      <div><h2 className="h2">{title}</h2>
-        <p className="meta">{hint}</p></div>
-      {action}
+      {/* ── Schedule 1:1 Modal ── */}
+      <Modal
+        isOpen={scheduleModalOpen}
+        onClose={() => setScheduleModalOpen(false)}
+        title="Schedule 1:1 Milestone Check-in"
+        description="Connect with Engineering Director Vikram Malhotra for your 60-day review."
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setScheduleModalOpen(false)}>Cancel</Button>
+            <Button onClick={() => { alert('Check-in invite dispatched to Vikram Malhotra via Google Calendar!'); setScheduleModalOpen(false); }}>
+              Send Calendar Invite
+            </Button>
+          </>
+        }
+      >
+        <div style={{ display: 'grid', gap: 12 }}>
+          <div style={{ padding: 12, background: 'var(--bg-subtle)', borderRadius: 'var(--r-md)', fontSize: '0.84rem' }}>
+            <div><strong>Host:</strong> Vikram Malhotra (Director of Engineering)</div>
+            <div><strong>Location:</strong> Google Meet / Bellandur HQ Meeting Room 3B</div>
+            <div><strong>Agenda:</strong> 60-day feature sprint ownership &amp; architectural feedback</div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
 
 function ProgressRing({ value }) {
-  const r = 34, c = 2 * Math.PI * r;
+  const r = 36, c = 2 * Math.PI * r;
   return (
-    <svg width="88" height="88" viewBox="0 0 88 88" role="img"
-      aria-label={`Onboarding ${value}% complete`}
-      style={{ filter:'drop-shadow(3px 3px 6px rgba(163,177,198,.5))' }}>
-      <circle cx="44" cy="44" r={r} fill="var(--surface)" />
-      <circle cx="44" cy="44" r={r} fill="none" stroke="var(--surface-sunken)" strokeWidth="8"/>
-      <circle cx="44" cy="44" r={r} fill="none" stroke="var(--primary)" strokeWidth="8"
-        strokeLinecap="round" strokeDasharray={`${c*value/100} ${c}`}
-        transform="rotate(-90 44 44)" />
-      <text x="44" y="50" textAnchor="middle" fontSize="17" fontWeight="700"
-        fill="var(--text-1)">{value}%</text>
+    <svg width="90" height="90" viewBox="0 0 90 90" role="img" aria-label={`Onboarding ${value}% complete`}>
+      <circle cx="45" cy="45" r={r} fill="none" stroke="var(--bg-sunken)" strokeWidth="8" />
+      <circle
+        cx="45"
+        cy="45"
+        r={r}
+        fill="none"
+        stroke="var(--primary)"
+        strokeWidth="8"
+        strokeLinecap="round"
+        strokeDasharray={`${(c * value) / 100} ${c}`}
+        transform="rotate(-90 45 45)"
+      />
+      <text x="45" y="52" textAnchor="middle" fontSize="18" fontWeight="800" fill="var(--text-primary)">
+        {value}%
+      </text>
     </svg>
   );
 }
 
 function Timeline({ stages, current }) {
   return (
-    <ol style={{ display:'flex', gap:0, listStyle:'none', padding:0, margin:0 }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative', overflowX: 'auto', padding: '10px 0' }}>
       {stages.map((s, i) => {
-        const state = s.done ? 'done' : i === current ? 'current' : 'todo';
+        const isCurrent = i === current;
         return (
-          <li key={s.label} style={{ flex:1, position:'relative', textAlign:'center' }}>
-            {i > 0 && <span aria-hidden="true" style={{
-              position:'absolute', top:14, left:'-50%', width:'100%', height:3,
-              background: state === 'todo' ? 'var(--surface-sunken)' : 'var(--primary)',
-              borderRadius:2 }} />}
-            <span aria-hidden="true" style={{
-              position:'relative', zIndex:1, display:'inline-grid', placeItems:'center',
-              width:30, height:30, borderRadius:'50%', fontSize:13, fontWeight:700,
-              background: state === 'current' ? 'var(--primary)' : 'var(--surface)',
-              color: state === 'current' ? '#fff' : state === 'done' ? 'var(--success)' : 'var(--text-3)',
-              boxShadow:'var(--neo-sm)' }}>{s.done ? '✓' : i + 1}</span>
-            <div style={{ fontWeight:600, fontSize:'.8125rem', marginTop:8,
-              color: state === 'current' ? 'var(--primary)' : 'var(--text-1)' }}>
-              {s.label}{state === 'current' && ' · now'}</div>
+          <div key={s.label} style={{ flex: 1, minWidth: 120, textAlign: 'center', position: 'relative' }}>
+            {i > 0 && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 14,
+                  left: '-50%',
+                  width: '100%',
+                  height: 3,
+                  background: s.done || isCurrent ? 'var(--primary)' : 'var(--bg-sunken)',
+                  zIndex: 0,
+                }}
+              />
+            )}
+            <div
+              style={{
+                position: 'relative',
+                zIndex: 1,
+                width: 30,
+                height: 30,
+                borderRadius: '50%',
+                margin: '0 auto',
+                background: s.done ? 'var(--success)' : isCurrent ? 'var(--primary)' : 'var(--bg-surface)',
+                color: s.done || isCurrent ? '#FFFFFF' : 'var(--text-muted)',
+                border: `2px solid ${s.done ? 'var(--success)' : isCurrent ? 'var(--primary)' : 'var(--border-default)'}`,
+                display: 'grid',
+                placeItems: 'center',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+              }}
+            >
+              {s.done ? '✓' : i + 1}
+            </div>
+            <div style={{ fontSize: '0.8125rem', fontWeight: 600, marginTop: 8, color: isCurrent ? 'var(--primary)' : 'var(--text-primary)' }}>
+              {s.label}
+            </div>
             <div className="meta">{s.date}</div>
-          </li>
+            <div className="meta" style={{ marginTop: 2, fontSize: '0.7rem' }}>{s.desc}</div>
+          </div>
         );
       })}
-    </ol>
-  );
-}
-
-function TrainingRow({ title, progress, due, tag, done }) {
-  return (
-    <div style={{ display:'flex', alignItems:'center', gap:'var(--sp-3)',
-      padding:'var(--sp-3) 0', borderTop:'1px solid var(--surface-sunken)' }}>
-      <div style={{ flex:1 }}>
-        <div style={{ fontWeight:600, color:'var(--text-1)', fontSize:'.875rem' }}>{title}</div>
-        <div style={{ display:'flex', gap:8, alignItems:'center', marginTop:4 }}>
-          <div style={{ flex:1, maxWidth:140 }}><Progress value={progress} size="sm"
-            showValue={false} label={title} /></div>
-          <span className="meta">{due}</span>
-        </div>
-      </div>
-      <Badge tone={done ? 'success' : 'warning'} icon={done ? '✓' : '!'}>{tag}</Badge>
-      {!done && <Button size="sm" variant="soft">Continue</Button>}
     </div>
   );
 }

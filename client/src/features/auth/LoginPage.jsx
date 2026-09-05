@@ -35,11 +35,12 @@ export default function LoginPage() {
     } catch (err) {
       // For local testing fallback if backend is not started
       if (!err.response) {
-        // Mock fallback session for demo/offline preview
-        const role = form.identifier.includes('alex') ? 'EMPLOYEE' :
-                     form.identifier.includes('sarah') ? 'HR_ADMIN' :
-                     form.identifier.includes('michael') ? 'DEPARTMENT_MANAGER' :
-                     form.identifier.includes('david') ? 'IT_ADMIN' : 'SYSTEM_ADMIN';
+        const idStr = (form.identifier || '').toLowerCase();
+        const role = idStr.includes('aarav') || idStr.includes('alex') || idStr.includes('sneha') || idStr.includes('arjun') ? 'EMPLOYEE' :
+                     idStr.includes('priya') || idStr.includes('sarah') ? 'HR_ADMIN' :
+                     idStr.includes('vikram') || idStr.includes('michael') ? 'DEPARTMENT_MANAGER' :
+                     idStr.includes('rohan') || idStr.includes('david') ? 'IT_ADMIN' :
+                     idStr.includes('neha') ? 'COMPLIANCE_OFFICER' : 'SYSTEM_ADMIN';
         finish({
           token: 'demo-mock-token-jwt',
           user: { id: 1, username: form.identifier || 'admin', roles: [role] }
@@ -221,9 +222,37 @@ export default function LoginPage() {
           )}
 
           <div className="meta" style={{ textAlign: 'center', marginTop: 'var(--sp-2)' }}>
-            🔐 Protected by MFA &amp; full audit logging
-            <div style={{ marginTop: 6, fontSize: '0.72rem', color: 'var(--text-3)' }}>
-              Demo hint: try <strong>admin</strong>, <strong>alex.johnson</strong>, <strong>sarah.williams</strong> / <strong>Password@123</strong>
+            🔐 Protected by Enterprise MFA &amp; Full Audit Trail
+            <div style={{ marginTop: 8, fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+              Demo Quick-Fill:
+              <div style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap', marginTop: 6 }}>
+                {[
+                  { name: 'Priya (HR)', id: 'priya.patel' },
+                  { name: 'Aarav (SDE)', id: 'aarav.sharma' },
+                  { name: 'Vikram (Mgr)', id: 'vikram.malhotra' },
+                  { name: 'Rohan (IT)', id: 'rohan.verma' },
+                  { name: 'Admin', id: 'admin' },
+                ].map(p => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => setForm({ identifier: p.id, password: 'Password@123', code: '123456' })}
+                    style={{
+                      padding: '3px 8px',
+                      borderRadius: 'var(--r-xs)',
+                      background: 'var(--bg-subtle)',
+                      border: '1px solid var(--border-default)',
+                      fontSize: '0.7rem',
+                      fontWeight: 600,
+                      color: 'var(--primary)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {p.name}
+                  </button>
+                ))}
+              </div>
+              <div style={{ marginTop: 4, color: 'var(--text-muted)' }}>Password: <strong>Password@123</strong></div>
             </div>
           </div>
         </form>
