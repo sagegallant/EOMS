@@ -3,6 +3,8 @@ import {
   sequelize,
   SystemUser,
   Role,
+  Permission,
+  RolePermission,
   UserRole,
   Department,
   Position,
@@ -122,6 +124,73 @@ export async function seed() {
     { userId: U['michael.chen'], roleId: R.DEPARTMENT_MANAGER, isPrimary: true },
     { userId: U['david.miller'], roleId: R.IT_ADMIN, isPrimary: true },
   ]);
+
+  // ── 2b. Permissions & Role Permissions ──────────────────────────────
+  const permissions = await Permission.bulkCreate([
+    { actionName: 'employee:read', resource: 'employees', description: 'View employee profiles and directories' },
+    { actionName: 'employee:write', resource: 'employees', description: 'Create and update employee records' },
+    { actionName: 'onboarding:read', resource: 'onboarding_plans', description: 'View onboarding plans and cohorts' },
+    { actionName: 'onboarding:write', resource: 'onboarding_plans', description: 'Create and modify onboarding plans' },
+    { actionName: 'task:read', resource: 'tasks', description: 'View onboarding checklist tasks' },
+    { actionName: 'task:write', resource: 'tasks', description: 'Create, update, and complete tasks' },
+    { actionName: 'document:read', resource: 'documents', description: 'View submitted statutory documents' },
+    { actionName: 'document:upload', resource: 'documents', description: 'Upload employee compliance documents' },
+    { actionName: 'document:verify', resource: 'document_verifications', description: 'Audit and approve/reject documents' },
+    { actionName: 'asset:read', resource: 'assets', description: 'View IT equipment catalog and allocations' },
+    { actionName: 'asset:allocate', resource: 'asset_allocations', description: 'Assign hardware assets to employees' },
+    { actionName: 'training:read', resource: 'training_courses', description: 'View compliance training modules' },
+    { actionName: 'training:write', resource: 'training_records', description: 'Complete training and quizzes' },
+    { actionName: 'report:view', resource: 'reports', description: 'Access executive compliance & onboarding metrics' },
+    { actionName: 'audit:view', resource: 'audit_logs', description: 'View security and compliance audit trails' },
+    { actionName: 'setting:manage', resource: 'system_settings', description: 'Modify enterprise configuration' },
+  ], { returning: true });
+
+  const rolePermMappings = [
+    { roleId: R.HR_ADMIN, action: 'employee:read' },
+    { roleId: R.HR_ADMIN, action: 'employee:write' },
+    { roleId: R.HR_ADMIN, action: 'onboarding:read' },
+    { roleId: R.HR_ADMIN, action: 'onboarding:write' },
+    { roleId: R.HR_ADMIN, action: 'task:read' },
+    { roleId: R.HR_ADMIN, action: 'task:write' },
+    { roleId: R.HR_ADMIN, action: 'document:read' },
+    { roleId: R.HR_ADMIN, action: 'document:verify' },
+    { roleId: R.HR_ADMIN, action: 'asset:read' },
+    { roleId: R.HR_ADMIN, action: 'training:read' },
+    { roleId: R.HR_ADMIN, action: 'report:view' },
+    { roleId: R.HR_ADMIN, action: 'audit:view' },
+
+    { roleId: R.COMPLIANCE_OFFICER, action: 'document:read' },
+    { roleId: R.COMPLIANCE_OFFICER, action: 'document:verify' },
+    { roleId: R.COMPLIANCE_OFFICER, action: 'employee:read' },
+    { roleId: R.COMPLIANCE_OFFICER, action: 'report:view' },
+    { roleId: R.COMPLIANCE_OFFICER, action: 'audit:view' },
+
+    { roleId: R.IT_ADMIN, action: 'asset:read' },
+    { roleId: R.IT_ADMIN, action: 'asset:allocate' },
+    { roleId: R.IT_ADMIN, action: 'employee:read' },
+    { roleId: R.IT_ADMIN, action: 'task:read' },
+    { roleId: R.IT_ADMIN, action: 'task:write' },
+
+    { roleId: R.DEPARTMENT_MANAGER, action: 'employee:read' },
+    { roleId: R.DEPARTMENT_MANAGER, action: 'onboarding:read' },
+    { roleId: R.DEPARTMENT_MANAGER, action: 'task:read' },
+    { roleId: R.DEPARTMENT_MANAGER, action: 'task:write' },
+    { roleId: R.DEPARTMENT_MANAGER, action: 'report:view' },
+
+    { roleId: R.EMPLOYEE, action: 'employee:read' },
+    { roleId: R.EMPLOYEE, action: 'task:read' },
+    { roleId: R.EMPLOYEE, action: 'task:write' },
+    { roleId: R.EMPLOYEE, action: 'document:upload' },
+    { roleId: R.EMPLOYEE, action: 'document:read' },
+    { roleId: R.EMPLOYEE, action: 'training:read' },
+    { roleId: R.EMPLOYEE, action: 'training:write' },
+  ];
+
+  const permByName = Object.fromEntries(permissions.map(p => [p.actionName, p.permissionId]));
+  await RolePermission.bulkCreate(
+    rolePermMappings.map(m => ({ roleId: m.roleId, permissionId: permByName[m.action] }))
+  );
+
 
   // ── 3. Departments ──────────────────────────────────────────────────
   const departments = await Department.bulkCreate([
