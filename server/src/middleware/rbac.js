@@ -4,6 +4,15 @@ const permCache = new Map(); // userId → Set<action_name>, TTL 60s
 
 export const requirePermission = (action) => async (req, res, next) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required.' });
+    }
+
+    // SYSTEM_ADMIN possesses superuser permissions across all resources
+    if (req.user.roles?.includes('SYSTEM_ADMIN')) {
+      return next();
+    }
+
     const key = req.user.userId;
     let perms = permCache.get(key);
     if (!perms) {
@@ -19,11 +28,32 @@ export const requirePermission = (action) => async (req, res, next) => {
       permCache.set(key, perms);
       setTimeout(() => permCache.delete(key), 60_000);
     }
+
     if (!perms.has(action)) {
-      return res.status(403).json({ code: 'FORBIDDEN',
-        message: `Missing permission: ${action}. Contact your administrator.` });
+      return res.status(403).json({
+        code: 'FORBIDDEN',
+        message: `Missing permission: ${action}. Contact your administrator.`,
+      });
     }
     req.permissions = perms;
     next();
-  } catch (e) { next(e); }
+  } catch (e) {
+    next(e);
+  }
+};
+
+export const requireRole = (...allowedRoles) => (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required.' });
+  }
+
+  const userRoles = req.user.roles || [];
+  if (userRoles.includes('SYSTEM_ADMIN') || allowedRoles.some(r => userRoles.includes(r))) {
+    return next();
+  }
+
+  return res.status(403).json({
+    code: 'FORBIDDEN',
+    message: `Access denied. Requires one of: ${allowedRoles.join(', ')}.`,
+  });
 };
