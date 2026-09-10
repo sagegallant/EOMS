@@ -1,386 +1,127 @@
 import { useState } from 'react';
-import { Card, Button, Badge, Modal, Input, Select, Label } from '../../components/common/ui';
-import { FileText, Upload, CheckCircle2, XCircle, Clock, Eye, AlertCircle, ShieldCheck } from 'lucide-react';
+import { Card, Button, Badge, Modal, AnimatedList, AnimatedItem, PageHeader } from '../../components/common/ui';
+import { MiniDonut, HorizontalBar } from '../../components/common/charts';
+import { FileCheck, FileWarning, FileMinus, Eye, CheckCircle2, XCircle, Upload } from 'lucide-react';
 
 const INITIAL_DOCS = [
-  {
-    id: 1,
-    employee: 'Aarav Sharma',
-    type: 'PAN Card Copy',
-    fileName: 'Aarav_Sharma_PAN_Card.pdf',
-    size: '1.05 MB',
-    uploadedAt: 'Jan 12, 2026',
-    status: 'approved',
-    reviewer: 'Priya Patel (HR)',
-    notes: 'PAN details cross-verified with NSDL Income Tax database. Name matches Aarav Sharma.',
-  },
-  {
-    id: 2,
-    employee: 'Aarav Sharma',
-    type: 'Aadhaar Identity Proof',
-    fileName: 'Aarav_Sharma_Aadhaar.pdf',
-    size: '2.10 MB',
-    uploadedAt: 'Jan 12, 2026',
-    status: 'approved',
-    reviewer: 'Priya Patel (HR)',
-    notes: 'Aadhaar masked UIDAI copy verified.',
-  },
-  {
-    id: 3,
-    employee: 'Aarav Sharma',
-    type: 'EPFO Form 11 Declaration',
-    fileName: 'Aarav_Sharma_EPFO_Form11.pdf',
-    size: '512 KB',
-    uploadedAt: 'Jan 13, 2026',
-    status: 'approved',
-    reviewer: 'Priya Patel (HR)',
-    notes: 'Existing UAN validated for Provident Fund transfer.',
-  },
-  {
-    id: 4,
-    employee: 'Aarav Sharma',
-    type: 'Cancelled Cheque / Bank Proof',
-    fileName: 'Aarav_HDFC_Bank_Cheque.pdf',
-    size: '820 KB',
-    uploadedAt: 'Jan 13, 2026',
-    status: 'approved',
-    reviewer: 'Ritu Choudhury (Payroll)',
-    notes: 'HDFC Bank Bellandur branch IFSC and salary account details verified.',
-  },
-  {
-    id: 5,
-    employee: 'Aarav Sharma',
-    type: 'POSH Policy Acknowledgement',
-    fileName: 'Aarav_POSH_Signed_Affidavit.pdf',
-    size: '614 KB',
-    uploadedAt: 'Jan 14, 2026',
-    status: 'pending',
-    reviewer: 'Neha Nair (Compliance)',
-    notes: 'Under statutory legal review queue.',
-  },
-  {
-    id: 6,
-    employee: 'Sneha Kulkarni',
-    type: 'Aadhaar Identity Proof',
-    fileName: 'Sneha_Kulkarni_Aadhaar.pdf',
-    size: '1.80 MB',
-    uploadedAt: 'Jan 20, 2026',
-    status: 'requires_resubmission',
-    reviewer: 'Priya Patel (HR)',
-    notes: 'Corner QR code of Aadhaar scan is cut off. Please re-upload clear full-page PDF.',
-  },
-  {
-    id: 7,
-    employee: 'Arjun Rao',
-    type: 'PAN Card Copy',
-    fileName: 'Arjun_Rao_PAN.pdf',
-    size: '850 KB',
-    uploadedAt: 'Feb 02, 2026',
-    status: 'pending',
-    reviewer: 'Priya Patel (HR)',
-    notes: 'Pending initial HR review.',
-  },
-  {
-    id: 8,
-    employee: 'Ananya Iyer',
-    type: 'Relieving & Experience Letter',
-    fileName: 'Ananya_Iyer_Relieving_Cert.pdf',
-    size: '1.20 MB',
-    uploadedAt: 'Feb 10, 2026',
-    status: 'pending',
-    reviewer: 'Priya Patel (HR)',
-    notes: 'Pending HR verification of service tenure.',
-  },
+  { id: 1, employee: 'Aarav Sharma',   type: 'PAN Card',             status: 'VERIFIED',  reviewer: 'Priya Patel', date: 'Mar 10, 2026', tone: 'success' },
+  { id: 2, employee: 'Sneha Kulkarni', type: 'Aadhaar Card',         status: 'PENDING',   reviewer: '—',           date: 'Mar 15, 2026', tone: 'warning' },
+  { id: 3, employee: 'Arjun Rao',      type: 'EPFO Form 11 (UAN)',   status: 'VERIFIED',  reviewer: 'Neha Nair',   date: 'Mar 08, 2026', tone: 'success' },
+  { id: 4, employee: 'Kabir Mehta',    type: 'Relieving Letter',      status: 'PENDING',   reviewer: '—',           date: 'Mar 18, 2026', tone: 'warning' },
+  { id: 5, employee: 'Ananya Iyer',    type: 'POSH Sign-off',         status: 'VERIFIED',  reviewer: 'Neha Nair',   date: 'Mar 12, 2026', tone: 'success' },
+  { id: 6, employee: 'Pooja Desai',    type: 'Cancelled Cheque',      status: 'REJECTED',  reviewer: 'Priya Patel', date: 'Mar 14, 2026', tone: 'danger' },
 ];
+
+const STATUS_BARS = [
+  { label: 'Verified', value: 3, displayValue: '3 docs', color: 'var(--chart-emerald)' },
+  { label: 'Pending',  value: 2, displayValue: '2 docs', color: 'var(--warning)' },
+  { label: 'Rejected', value: 1, displayValue: '1 doc',  color: 'var(--chart-rose)' },
+];
+
+const STATUS_ICONS = { VERIFIED: FileCheck, PENDING: FileWarning, REJECTED: FileMinus };
 
 export default function DocumentsView() {
   const [docs, setDocs] = useState(INITIAL_DOCS);
-  const [filterStatus, setFilterStatus] = useState('ALL');
-  const [reviewModalDoc, setReviewModalDoc] = useState(null);
-  const [reviewNotes, setReviewNotes] = useState('');
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [newDoc, setNewDoc] = useState({
-    type: 'PAN Card Copy',
-    fileName: '',
-  });
+  const [reviewing, setReviewing] = useState(null);
+  const [filter, setFilter] = useState('ALL');
 
-  const filteredDocs = docs.filter(d => (filterStatus === 'ALL' ? true : d.status === filterStatus));
-
-  const handleReviewAction = newStatus => {
-    if (!reviewModalDoc) return;
-    setDocs(
-      docs.map(d =>
-        d.id === reviewModalDoc.id
-          ? {
-              ...d,
-              status: newStatus,
-              notes: reviewNotes || (newStatus === 'approved' ? 'Verified and approved.' : 'Requires correction and resubmission.'),
-            }
-          : d
-      )
-    );
-    setReviewModalDoc(null);
+  const updateStatus = (id, status) => {
+    setDocs(ds => ds.map(d => d.id === id ? { ...d, status, tone: status === 'VERIFIED' ? 'success' : status === 'REJECTED' ? 'danger' : 'warning', reviewer: 'Priya Patel' } : d));
+    setReviewing(null);
   };
 
-  const handleUploadSubmit = e => {
-    e.preventDefault();
-    if (!newDoc.fileName) return;
-
-    const item = {
-      id: Date.now(),
-      employee: 'Aarav Sharma',
-      type: newDoc.type,
-      fileName: newDoc.fileName,
-      size: '1.15 MB',
-      uploadedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      status: 'pending',
-      reviewer: 'Priya Patel (HR)',
-      notes: 'Newly submitted document in verification queue.',
-    };
-
-    setDocs([item, ...docs]);
-    setIsUploadModalOpen(false);
-    setNewDoc({ type: 'PAN Card Copy', fileName: '' });
-  };
-
-  const getStatusBadge = status => {
-    if (status === 'approved') return <Badge tone="success" icon={CheckCircle2}>Approved</Badge>;
-    if (status === 'requires_resubmission') return <Badge tone="danger" icon={XCircle}>Resubmission Required</Badge>;
-    return <Badge tone="warning" icon={Clock}>Under Review</Badge>;
-  };
+  const visible = filter === 'ALL' ? docs : docs.filter(d => d.status === filter);
+  const verified = docs.filter(d => d.status === 'VERIFIED').length;
+  const total    = docs.length;
 
   return (
-    <div style={{ display: 'grid', gap: 'var(--sp-6)' }} className="animate-fade-in">
-      {/* ── Header ── */}
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--sp-3)' }}>
-        <div>
-          <h1 className="display">Compliance &amp; Document Repository</h1>
-          <p className="body" style={{ color: 'var(--text-muted)', marginTop: 4 }}>
-            Indian statutory employee verification: PAN, Aadhaar, EPFO Form 11, and POSH compliance queue.
-          </p>
-        </div>
-        <Button icon={Upload} onClick={() => setIsUploadModalOpen(true)}>
-          Upload Document
-        </Button>
-      </header>
+    <div style={{ display: 'grid', gap: 'var(--sp-5)' }}>
+      <PageHeader title="Documents" subtitle="Statutory document verification queue for Indian compliance." />
 
-      {/* ── Stats Overview ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--sp-4)' }}>
-        <Card style={{ padding: 'var(--sp-4) var(--sp-5)' }}>
-          <div className="caption" style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Total Documents</div>
-          <div className="h1" style={{ marginTop: 4 }}>{docs.length}</div>
+      {/* ── Summary ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-4)' }}>
+        <Card style={{ padding: 'var(--sp-4)' }}>
+          <p className="meta" style={{ fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>Verification Rate</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <MiniDonut value={verified} total={total} label={`${Math.round((verified/total)*100)}%`} size={72} color="var(--chart-emerald)" />
+            <div style={{ fontSize: '0.8125rem', display: 'grid', gap: 6 }}>
+              {STATUS_BARS.map(s => <div key={s.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}><span style={{ color: 'var(--text-muted)' }}>{s.label}</span><span style={{ fontWeight: 500 }}>{s.value}</span></div>)}
+            </div>
+          </div>
         </Card>
-        <Card style={{ padding: 'var(--sp-4) var(--sp-5)' }}>
-          <div className="caption" style={{ color: 'var(--success)', fontWeight: 600 }}>Verified &amp; Approved</div>
-          <div className="h1" style={{ marginTop: 4, color: 'var(--success)' }}>{docs.filter(d => d.status === 'approved').length}</div>
-        </Card>
-        <Card style={{ padding: 'var(--sp-4) var(--sp-5)' }}>
-          <div className="caption" style={{ color: 'var(--warning)', fontWeight: 600 }}>Pending Review</div>
-          <div className="h1" style={{ marginTop: 4, color: 'var(--warning)' }}>{docs.filter(d => d.status === 'pending').length}</div>
-        </Card>
-        <Card style={{ padding: 'var(--sp-4) var(--sp-5)' }}>
-          <div className="caption" style={{ color: 'var(--danger)', fontWeight: 600 }}>Requires Resubmission</div>
-          <div className="h1" style={{ marginTop: 4, color: 'var(--danger)' }}>{docs.filter(d => d.status === 'requires_resubmission').length}</div>
+        <Card style={{ padding: 'var(--sp-4)' }}>
+          <p className="meta" style={{ fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>By Status</p>
+          <HorizontalBar items={STATUS_BARS} maxValue={total} />
         </Card>
       </div>
 
-      {/* ── Filter Bar ── */}
-      <Card style={{ padding: 'var(--sp-4) var(--sp-5)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {['ALL', 'pending', 'approved', 'requires_resubmission'].map(st => (
-              <button
-                key={st}
-                onClick={() => setFilterStatus(st)}
-                style={{
-                  padding: '6px 14px',
-                  borderRadius: 'var(--r-full)',
-                  fontSize: '0.8125rem',
-                  fontWeight: 600,
-                  background: filterStatus === st ? 'var(--primary)' : 'var(--bg-subtle)',
-                  color: filterStatus === st ? '#FFFFFF' : 'var(--text-secondary)',
-                  border: '1px solid var(--border-subtle)',
-                  cursor: 'pointer',
-                }}
-              >
-                {st === 'ALL' ? 'All Records' : st.replace('_', ' ').toUpperCase()}
+      {/* ── Doc List ── */}
+      <Card>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {['ALL', 'VERIFIED', 'PENDING', 'REJECTED'].map(f => (
+              <button key={f} onClick={() => setFilter(f)}
+                style={{ padding: '4px 10px', borderRadius: 'var(--r-full)', fontSize: '0.75rem', fontWeight: 500, border: '1px solid', cursor: 'pointer', transition: 'all var(--t-fast)',
+                  borderColor: filter === f ? 'var(--primary)' : 'var(--border-default)',
+                  background: filter === f ? 'var(--primary-light)' : 'transparent',
+                  color: filter === f ? 'var(--primary)' : 'var(--text-muted)',
+                }}>
+                {f === 'ALL' ? 'All' : f.charAt(0) + f.slice(1).toLowerCase()}
               </button>
             ))}
           </div>
-          <span className="caption" style={{ color: 'var(--text-muted)' }}>
-            Showing {filteredDocs.length} items
-          </span>
         </div>
+        <AnimatedList style={{ display: 'grid', gap: 6 }}>
+          {visible.map(doc => {
+            const Icon = STATUS_ICONS[doc.status] || FileWarning;
+            return (
+              <AnimatedItem key={doc.id}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', flexWrap: 'wrap', transition: 'border-color var(--t-fast)' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-default)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; }}
+                >
+                  <div style={{ width: 32, height: 32, borderRadius: 'var(--r-sm)', background: `var(--${doc.status === 'VERIFIED' ? 'success' : doc.status === 'PENDING' ? 'warning' : 'danger'}-bg)`, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                    <Icon size={15} style={{ color: `var(--${doc.status === 'VERIFIED' ? 'success' : doc.status === 'PENDING' ? 'warning' : 'danger'})` }} />
+                  </div>
+                  <div style={{ flex: '1 1 180px', minWidth: 0 }}>
+                    <div style={{ fontWeight: 500, fontSize: '0.875rem', color: 'var(--text-primary)' }}>{doc.type}</div>
+                    <div className="meta" style={{ color: 'var(--text-muted)' }}>{doc.employee} · {doc.date}</div>
+                  </div>
+                  <Badge tone={doc.tone}>{doc.status.charAt(0) + doc.status.slice(1).toLowerCase()}</Badge>
+                  {doc.status === 'PENDING' && (
+                    <Button variant="soft" size="xs" icon={Eye} onClick={() => setReviewing(doc)}>Review</Button>
+                  )}
+                </div>
+              </AnimatedItem>
+            );
+          })}
+        </AnimatedList>
       </Card>
 
-      {/* ── Document Table ── */}
-      <Card style={{ padding: 0, overflow: 'hidden' }}>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.84rem' }}>
-            <thead>
-              <tr style={{ background: 'var(--bg-subtle)', borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                <th style={{ padding: '12px 20px' }}>Employee</th>
-                <th style={{ padding: '12px 16px' }}>Document Type</th>
-                <th style={{ padding: '12px 16px' }}>File Info</th>
-                <th style={{ padding: '12px 16px' }}>Uploaded</th>
-                <th style={{ padding: '12px 16px' }}>Status</th>
-                <th style={{ padding: '12px 20px', textAlign: 'right' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredDocs.map(d => (
-                <tr key={d.id} style={{ borderBottom: '1px solid var(--border-subtle)', transition: 'background 150ms ease' }}>
-                  <td style={{ padding: '14px 20px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                    {d.employee}
-                  </td>
-                  <td style={{ padding: '14px 16px' }}>
-                    <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{d.type}</div>
-                    <div className="meta">{d.notes}</div>
-                  </td>
-                  <td style={{ padding: '14px 16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--primary)', fontWeight: 500 }}>
-                      <FileText size={15} /> {d.fileName}
-                    </div>
-                    <div className="meta">{d.size}</div>
-                  </td>
-                  <td style={{ padding: '14px 16px', color: 'var(--text-muted)' }}>
-                    {d.uploadedAt}
-                  </td>
-                  <td style={{ padding: '14px 16px' }}>
-                    {getStatusBadge(d.status)}
-                  </td>
-                  <td style={{ padding: '14px 20px', textAlign: 'right' }}>
-                    <Button
-                      size="xs"
-                      variant="soft"
-                      onClick={() => {
-                        setReviewModalDoc(d);
-                        setReviewNotes(d.notes);
-                      }}
-                    >
-                      <Eye size={13} /> Review &amp; Verify
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <Modal isOpen={!!reviewing} onClose={() => setReviewing(null)}
+        title={`Review: ${reviewing?.type}`}
+        description={`Submitted by ${reviewing?.employee} on ${reviewing?.date}`}
+        footer={<>
+          <Button variant="dangerSoft" icon={XCircle} onClick={() => updateStatus(reviewing.id, 'REJECTED')}>Reject</Button>
+          <Button icon={CheckCircle2} onClick={() => updateStatus(reviewing.id, 'VERIFIED')}>Approve</Button>
+        </>}>
+        <div style={{ display: 'grid', gap: 12 }}>
+          <div style={{ padding: 16, borderRadius: 'var(--r-md)', background: 'var(--bg-subtle)', border: '2px dashed var(--border-default)', display: 'grid', placeItems: 'center', minHeight: 120 }}>
+            <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
+              <Upload size={24} style={{ margin: '0 auto 8px', display: 'block' }} />
+              <p className="caption">{reviewing?.type} document preview</p>
+              <p className="meta" style={{ marginTop: 2 }}>Document content shown here in production</p>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gap: 6, fontSize: '0.8125rem' }}>
+            {[['Employee', reviewing?.employee], ['Document Type', reviewing?.type], ['Submitted', reviewing?.date]].map(([k, v]) => (
+              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                <span style={{ color: 'var(--text-muted)' }}>{k}</span>
+                <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{v}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      </Card>
-
-      {/* ── Document Review Modal ── */}
-      {reviewModalDoc && (
-        <Modal
-          isOpen={true}
-          onClose={() => setReviewModalDoc(null)}
-          title={`Review ${reviewModalDoc.type}`}
-          description={`Submitted by ${reviewModalDoc.employee} on ${reviewModalDoc.uploadedAt}`}
-          footer={
-            <>
-              <Button variant="secondary" onClick={() => setReviewModalDoc(null)}>Cancel</Button>
-              <Button
-                variant="danger"
-                onClick={() => handleReviewAction('requires_resubmission')}
-              >
-                Request Resubmission
-              </Button>
-              <Button
-                onClick={() => handleReviewAction('approved')}
-              >
-                Approve Document
-              </Button>
-            </>
-          }
-        >
-          <div style={{ display: 'grid', gap: 16 }}>
-            <div style={{ padding: 14, background: 'var(--bg-subtle)', borderRadius: 'var(--r-md)', display: 'grid', gap: 6 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span className="caption" style={{ color: 'var(--text-muted)' }}>Document File:</span>
-                <span style={{ fontWeight: 600, color: 'var(--primary)' }}>{reviewModalDoc.fileName}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span className="caption" style={{ color: 'var(--text-muted)' }}>File Size:</span>
-                <span style={{ fontWeight: 600 }}>{reviewModalDoc.size}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span className="caption" style={{ color: 'var(--text-muted)' }}>Current Status:</span>
-                {getStatusBadge(reviewModalDoc.status)}
-              </div>
-            </div>
-
-            <div>
-              <Label>Reviewer Compliance Notes &amp; Feedback</Label>
-              <textarea
-                rows={3}
-                value={reviewNotes}
-                onChange={e => setReviewNotes(e.target.value)}
-                placeholder="Enter audit verification comments or rejection rationale..."
-                style={{
-                  width: '100%',
-                  padding: '10px 14px',
-                  borderRadius: 'var(--r-sm)',
-                  border: '1px solid var(--border-default)',
-                  fontSize: '0.875rem',
-                  fontFamily: 'inherit',
-                  outline: 'none',
-                }}
-              />
-            </div>
-          </div>
-        </Modal>
-      )}
-
-      {/* ── Upload Modal ── */}
-      <Modal
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
-        title="Upload Compliance Document"
-        description="Submit official proof for statutory Indian verification."
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setIsUploadModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleUploadSubmit}>Submit for Verification</Button>
-          </>
-        }
-      >
-        <form onSubmit={handleUploadSubmit} style={{ display: 'grid', gap: 14 }}>
-          <div>
-            <Label>Document Category</Label>
-            <Select
-              value={newDoc.type}
-              onChange={e => setNewDoc({ ...newDoc, type: e.target.value })}
-            >
-              <option value="PAN Card Copy">PAN Card Copy (NSDL/IT Department)</option>
-              <option value="Aadhaar Identity Proof">Aadhaar Identity Proof (UIDAI)</option>
-              <option value="EPFO Form 11 Declaration">EPFO Form 11 Declaration (UAN)</option>
-              <option value="Cancelled Cheque / Bank Proof">Cancelled Cheque / Bank Statement (Direct Deposit)</option>
-              <option value="POSH Policy Acknowledgement">POSH Policy &amp; Code of Conduct Sign-off</option>
-              <option value="Relieving & Experience Letter">Previous Employer Relieving Certificate</option>
-            </Select>
-          </div>
-          <div>
-            <Label>File Name / Selection</Label>
-            <Input
-              required
-              placeholder="e.g. Aarav_Sharma_Aadhaar_Masked.pdf"
-              value={newDoc.fileName}
-              onChange={e => setNewDoc({ ...newDoc, fileName: e.target.value })}
-            />
-          </div>
-          <div
-            style={{
-              padding: '24px 16px',
-              border: '2px dashed var(--border-default)',
-              borderRadius: 'var(--r-md)',
-              textAlign: 'center',
-              background: 'var(--bg-subtle)',
-            }}
-          >
-            <Upload size={28} style={{ margin: '0 auto 8px auto', color: 'var(--primary)' }} />
-            <div className="caption" style={{ fontWeight: 600 }}>Drag and drop file here, or browse local disk</div>
-            <div className="meta" style={{ marginTop: 4 }}>PDF, PNG, JPEG up to 10MB</div>
-          </div>
-        </form>
       </Modal>
     </div>
   );

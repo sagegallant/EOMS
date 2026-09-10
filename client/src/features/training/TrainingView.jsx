@@ -1,298 +1,110 @@
 import { useState } from 'react';
-import { Card, Button, Badge, Progress, Modal } from '../../components/common/ui';
-import { GraduationCap, PlayCircle, CheckCircle2, Clock, Award, BookOpen, AlertCircle } from 'lucide-react';
+import { Card, Button, Badge, Modal, AnimatedList, AnimatedItem, PageHeader } from '../../components/common/ui';
+import { RadialProgress, HorizontalBar } from '../../components/common/charts';
+import { GraduationCap, PlayCircle, CheckCircle2, Lock } from 'lucide-react';
 
-const INITIAL_COURSES = [
-  {
-    id: 1,
-    title: 'POSH Act 2013 Sensitization & Prevention of Workplace Harassment',
-    desc: 'Mandatory Indian statutory training on recognizing, preventing, and reporting workplace misconduct under ICC guidelines.',
-    duration: '45 mins',
-    mandatory: true,
-    passingScore: 80,
-    score: 85,
-    progress: 64,
-    status: 'in_progress',
-    modules: [
-      'Understanding the POSH Act 2013 & Legal Definitions',
-      'Internal Complaints Committee (ICC) Role & Redressal Procedures',
-      'Workplace Conduct Scenarios & Case Studies',
-      'POSH Mandatory Certification Quiz',
-    ],
-  },
-  {
-    id: 2,
-    title: 'Information Security & DPDP Act Compliance 2026',
-    desc: 'Data protection standards, handling customer PII, corporate phishing defense, and secure engineering practices.',
-    duration: '60 mins',
-    mandatory: true,
-    passingScore: 85,
-    score: 92,
-    progress: 100,
-    status: 'completed',
-    modules: [
-      'Digital Personal Data Protection (DPDP) Core Principles',
-      'Phishing Awareness, 2FA & Password Hygiene',
-      'Information Security Final Assessment',
-    ],
-  },
-  {
-    id: 3,
-    title: 'EOMS Cloud Infrastructure & Git Flow Standards',
-    desc: 'Microservices architecture, Docker environment setup, PR code review conventions, and CI/CD deployment policies.',
-    duration: '90 mins',
-    mandatory: true,
-    passingScore: 80,
-    score: 95,
-    progress: 100,
-    status: 'completed',
-    modules: [
-      'Local Development Environment with Docker',
-      'Branching Conventions & GitHub PR Lifecycles',
-      'Testing & Zero-Downtime Deployment SOPs',
-    ],
-  },
-  {
-    id: 4,
-    title: 'Corporate Code of Conduct & Anti-Bribery Standards',
-    desc: 'Company ethics, gift policies, conflict of interest, and whistle-blower mechanisms.',
-    duration: '30 mins',
-    mandatory: false,
-    passingScore: 75,
-    score: 100,
-    progress: 100,
-    status: 'completed',
-    modules: [
-      'Ethical Decision Making at EOMS',
-      'Conflict of Interest & Gift Declaration Policies',
-      'Whistle-blower Protection & Reporting',
-    ],
-  },
+const COURSES = [
+  { id: 1, title: 'POSH Act 2013 Compliance & Sensitization', category: 'Statutory Compliance', duration: '45 min', progress: 68, required: true, tone: 'info' },
+  { id: 2, title: 'Data Protection & IT Act 2000 (DPDP)',     category: 'Legal & Compliance',    duration: '30 min', progress: 40, required: true, tone: 'info' },
+  { id: 3, title: 'Engineering Best Practices & Architecture', category: 'Technical',             duration: '60 min', progress: 90, required: false, tone: 'success' },
+  { id: 4, title: 'Information Security & Access Governance',  category: 'Security',              duration: '25 min', progress: 100, required: true, tone: 'success' },
+  { id: 5, title: 'Workplace Diversity & Inclusion (India)',   category: 'Culture',               duration: '20 min', progress: 0, required: false, tone: 'neutral' },
 ];
 
+const COMPLETION_BARS = COURSES.map(c => ({
+  label: c.title.slice(0, 30) + (c.title.length > 30 ? '…' : ''),
+  value: c.progress,
+  displayValue: `${c.progress}%`,
+  color: c.progress === 100 ? 'var(--chart-emerald)' : c.progress > 50 ? 'var(--chart-blue)' : 'var(--chart-amber)',
+}));
+
 export default function TrainingView() {
-  const [courses, setCourses] = useState(INITIAL_COURSES);
   const [activeCourse, setActiveCourse] = useState(null);
-  const [activeModuleIndex, setActiveModuleIndex] = useState(0);
-  const [quizSelected, setQuizSelected] = useState(null);
-  const [quizSubmitted, setQuizSubmitted] = useState(false);
+  const [filter, setFilter] = useState('ALL');
 
-  const handleStartCourse = course => {
-    setActiveCourse(course);
-    setActiveModuleIndex(0);
-    setQuizSelected(null);
-    setQuizSubmitted(false);
-  };
-
-  const handleNextModule = () => {
-    if (activeModuleIndex < activeCourse.modules.length - 1) {
-      setActiveModuleIndex(activeModuleIndex + 1);
-    } else if (!quizSubmitted) {
-      // Final quiz step
-      setQuizSubmitted(true);
-      // Mark course completed
-      setCourses(
-        courses.map(c =>
-          c.id === activeCourse.id
-            ? { ...c, progress: 100, status: 'completed', score: 90 }
-            : c
-        )
-      );
-    }
-  };
+  const visible = filter === 'ALL' ? COURSES : COURSES.filter(c => c.category === filter || (filter === 'required' && c.required));
+  const completed = COURSES.filter(c => c.progress === 100).length;
 
   return (
-    <div style={{ display: 'grid', gap: 'var(--sp-6)' }} className="animate-fade-in">
-      {/* ── Header ── */}
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--sp-3)' }}>
-        <div>
-          <h1 className="display">Training &amp; Statutory Compliance</h1>
-          <p className="body" style={{ color: 'var(--text-muted)', marginTop: 4 }}>
-            Mandatory India regulatory courses (POSH Act 2013, DPDP) and engineering onboarding modules.
-          </p>
+    <div style={{ display: 'grid', gap: 'var(--sp-5)' }}>
+      <PageHeader title="Training" subtitle={`${completed} of ${COURSES.length} courses completed`} />
+
+      {/* ── Completion overview ── */}
+      <Card>
+        <h2 className="h3" style={{ marginBottom: 14 }}>Course Completion</h2>
+        <HorizontalBar items={COMPLETION_BARS} maxValue={100} />
+      </Card>
+
+      {/* ── Filter + Courses ── */}
+      <Card>
+        <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
+          {['ALL', 'required', 'Statutory Compliance', 'Technical'].map(f => (
+            <button key={f} onClick={() => setFilter(f)}
+              style={{ padding: '4px 10px', borderRadius: 'var(--r-full)', fontSize: '0.75rem', fontWeight: 500, border: '1px solid', cursor: 'pointer', transition: 'all var(--t-fast)',
+                borderColor: filter === f ? 'var(--primary)' : 'var(--border-default)',
+                background: filter === f ? 'var(--primary-light)' : 'transparent',
+                color: filter === f ? 'var(--primary)' : 'var(--text-muted)',
+              }}>
+              {f === 'ALL' ? 'All' : f === 'required' ? 'Required' : f.split(' ')[0]}
+            </button>
+          ))}
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <Badge tone="success" icon={CheckCircle2}>
-            {courses.filter(c => c.status === 'completed').length} of {courses.length} Completed
-          </Badge>
-        </div>
-      </header>
-
-      {/* ── Course Grid ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 'var(--sp-4)' }}>
-        {courses.map(c => {
-          const isDone = c.status === 'completed';
-          return (
-            <Card key={c.id} $hoverable style={{ display: 'grid', gap: 'var(--sp-4)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
-                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                  <div
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 'var(--r-md)',
-                      background: isDone ? 'var(--success-bg)' : 'var(--primary-light)',
-                      color: isDone ? 'var(--success)' : 'var(--primary)',
-                      display: 'grid',
-                      placeItems: 'center',
-                    }}
-                  >
-                    {isDone ? <Award size={20} /> : <BookOpen size={20} />}
-                  </div>
-                  <div>
-                    <h3 className="h3" style={{ fontSize: '0.95rem' }}>{c.title}</h3>
-                  </div>
-                </div>
-                {c.mandatory && <Badge tone="warning" showDot={false}>Mandatory</Badge>}
-              </div>
-
-              <p className="body" style={{ fontSize: '0.84rem', color: 'var(--text-secondary)' }}>
-                {c.desc}
-              </p>
-
-              <div style={{ display: 'flex', gap: 16, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <Clock size={13} /> {c.duration}
-                </span>
-                <span>Passing score: <strong>{c.passingScore}%</strong></span>
-                {c.score && <span>Score: <strong style={{ color: 'var(--success)' }}>{c.score}%</strong></span>}
-              </div>
-
-              <div>
-                <Progress value={c.progress} size="md" label="Course Completion" />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 10, borderTop: '1px solid var(--border-subtle)' }}>
-                <Badge tone={isDone ? 'success' : 'info'}>
-                  {isDone ? 'Certified Completed' : `${c.progress}% In Progress`}
-                </Badge>
-                <Button
-                  size="sm"
-                  variant={isDone ? 'secondary' : 'primary'}
-                  icon={PlayCircle}
-                  onClick={() => handleStartCourse(c)}
-                >
-                  {isDone ? 'Review Course' : 'Resume Course'}
-                </Button>
-              </div>
-            </Card>
-          );
-        })}
-      </div>
-
-      {/* ── Interactive Course Player Modal ── */}
-      {activeCourse && (
-        <Modal
-          isOpen={true}
-          onClose={() => setActiveCourse(null)}
-          title={activeCourse.title}
-          description={`Module ${activeModuleIndex + 1} of ${activeCourse.modules.length}: ${activeCourse.modules[activeModuleIndex]}`}
-          maxWidth={620}
-          footer={
-            <>
-              <Button variant="secondary" onClick={() => setActiveCourse(null)}>Exit Player</Button>
-              <Button onClick={handleNextModule}>
-                {quizSubmitted
-                  ? 'Done'
-                  : activeModuleIndex < activeCourse.modules.length - 1
-                  ? 'Complete & Continue →'
-                  : 'Submit Final Quiz'}
-              </Button>
-            </>
-          }
-        >
-          <div style={{ display: 'grid', gap: 16 }}>
-            {/* Progress stepper */}
-            <div style={{ display: 'flex', gap: 6 }}>
-              {activeCourse.modules.map((m, idx) => (
-                <div
-                  key={m}
-                  style={{
-                    flex: 1,
-                    height: 5,
-                    borderRadius: 'var(--r-full)',
-                    background: idx <= activeModuleIndex ? 'var(--primary)' : 'var(--bg-sunken)',
-                    transition: 'all 200ms ease',
-                  }}
+        <AnimatedList style={{ display: 'grid', gap: 8 }}>
+          {visible.map(course => (
+            <AnimatedItem key={course.id}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', transition: 'border-color var(--t-fast)' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-default)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; }}
+              >
+                <RadialProgress
+                  value={course.progress}
+                  size={52}
+                  strokeWidth={5}
+                  color={course.progress === 100 ? 'var(--chart-emerald)' : course.progress > 0 ? 'var(--chart-blue)' : 'var(--bg-sunken)'}
+                  label={course.progress === 100 ? '✓' : `${course.progress}%`}
                 />
-              ))}
-            </div>
-
-            {/* Content Display */}
-            <div
-              style={{
-                padding: '24px 20px',
-                background: 'var(--bg-subtle)',
-                borderRadius: 'var(--r-lg)',
-                border: '1px solid var(--border-subtle)',
-              }}
-            >
-              {activeModuleIndex < activeCourse.modules.length - 1 ? (
-                <div style={{ display: 'grid', gap: 12 }}>
-                  <div className="h3" style={{ color: 'var(--primary)' }}>
-                    📖 {activeCourse.modules[activeModuleIndex]}
-                  </div>
-                  <p className="body" style={{ lineHeight: 1.6 }}>
-                    This module covers compliance protocols mandated by EOMS People Operations and Indian labor regulations. Ensure you review all case scenarios and guidelines prior to the final evaluation.
-                  </p>
-                  <div style={{ padding: 12, background: 'var(--bg-surface)', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', fontSize: '0.84rem' }}>
-                    ✔ <strong>Key Takeaway:</strong> All employees have the right to a secure, respectful, and transparent workspace under corporate policies and the POSH Act 2013.
-                  </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 500, fontSize: '0.875rem', color: 'var(--text-primary)' }}>{course.title}</div>
+                  <div className="meta" style={{ color: 'var(--text-muted)', marginTop: 2 }}>{course.category} · {course.duration}</div>
                 </div>
-              ) : (
-                <div style={{ display: 'grid', gap: 14 }}>
-                  <div className="h3" style={{ color: 'var(--primary)' }}>
-                    ✍️ Assessment Question:
-                  </div>
-                  <p className="body" style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                    Under the POSH Act 2013, to whom should an aggrieved employee report an incident of workplace harassment?
-                  </p>
-                  <div style={{ display: 'grid', gap: 8 }}>
-                    {[
-                      'Internal Complaints Committee (ICC)',
-                      'External social media channels',
-                      'Immediate supervisor only',
-                      'Local police station without reporting internally',
-                    ].map((opt, oIdx) => (
-                      <label
-                        key={opt}
-                        onClick={() => setQuizSelected(oIdx)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 10,
-                          padding: '10px 14px',
-                          borderRadius: 'var(--r-sm)',
-                          border: `1px solid ${quizSelected === oIdx ? 'var(--primary)' : 'var(--border-default)'}`,
-                          background: quizSelected === oIdx ? 'var(--primary-light)' : 'var(--bg-surface)',
-                          cursor: 'pointer',
-                          fontSize: '0.84rem',
-                          fontWeight: quizSelected === oIdx ? 600 : 400,
-                        }}
-                      >
-                        <input
-                          type="radio"
-                          name="posh-quiz"
-                          checked={quizSelected === oIdx}
-                          onChange={() => setQuizSelected(oIdx)}
-                        />
-                        {opt}
-                      </label>
-                    ))}
-                  </div>
-
-                  {quizSubmitted && (
-                    <div style={{ padding: 12, borderRadius: 'var(--r-md)', background: 'var(--success-bg)', color: 'var(--success-text)', fontSize: '0.84rem', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <CheckCircle2 size={18} />
-                      <span>Congratulations! You passed with a score of <strong>90%</strong>. Your certificate has been recorded.</span>
-                    </div>
-                  )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {course.required && <Badge tone="info">Required</Badge>}
+                  <Button
+                    variant={course.progress === 100 ? 'ghost' : 'soft'}
+                    size="xs"
+                    icon={course.progress === 100 ? CheckCircle2 : course.progress === 0 ? PlayCircle : PlayCircle}
+                    onClick={() => course.progress < 100 && setActiveCourse(course)}
+                  >
+                    {course.progress === 100 ? 'Done' : course.progress === 0 ? 'Start' : 'Continue'}
+                  </Button>
                 </div>
-              )}
+              </div>
+            </AnimatedItem>
+          ))}
+        </AnimatedList>
+      </Card>
+
+      <Modal isOpen={!!activeCourse} onClose={() => setActiveCourse(null)}
+        title={activeCourse?.title}
+        description={`${activeCourse?.category} · ${activeCourse?.duration}`}
+        footer={<><Button variant="secondary" onClick={() => setActiveCourse(null)}>Later</Button><Button>Mark Complete</Button></>}>
+        <div style={{ display: 'grid', gap: 14 }}>
+          <div style={{ padding: 20, borderRadius: 'var(--r-md)', background: 'var(--bg-subtle)', border: '2px dashed var(--border-default)', display: 'grid', placeItems: 'center', minHeight: 140 }}>
+            <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
+              <GraduationCap size={28} style={{ margin: '0 auto 8px', display: 'block', color: 'var(--primary)' }} />
+              <p className="caption">{activeCourse?.title}</p>
+              <p className="meta" style={{ marginTop: 4 }}>Interactive course content loads here in production</p>
             </div>
           </div>
-        </Modal>
-      )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <RadialProgress value={activeCourse?.progress || 0} size={56} strokeWidth={5} color="var(--chart-blue)" label={`${activeCourse?.progress || 0}%`} />
+            <div>
+              <div className="h3">Current progress</div>
+              <p className="meta" style={{ color: 'var(--text-muted)' }}>Continue where you left off</p>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
