@@ -7,7 +7,11 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "node --watch src/app.js",
-    "seed": "node -e \"import('./src/seeders/demoSeed.js').then(s => s.seed()).catch(console.error)\""
+    "seed": "node -e \"import('./src/seeders/demoSeed.js').then(s => s.seed()).catch(console.error)\"",
+    "test": "node --test tests/**/*.test.js",
+    "test:unit": "node --test tests/unit/*.test.js",
+    "test:integration": "node --test tests/integration/*.test.js",
+    "test:e2e": "node --test tests/e2e/*.test.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
