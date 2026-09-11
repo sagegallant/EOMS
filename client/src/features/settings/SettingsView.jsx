@@ -1,142 +1,119 @@
 import { useState } from 'react';
-import { Card, Button, Input, Select, Label, Badge } from '../../components/common/ui';
-import { Settings, Save, CheckCircle2, Shield, Bell, Building } from 'lucide-react';
+import { Card, Button, Input, Label, Select, PageHeader } from '../../components/common/ui';
+import { Save, Bell, Shield, Database, Clock } from 'lucide-react';
+
+const SECTIONS = [
+  {
+    title: 'Notifications',
+    icon: Bell,
+    settings: [
+      { id: 'email_notif', label: 'Email Notifications', desc: 'Receive onboarding updates via email', type: 'toggle', value: true },
+      { id: 'task_remind', label: 'Task Reminders',       desc: 'Get reminded about pending tasks 24h before due date', type: 'toggle', value: true },
+      { id: 'weekly_digest', label: 'Weekly Digest',      desc: 'Receive a weekly summary every Monday morning', type: 'toggle', value: false },
+    ],
+  },
+  {
+    title: 'Security & Compliance',
+    icon: Shield,
+    settings: [
+      { id: 'mfa_required', label: 'Require MFA',         desc: 'Enforce two-factor authentication for all users', type: 'toggle', value: true },
+      { id: 'session_timeout', label: 'Session Timeout',  desc: 'Auto-logout idle users', type: 'select', value: '30 minutes', options: ['15 minutes', '30 minutes', '1 hour', '4 hours'] },
+    ],
+  },
+  {
+    title: 'Data & Retention',
+    icon: Database,
+    settings: [
+      { id: 'data_retention', label: 'Audit Log Retention', desc: 'How long to keep audit events', type: 'select', value: '90 days', options: ['30 days', '60 days', '90 days', '1 year'] },
+      { id: 'auto_archive',   label: 'Auto-Archive Completed Plans', desc: 'Archive onboarding plans after 90-day milestone', type: 'toggle', value: true },
+    ],
+  },
+  {
+    title: 'SLA Configuration',
+    icon: Clock,
+    settings: [
+      { id: 'sla_target', label: 'Onboarding SLA Target', desc: 'Target completion time for full onboarding', type: 'select', value: '45 days', options: ['30 days', '45 days', '60 days', '90 days'] },
+      { id: 'sla_alert',  label: 'SLA Alert Threshold',    desc: 'Alert when employees exceed this % of SLA time', type: 'select', value: '80%', options: ['60%', '70%', '80%', '90%'] },
+    ],
+  },
+];
+
+function Toggle({ value, onChange }) {
+  return (
+    <button
+      onClick={() => onChange(!value)}
+      style={{
+        width: 36, height: 20, borderRadius: 'var(--r-full)',
+        background: value ? 'var(--primary)' : 'var(--bg-sunken)',
+        position: 'relative', border: 'none', cursor: 'pointer',
+        flexShrink: 0, transition: 'background var(--t-normal)',
+      }}
+    >
+      <div style={{
+        position: 'absolute', top: 3, left: value ? 'calc(100% - 17px)' : 3,
+        width: 14, height: 14, borderRadius: '50%', background: '#fff',
+        transition: 'left var(--t-normal) var(--ease)',
+        boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+      }} />
+    </button>
+  );
+}
 
 export default function SettingsView() {
-  const [settings, setSettings] = useState({
-    companyName: 'EOMS Technologies India Private Limited',
-    primaryHub: 'Bengaluru (Bellandur Tech Corridor), Karnataka',
-    slaDays: '45',
-    supportEmail: 'peopleops@eoms.in',
-    poshEmail: 'icc.complaints@eoms.in',
-    mfaEnforced: true,
-    emailNotifications: true,
-    autoProvisioning: true,
-  });
+  const [settings, setSettings] = useState(
+    Object.fromEntries(SECTIONS.flatMap(s => s.settings).map(s => [s.id, s.value]))
+  );
   const [saved, setSaved] = useState(false);
 
-  const handleSubmit = e => {
-    e.preventDefault();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
-  };
+  const updateSetting = (id, val) => setSettings(prev => ({ ...prev, [id]: val }));
+  const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
 
   return (
-    <div style={{ display: 'grid', gap: 'var(--sp-6)', maxWidth: 840 }} className="animate-fade-in">
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <h1 className="display">System Settings &amp; Configuration</h1>
-          <p className="body" style={{ color: 'var(--text-muted)', marginTop: 4 }}>
-            Platform-wide governance, SLA targets, and Indian statutory compliance rules.
-          </p>
-        </div>
-        {saved && (
-          <Badge tone="success" icon={CheckCircle2}>
-            Settings saved successfully!
-          </Badge>
-        )}
-      </header>
-
-      <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 'var(--sp-5)' }}>
-        {/* ── Organization Profile ── */}
-        <Card>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-            <Building size={20} style={{ color: 'var(--primary)' }} />
-            <h2 className="h2">Corporate Organization Profile</h2>
-          </div>
-
-          <div style={{ display: 'grid', gap: 14 }}>
-            <div>
-              <Label>Registered Legal Entity Name (India)</Label>
-              <Input
-                value={settings.companyName}
-                onChange={e => setSettings({ ...settings, companyName: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>Primary Tech Hub &amp; Operations Center</Label>
-              <Input
-                value={settings.primaryHub}
-                onChange={e => setSettings({ ...settings, primaryHub: e.target.value })}
-              />
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <div>
-                <Label>People Operations (HR) Mailbox</Label>
-                <Input
-                  value={settings.supportEmail}
-                  onChange={e => setSettings({ ...settings, supportEmail: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label>Statutory POSH ICC Committee Email</Label>
-                <Input
-                  value={settings.poshEmail}
-                  onChange={e => setSettings({ ...settings, poshEmail: e.target.value })}
-                />
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* ── Onboarding SLA Rules ── */}
-        <Card>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-            <Shield size={20} style={{ color: 'var(--primary)' }} />
-            <h2 className="h2">Onboarding SLA &amp; Compliance Policies</h2>
-          </div>
-
-          <div style={{ display: 'grid', gap: 14 }}>
-            <div>
-              <Label>Target Days to 100% Contributor Ramp-Up</Label>
-              <Input
-                type="number"
-                value={settings.slaDays}
-                onChange={e => setSettings({ ...settings, slaDays: e.target.value })}
-              />
-              <div className="meta" style={{ marginTop: 4 }}>Standard recommended Indian tech SLA is 45 calendar days.</div>
-            </div>
-
-            <div style={{ display: 'grid', gap: 10, paddingTop: 10, borderTop: '1px solid var(--border-subtle)' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={settings.mfaEnforced}
-                  onChange={e => setSettings({ ...settings, mfaEnforced: e.target.checked })}
-                  style={{ width: 17, height: 17, accentColor: 'var(--primary)' }}
-                />
-                Enforce Hardware Security Keys / 2FA for all new employee logins
-              </label>
-
-              <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={settings.emailNotifications}
-                  onChange={e => setSettings({ ...settings, emailNotifications: e.target.checked })}
-                  style={{ width: 17, height: 17, accentColor: 'var(--primary)' }}
-                />
-                Dispatch automatic email reminders 3 days before milestone sign-offs
-              </label>
-
-              <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={settings.autoProvisioning}
-                  onChange={e => setSettings({ ...settings, autoProvisioning: e.target.checked })}
-                  style={{ width: 17, height: 17, accentColor: 'var(--primary)' }}
-                />
-                Automatically queue IT asset tickets upon candidate offer acceptance
-              </label>
-            </div>
-          </div>
-        </Card>
-
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <Button type="submit" icon={Save} size="lg">
-            Save System Settings
+    <div style={{ display: 'grid', gap: 'var(--sp-5)', maxWidth: 640 }}>
+      <PageHeader
+        title="Settings"
+        subtitle="Configure EOMS behaviour, security, and compliance preferences."
+        action={
+          <Button size="sm" icon={Save} onClick={handleSave} variant={saved ? 'secondary' : 'primary'}>
+            {saved ? '✓ Saved' : 'Save Changes'}
           </Button>
-        </div>
-      </form>
+        }
+      />
+
+      {SECTIONS.map(section => {
+        const Icon = section.icon;
+        return (
+          <Card key={section.title}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+              <div style={{ width: 28, height: 28, borderRadius: 'var(--r-sm)', background: 'var(--primary-light)', color: 'var(--primary)', display: 'grid', placeItems: 'center' }}>
+                <Icon size={14} />
+              </div>
+              <h2 className="h3">{section.title}</h2>
+            </div>
+            <div style={{ display: 'grid', gap: 0 }}>
+              {section.settings.map((s, i) => (
+                <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '12px 0', borderTop: i === 0 ? 'none' : '1px solid var(--border-subtle)' }}>
+                  <div>
+                    <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' }}>{s.label}</div>
+                    <div className="meta" style={{ color: 'var(--text-muted)', marginTop: 2 }}>{s.desc}</div>
+                  </div>
+                  {s.type === 'toggle' ? (
+                    <Toggle value={settings[s.id]} onChange={val => updateSetting(s.id, val)} />
+                  ) : s.type === 'select' ? (
+                    <select value={settings[s.id]} onChange={e => updateSetting(s.id, e.target.value)}
+                      style={{ padding: '5px 10px', fontSize: '0.8125rem', borderRadius: 'var(--r-sm)', border: '1px solid var(--border-default)', background: 'var(--bg-surface)', color: 'var(--text-primary)', flexShrink: 0 }}>
+                      {s.options.map(o => <option key={o}>{o}</option>)}
+                    </select>
+                  ) : (
+                    <input value={settings[s.id]} onChange={e => updateSetting(s.id, e.target.value)}
+                      style={{ padding: '5px 10px', fontSize: '0.8125rem', borderRadius: 'var(--r-sm)', border: '1px solid var(--border-default)', background: 'var(--bg-surface)', width: 140, outline: 'none' }} />
+                  )}
+                </div>
+              ))}
+            </div>
+          </Card>
+        );
+      })}
     </div>
   );
 }

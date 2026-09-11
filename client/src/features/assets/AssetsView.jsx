@@ -1,300 +1,111 @@
 import { useState } from 'react';
-import { Card, Button, Badge, Modal, Input, Select, Label } from '../../components/common/ui';
-import { Laptop, Plus, CheckCircle2, Clock, ShieldCheck, Box, HardDrive, KeyRound } from 'lucide-react';
+import { Card, Button, Badge, Modal, Input, Select, Label, AnimatedList, AnimatedItem, PageHeader } from '../../components/common/ui';
+import { StackedBarChart, HorizontalBar } from '../../components/common/charts';
+import { Laptop, Plus, CheckCircle2 } from 'lucide-react';
 
 const INITIAL_ASSETS = [
-  {
-    id: 1,
-    tag: 'BLR-MBP-2026-108',
-    serial: 'C02XYZ108M3',
-    model: 'Apple MacBook Pro 16" M3 Max (36GB / 1TB)',
-    category: 'Hardware Workstation',
-    allocatedTo: 'Aarav Sharma',
-    hub: 'Bengaluru (Bellandur Hub)',
-    status: 'acknowledged',
-    allocatedAt: 'Jan 12, 2026',
-    notes: 'Collected on Day 1 at Bengaluru Tech Hub. Hardware verified.',
-  },
-  {
-    id: 2,
-    tag: 'BLR-MON-2026-088',
-    serial: 'CN088DEL4K',
-    model: 'Dell UltraSharp 27" 4K USB-C Monitor',
-    category: 'Display & Peripherals',
-    allocatedTo: 'Aarav Sharma',
-    hub: 'Bengaluru (Home Setup)',
-    status: 'acknowledged',
-    allocatedAt: 'Jan 13, 2026',
-    notes: 'Delivered via courier for hybrid workstation.',
-  },
-  {
-    id: 3,
-    tag: 'BLR-SEC-2026-014',
-    serial: 'YK5C-99014',
-    model: 'YubiKey 5C NFC Security Key',
-    category: 'Security Token',
-    allocatedTo: 'Aarav Sharma',
-    hub: 'Bengaluru Hub',
-    status: 'acknowledged',
-    allocatedAt: 'Jan 12, 2026',
-    notes: 'Configured for AWS & GitHub 2FA authentication.',
-  },
-  {
-    id: 4,
-    tag: 'HYD-TP-2026-214',
-    serial: 'PF2K991A4',
-    model: 'Lenovo ThinkPad T14s Gen 5 (32GB / 1TB)',
-    category: 'Hardware Workstation',
-    allocatedTo: 'Arjun Rao',
-    hub: 'Hyderabad (HITEC City)',
-    status: 'acknowledged',
-    allocatedAt: 'Feb 02, 2026',
-    notes: 'Issued at Hyderabad office.',
-  },
-  {
-    id: 5,
-    tag: 'PUN-MBP-2026-109',
-    serial: 'C02XYZ109M3',
-    model: 'Apple MacBook Pro 16" M3 Max (36GB / 1TB)',
-    category: 'Hardware Workstation',
-    allocatedTo: 'Sneha Kulkarni',
-    hub: 'Pune (Hinjawadi)',
-    status: 'pending',
-    allocatedAt: 'Jan 20, 2026',
-    notes: 'In courier transit to Pune. Awaiting employee acknowledgement.',
-  },
-  {
-    id: 6,
-    tag: 'BLR-MBP-2026-110',
-    serial: 'C02XYZ110M3',
-    model: 'Apple MacBook Pro 16" M3 Max (36GB / 1TB)',
-    category: 'Hardware Workstation',
-    allocatedTo: 'Unassigned',
-    hub: 'Bengaluru Inventory',
-    status: 'in_stock',
-    allocatedAt: '—',
-    notes: 'In IT reserve inventory.',
-  },
+  { id: 1, employee: 'Aarav Sharma',   type: 'Laptop', asset: 'MacBook Pro 16" M3 Max (36GB)',  serial: 'BLR-MBP-2026-108', hub: 'Bengaluru', status: 'Acknowledged',  tone: 'success' },
+  { id: 2, employee: 'Sneha Kulkarni', type: 'Laptop', asset: 'MacBook Pro 14" M3 Pro (18GB)',  serial: 'PUN-MBP-2026-109', hub: 'Pune',       status: 'In Transit',    tone: 'warning' },
+  { id: 3, employee: 'Arjun Rao',      type: 'Laptop', asset: 'ThinkPad T14s Gen 5 (32GB)',     serial: 'HYD-TP-2026-214',  hub: 'Hyderabad',  status: 'Acknowledged',  tone: 'success' },
+  { id: 4, employee: 'Kabir Mehta',    type: 'Laptop', asset: 'Dell Latitude 5540 (16GB)',      serial: 'GGN-DL-2026-301',  hub: 'Gurugram',   status: 'Pending',       tone: 'info' },
+  { id: 5, employee: 'Ananya Iyer',    type: 'Monitor', asset: 'LG UltraFine 5K 27"',          serial: 'BLR-MON-2026-045', hub: 'Bengaluru',  status: 'Acknowledged',  tone: 'success' },
+];
+
+const BY_HUB = [
+  { label: 'Bengaluru', value: 2, displayValue: '2 assets' },
+  { label: 'Hyderabad', value: 1, displayValue: '1 asset' },
+  { label: 'Pune',      value: 1, displayValue: '1 asset' },
+  { label: 'Gurugram',  value: 1, displayValue: '1 asset' },
+];
+
+const BY_CAT = [
+  { name: 'Laptops',   count: 4 },
+  { name: 'Monitors',  count: 1 },
+  { name: 'Keyboards', count: 0 },
+  { name: 'Software',  count: 0 },
 ];
 
 export default function AssetsView() {
   const [assets, setAssets] = useState(INITIAL_ASSETS);
-  const [filterCat, setFilterCat] = useState('ALL');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newAsset, setNewAsset] = useState({
-    model: 'Apple MacBook Pro 16" M3 Max (36GB / 1TB)',
-    category: 'Hardware Workstation',
-    allocatedTo: '',
-    hub: 'Bengaluru (Bellandur Hub)',
-    tag: `BLR-ASSET-${Date.now().toString().slice(-4)}`,
-    serial: `SN-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
-  });
+  const [isModalOpen, setModal] = useState(false);
+  const [newAsset, setNew] = useState({ employee: '', type: 'Laptop', asset: 'MacBook Pro 16" M3 Max (36GB)', serial: '', hub: 'Bengaluru' });
 
-  const handleAcknowledge = id => {
-    setAssets(
-      assets.map(a =>
-        a.id === id ? { ...a, status: 'acknowledged', notes: 'Acknowledged by employee via portal.' } : a
-      )
-    );
-  };
-
-  const handleAllocateSubmit = e => {
+  const handleAdd = e => {
     e.preventDefault();
-    const item = {
-      id: Date.now(),
-      tag: newAsset.tag,
-      serial: newAsset.serial,
-      model: newAsset.model,
-      category: newAsset.category,
-      allocatedTo: newAsset.allocatedTo || 'Unassigned',
-      hub: newAsset.hub,
-      status: newAsset.allocatedTo ? 'pending' : 'in_stock',
-      allocatedAt: newAsset.allocatedTo ? new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—',
-      notes: newAsset.allocatedTo ? 'Newly allocated equipment awaiting employee handover.' : 'Available in stock.',
-    };
-
-    setAssets([item, ...assets]);
-    setIsModalOpen(false);
+    if (!newAsset.employee.trim()) return;
+    setAssets([{ id: Date.now(), ...newAsset, status: 'Pending', tone: 'info' }, ...assets]);
+    setModal(false);
+    setNew({ employee: '', type: 'Laptop', asset: 'MacBook Pro 16" M3 Max (36GB)', serial: '', hub: 'Bengaluru' });
   };
 
-  const filtered = assets.filter(a => (filterCat === 'ALL' ? true : a.category === filterCat));
-
-  const getStatusBadge = status => {
-    if (status === 'acknowledged') return <Badge tone="success" icon={CheckCircle2}>Acknowledged</Badge>;
-    if (status === 'pending') return <Badge tone="warning" icon={Clock}>Pending Handover</Badge>;
-    return <Badge tone="neutral">In Stock</Badge>;
-  };
+  const acknowledge = id => setAssets(as => as.map(a => a.id === id ? { ...a, status: 'Acknowledged', tone: 'success' } : a));
 
   return (
-    <div style={{ display: 'grid', gap: 'var(--sp-6)' }} className="animate-fade-in">
-      {/* ── Header ── */}
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--sp-3)' }}>
-        <div>
-          <h1 className="display">Asset &amp; Hardware Provisioning</h1>
-          <p className="body" style={{ color: 'var(--text-muted)', marginTop: 4 }}>
-            IT equipment allocation, serial tracking, and handover acknowledgments across India Hubs.
-          </p>
-        </div>
-        <Button icon={Plus} onClick={() => setIsModalOpen(true)}>
-          + Allocate New Asset
-        </Button>
-      </header>
+    <div style={{ display: 'grid', gap: 'var(--sp-5)' }}>
+      <PageHeader title="Assets" subtitle="Hardware provisioning and acknowledgement tracking."
+        action={<Button size="sm" icon={Plus} onClick={() => setModal(true)}>Add Asset</Button>} />
 
-      {/* ── Stats Summary ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--sp-4)' }}>
-        <Card style={{ padding: 'var(--sp-4) var(--sp-5)' }}>
-          <div className="caption" style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Total Tracked Assets</div>
-          <div className="h1" style={{ marginTop: 4 }}>{assets.length}</div>
+      {/* ── Charts ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-4)' }}>
+        <Card>
+          <h2 className="h3" style={{ marginBottom: 14 }}>By Category</h2>
+          <StackedBarChart data={BY_CAT} xKey="name" categories={[{ dataKey: 'count', name: 'Assets', color: 'var(--chart-blue)' }]} height={120} />
         </Card>
-        <Card style={{ padding: 'var(--sp-4) var(--sp-5)' }}>
-          <div className="caption" style={{ color: 'var(--success)', fontWeight: 600 }}>Handover Acknowledged</div>
-          <div className="h1" style={{ marginTop: 4, color: 'var(--success)' }}>
-            {assets.filter(a => a.status === 'acknowledged').length}
-          </div>
-        </Card>
-        <Card style={{ padding: 'var(--sp-4) var(--sp-5)' }}>
-          <div className="caption" style={{ color: 'var(--warning)', fontWeight: 600 }}>Pending Handover</div>
-          <div className="h1" style={{ marginTop: 4, color: 'var(--warning)' }}>
-            {assets.filter(a => a.status === 'pending').length}
-          </div>
-        </Card>
-        <Card style={{ padding: 'var(--sp-4) var(--sp-5)' }}>
-          <div className="caption" style={{ color: 'var(--primary)', fontWeight: 600 }}>Available in Stock</div>
-          <div className="h1" style={{ marginTop: 4, color: 'var(--primary)' }}>
-            {assets.filter(a => a.status === 'in_stock').length}
-          </div>
+        <Card style={{ padding: 'var(--sp-4)' }}>
+          <h2 className="h3" style={{ marginBottom: 12 }}>By Tech Hub</h2>
+          <HorizontalBar items={BY_HUB} colorVar="--chart-violet" />
         </Card>
       </div>
 
-      {/* ── Table Card ── */}
-      <Card style={{ padding: 0, overflow: 'hidden' }}>
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-          <h2 className="h2">Asset Inventory &amp; Allocations</h2>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span className="caption" style={{ color: 'var(--text-muted)' }}>Category:</span>
-            <select
-              value={filterCat}
-              onChange={e => setFilterCat(e.target.value)}
-              style={{
-                padding: '4px 10px',
-                fontSize: '0.8125rem',
-                borderRadius: 'var(--r-sm)',
-                border: '1px solid var(--border-default)',
-                background: 'var(--bg-surface)',
-              }}
-            >
-              <option value="ALL">All Categories</option>
-              <option value="Hardware Workstation">Hardware Workstations</option>
-              <option value="Display & Peripherals">Displays &amp; Peripherals</option>
-              <option value="Security Token">Security Tokens</option>
-            </select>
-          </div>
-        </div>
-
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.84rem' }}>
-            <thead>
-              <tr style={{ background: 'var(--bg-subtle)', borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase' }}>
-                <th style={{ padding: '12px 20px' }}>Asset Tag</th>
-                <th style={{ padding: '12px 16px' }}>Model &amp; Specs</th>
-                <th style={{ padding: '12px 16px' }}>Allocated To</th>
-                <th style={{ padding: '12px 16px' }}>Hub / Location</th>
-                <th style={{ padding: '12px 16px' }}>Status</th>
-                <th style={{ padding: '12px 20px', textAlign: 'right' }}>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(a => (
-                <tr key={a.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                  <td style={{ padding: '14px 20px', fontWeight: 600, color: 'var(--primary)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <Laptop size={15} /> {a.tag}
-                    </div>
-                    <div className="meta">SN: {a.serial}</div>
-                  </td>
-                  <td style={{ padding: '14px 16px' }}>
-                    <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{a.model}</div>
-                    <div className="meta">{a.category}</div>
-                  </td>
-                  <td style={{ padding: '14px 16px', fontWeight: 500 }}>
-                    {a.allocatedTo}
-                  </td>
-                  <td style={{ padding: '14px 16px', color: 'var(--text-secondary)' }}>
-                    {a.hub}
-                  </td>
-                  <td style={{ padding: '14px 16px' }}>
-                    {getStatusBadge(a.status)}
-                  </td>
-                  <td style={{ padding: '14px 20px', textAlign: 'right' }}>
-                    {a.status === 'pending' ? (
-                      <Button size="xs" variant="primary" onClick={() => handleAcknowledge(a.id)}>
-                        Acknowledge Handover
-                      </Button>
-                    ) : (
-                      <span className="caption" style={{ color: 'var(--text-muted)' }}>Verified</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {/* ── Asset List ── */}
+      <Card>
+        <h2 className="h3" style={{ marginBottom: 14 }}>Asset Registry</h2>
+        <AnimatedList style={{ display: 'grid', gap: 6 }}>
+          {assets.map(asset => (
+            <AnimatedItem key={asset.id}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', flexWrap: 'wrap', transition: 'border-color var(--t-fast)' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-default)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; }}
+              >
+                <div style={{ width: 32, height: 32, borderRadius: 'var(--r-sm)', background: 'var(--bg-subtle)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                  <Laptop size={15} style={{ color: 'var(--text-muted)' }} />
+                </div>
+                <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                  <div style={{ fontWeight: 500, fontSize: '0.875rem', color: 'var(--text-primary)' }}>{asset.asset}</div>
+                  <div className="meta" style={{ color: 'var(--text-muted)' }}>{asset.employee} · {asset.serial} · {asset.hub}</div>
+                </div>
+                <Badge tone={asset.tone}>{asset.status}</Badge>
+                {asset.status !== 'Acknowledged' && (
+                  <Button variant="soft" size="xs" icon={CheckCircle2} onClick={() => acknowledge(asset.id)}>Acknowledge</Button>
+                )}
+              </div>
+            </AnimatedItem>
+          ))}
+        </AnimatedList>
       </Card>
 
-      {/* ── Allocate Asset Modal ── */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Allocate New Corporate Equipment"
-        description="Assign a hardware workstation or peripheral to a team member."
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleAllocateSubmit}>Confirm Allocation</Button>
-          </>
-        }
-      >
-        <form onSubmit={handleAllocateSubmit} style={{ display: 'grid', gap: 14 }}>
-          <div>
-            <Label>Hardware Model</Label>
-            <Select
-              value={newAsset.model}
-              onChange={e => setNewAsset({ ...newAsset, model: e.target.value })}
-            >
-              <option value="Apple MacBook Pro 16&quot; M3 Max (36GB / 1TB)">Apple MacBook Pro 16" M3 Max (36GB / 1TB)</option>
-              <option value="Lenovo ThinkPad T14s Gen 5 (32GB / 1TB)">Lenovo ThinkPad T14s Gen 5 (32GB / 1TB)</option>
-              <option value="Dell UltraSharp 27&quot; 4K USB-C Monitor">Dell UltraSharp 27" 4K USB-C Monitor</option>
-              <option value="YubiKey 5C NFC Security Key">YubiKey 5C NFC Security Key</option>
+      <Modal isOpen={isModalOpen} onClose={() => setModal(false)} title="Register Asset"
+        footer={<><Button variant="secondary" onClick={() => setModal(false)}>Cancel</Button><Button onClick={handleAdd}>Register</Button></>}>
+        <form onSubmit={handleAdd} style={{ display: 'grid', gap: 14 }}>
+          <div><Label>Employee Name</Label><Input required placeholder="e.g. Tanvi Reddy" value={newAsset.employee} onChange={e => setNew({ ...newAsset, employee: e.target.value })} /></div>
+          <div><Label>Asset Type</Label>
+            <Select value={newAsset.type} onChange={e => setNew({ ...newAsset, type: e.target.value })}>
+              <option>Laptop</option><option>Monitor</option><option>Keyboard</option><option>Software License</option>
             </Select>
           </div>
-          <div>
-            <Label>Recipient Employee</Label>
-            <Input
-              required
-              placeholder="e.g. Aditya Sengupta"
-              value={newAsset.allocatedTo}
-              onChange={e => setNewAsset({ ...newAsset, allocatedTo: e.target.value })}
-            />
-          </div>
-          <div>
-            <Label>Dispatch Tech Hub</Label>
-            <Select
-              value={newAsset.hub}
-              onChange={e => setNewAsset({ ...newAsset, hub: e.target.value })}
-            >
-              <option value="Bengaluru (Bellandur Hub)">Bengaluru - Bellandur Tech Hub</option>
-              <option value="Hyderabad (HITEC City)">Hyderabad - HITEC City</option>
-              <option value="Pune (Hinjawadi)">Pune - Hinjawadi</option>
-              <option value="Gurugram (Cyber City)">Gurugram - Cyber City</option>
-              <option value="Remote Dispatch (Courier)">Remote Dispatch (Blue Dart Courier)</option>
+          <div><Label>Model</Label>
+            <Select value={newAsset.asset} onChange={e => setNew({ ...newAsset, asset: e.target.value })}>
+              <option>MacBook Pro 16" M3 Max (36GB)</option>
+              <option>ThinkPad T14s Gen 5 (32GB)</option>
+              <option>Dell Latitude 5540 (16GB)</option>
+              <option>LG UltraFine 5K 27"</option>
             </Select>
           </div>
-          <div>
-            <Label>Asset Tag ID</Label>
-            <Input
-              value={newAsset.tag}
-              onChange={e => setNewAsset({ ...newAsset, tag: e.target.value })}
-            />
+          <div><Label>Serial / Asset Tag</Label><Input placeholder="e.g. BLR-MBP-2026-110" value={newAsset.serial} onChange={e => setNew({ ...newAsset, serial: e.target.value })} /></div>
+          <div><Label>Tech Hub</Label>
+            <Select value={newAsset.hub} onChange={e => setNew({ ...newAsset, hub: e.target.value })}>
+              <option>Bengaluru</option><option>Hyderabad</option><option>Pune</option><option>Gurugram</option><option>Remote</option>
+            </Select>
           </div>
         </form>
       </Modal>
