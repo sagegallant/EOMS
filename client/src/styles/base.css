@@ -1,10 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+/* ═══════════════════════════════════════════════════════════
+   EOMS Base CSS v2.1
+   Global resets, typography, utility classes
+   ═══════════════════════════════════════════════════════════ */
 
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html {
   font-size: 16px;
@@ -14,148 +15,217 @@ html {
 
 body {
   font-family: var(--font);
-  background-color: var(--bg-app);
+  background: var(--bg-app);
   color: var(--text-secondary);
-  line-height: 1.6;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
-h1, h2, h3, h4, h5, h6 {
+/* Lenis smooth scroll */
+html.lenis { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-green); border-radius: var(--r-full); }
+::-webkit-scrollbar-thumb:hover { background: var(--primary-fill); }
+
+/* ── Typography ── */
+.greeting {
+  font-size: 2.25rem;
+  font-weight: 700;
   color: var(--text-primary);
-  font-weight: 500;
-  line-height: 1.3;
-  letter-spacing: -0.01em;
-}
-
-a {
-  color: var(--primary);
-  text-decoration: none;
-  transition: color var(--t-fast) var(--ease);
-}
-a:hover {
-  color: var(--primary-hover);
-}
-
-button, input, select, textarea {
-  font: inherit;
-  color: inherit;
-}
-
-button {
-  cursor: pointer;
-  border: none;
-  background: none;
-}
-
-:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-  border-radius: var(--r-xs);
-}
-
-/* ── Typography Scale ──────────────────────────────────── */
-.page-title {
-  font-size: 1.25rem;
-  font-weight: 500;
+  line-height: 1.1;
   letter-spacing: -0.02em;
-  color: var(--text-primary);
 }
 
-.section-title {
-  font-size: 0.9375rem;
-  font-weight: 500;
+.kpi-number {
+  font-size: 2rem;
+  font-weight: 700;
   color: var(--text-primary);
-}
-
-.h1 {
-  font-size: 1.125rem;
-  font-weight: 500;
+  line-height: 1;
   letter-spacing: -0.01em;
-  color: var(--text-primary);
 }
 
-.h2 {
-  font-size: 0.9375rem;
-  font-weight: 500;
-  color: var(--text-primary);
-}
+.h1 { font-size: 1.375rem; font-weight: 600; color: var(--text-primary); line-height: 1.3; }
+.h2 { font-size: 1.125rem; font-weight: 600; color: var(--text-primary); line-height: 1.35; }
+.h3 { font-size: 0.9375rem; font-weight: 600; color: var(--text-primary); line-height: 1.4; }
+.h4 { font-size: 0.875rem;  font-weight: 600; color: var(--text-primary); }
 
-.h3 {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.body {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-}
-
-.caption {
-  font-size: 0.8125rem;
-  color: var(--text-secondary);
-}
-
+.body  { font-size: 0.875rem;  font-weight: 400; color: var(--text-secondary); }
+.caption { font-size: 0.75rem; font-weight: 400; color: var(--text-muted); }
 .meta {
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--text-faint);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ── Recharts overrides ── */
+.recharts-cartesian-axis-tick-value { font-size: 11px; fill: var(--text-faint); }
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line { stroke: #E5E7EB; stroke-opacity: 0.6; }
+.recharts-tooltip-wrapper { z-index: 50; }
+.recharts-default-tooltip {
+  background: var(--bg-dark) !important;
+  border: 1px solid var(--border-dark) !important;
+  border-radius: var(--r-md) !important;
+  padding: 8px 12px !important;
+  box-shadow: var(--shadow-dark) !important;
+  color: var(--text-on-dark) !important;
+  font-size: 0.8125rem !important;
+}
+.recharts-tooltip-label { color: var(--text-on-dark-2) !important; margin-bottom: 4px; }
+.recharts-tooltip-item { color: var(--text-on-dark) !important; }
+
+/* ── MetricPillBar ── */
+.metric-pill-track {
+  position: relative;
+  height: 32px;
+  background: rgba(255,255,255,0.6);
+  border-radius: var(--r-full);
+  border: 1.5px dashed var(--border-green);
+  overflow: hidden;
+}
+.metric-pill-fill {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  background: var(--primary-fill);
+  border-radius: var(--r-full);
+  transform-origin: left;
+  transition: transform 0.9s var(--ease-out);
+}
+.metric-pill-fill.amber { background: var(--amber); }
+.metric-pill-fill.info  { background: var(--info); }
+
+/* ── Dark card text ── */
+.dark-card { background: var(--bg-dark); color: var(--text-on-dark); border-radius: var(--r-lg); }
+.dark-card .h3, .dark-card .h2 { color: var(--text-on-dark); }
+.dark-card .caption, .dark-card .meta { color: var(--text-on-dark-2); }
+
+/* ── Radio task button ── */
+.task-radio {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-default);
+  flex-shrink: 0;
+  display: grid; place-items: center;
+  transition: all var(--t-fast);
+  cursor: pointer;
+}
+.task-radio.done {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+.dark-card .task-radio {
+  border-color: rgba(255,255,255,0.25);
+}
+.dark-card .task-radio.done {
+  background: var(--primary-fill);
+  border-color: var(--primary-fill);
+  color: var(--bg-dark);
+}
+
+/* ── Collapsible row ── */
+.collapsible-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-4) var(--sp-5);
+  cursor: pointer;
+  border-radius: var(--r-lg);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-card);
+  user-select: none;
+  transition: background var(--t-fast);
+}
+.collapsible-header:hover { background: var(--bg-subtle); }
+.collapsible-body {
+  overflow: hidden;
+  background: var(--bg-surface);
+  border-radius: 0 0 var(--r-lg) var(--r-lg);
+  border-top: 1px solid var(--border-subtle);
+}
+.collapsible-chevron {
+  transition: transform var(--t-normal) var(--ease);
   color: var(--text-muted);
 }
+.collapsible-chevron.open { transform: rotate(180deg); }
 
-/* keep display for legacy compat but make lighter */
-.display {
-  font-size: 1.25rem;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-  color: var(--text-primary);
+/* ── Avatar hero card ── */
+.avatar-hero-card {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(145deg, #DCFCE7 0%, #BBF7D0 60%, #86EFAC 100%);
+  border-radius: var(--r-lg);
+  min-height: 200px;
+}
+.avatar-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(12,16,16,0.65) 0%, transparent 55%);
+  border-radius: inherit;
+}
+.avatar-hero-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: var(--sp-5);
+  color: #fff;
 }
 
-/* ── Custom Scrollbar (near-invisible) ──────────────────── */
-::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+/* ── Page shell ── */
+#app-shell {
+  display: grid;
+  grid-template-rows: var(--nav-h) 1fr;
+  min-height: 100vh;
 }
-::-webkit-scrollbar-track {
-  background: transparent;
+#app-main {
+  overflow-y: auto;
+  padding: var(--page-py) var(--page-px);
+  max-width: var(--content-max);
+  width: 100%;
+  margin: 0 auto;
 }
-::-webkit-scrollbar-thumb {
-  background: var(--border-default);
-  border-radius: var(--r-full);
+
+/* ── GSAP scroll reveal initial state ── */
+.gsap-reveal {
   opacity: 0;
-  transition: opacity var(--t-fast);
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--border-strong);
+  transform: translateY(16px);
 }
 
-/* ── Recharts tooltip override ───────────────────────────── */
-.recharts-tooltip-wrapper {
-  outline: none !important;
+/* ── Animations ── */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.animate-fade-in { animation: fadeIn 0.3s var(--ease-out) both; }
+.animate-slide-up { animation: fadeSlideUp 0.4s var(--ease-out) both; }
 
-.recharts-default-tooltip {
-  background: var(--bg-surface) !important;
-  border: 1px solid var(--border-subtle) !important;
-  border-radius: var(--r-md) !important;
-  box-shadow: var(--shadow-md) !important;
-  padding: 8px 12px !important;
-  font-size: 0.8125rem !important;
-  color: var(--text-secondary) !important;
+/* ── Nav active pill (Crextio style) ── */
+.nav-pill-active {
+  background: var(--bg-dark);
+  color: #fff;
+  border-radius: var(--r-full);
+  font-weight: 500;
 }
-
-.recharts-tooltip-label {
-  color: var(--text-primary) !important;
-  font-weight: 500 !important;
-  margin-bottom: 4px !important;
+.nav-pill {
+  color: var(--text-secondary);
+  border-radius: var(--r-full);
+  font-weight: 400;
+  transition: color var(--t-fast), background var(--t-fast);
 }
-
-/* ── Reduced motion ──────────────────────────────────────── */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
+.nav-pill:hover { background: var(--primary-light); color: var(--primary); }
