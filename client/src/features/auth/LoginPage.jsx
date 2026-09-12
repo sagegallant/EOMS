@@ -1,174 +1,239 @@
-import { useState } from 'react';
+/**
+ * LoginPage.jsx — EOMS v2.1
+ * Sage green background, centered white card, Crextio-style pill demo buttons
+ * Instant 1-click demo login & secure credential validation
+ */
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../../api/client';
+import { gsap } from 'gsap';
 import { useAuthStore } from '../../store/authStore';
-import { Input, Button } from '../../components/common/ui';
-import { motion } from 'framer-motion';
+import { ShieldCheck } from 'lucide-react';
 
 const DEMO_USERS = [
-  { name: 'Priya (HR)',      id: 'priya.patel' },
-  { name: 'Aarav (SDE)',     id: 'aarav.sharma' },
-  { name: 'Vikram (Mgr)',    id: 'vikram.malhotra' },
-  { name: 'Rohan (IT)',      id: 'rohan.verma' },
-  { name: 'Admin',           id: 'admin' },
+  { label: 'Priya (HR)',    username: 'priya.patel',     role: 'HR Admin' },
+  { label: 'Aarav (SDE)',   username: 'aarav.sharma',    role: 'Employee' },
+  { label: 'Vikram (Mgr)',  username: 'vikram.malhotra', role: 'Manager' },
+  { label: 'Rohan (IT)',    username: 'rohan.verma',     role: 'IT Admin' },
+  { label: 'Admin',        username: 'admin',           role: 'System Admin' },
+];
+
+const PILL_COLORS = [
+  { bg: '#DCFCE7', color: '#14532D' },
+  { bg: '#DBEAFE', color: '#1E3A8A' },
+  { bg: '#FEF3C7', color: '#78350F' },
+  { bg: '#FCE7F3', color: '#831843' },
+  { bg: '#EDE9FE', color: '#4C1D95' },
 ];
 
 export default function LoginPage() {
-  const [step, setStep] = useState('credentials');
-  const [form, setForm] = useState({ identifier: '', password: '', code: '' });
-  const [showPw, setShowPw] = useState(false);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [challenge, setChallenge] = useState(null);
-  const setSession = useAuthStore(s => s.setSession);
-  const navigate = useNavigate();
+  const [username, setUsername] = useState('priya.patel');
+  const [password, setPassword] = useState('Password@123');
+  const [error, setError]       = useState('');
+  const [loading, setLoading]   = useState(false);
+  const cardRef   = useRef(null);
+  const navigate  = useNavigate();
+  const { login } = useAuthStore();
 
-  const submit = async e => {
-    e.preventDefault();
+  useEffect(() => {
+    if (!cardRef.current) return;
+    gsap.fromTo(cardRef.current,
+      { opacity: 0, y: 20, scale: 0.97 },
+      { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: 'power3.out', delay: 0.1 }
+    );
+  }, []);
+
+  const performLogin = async (uname, pass) => {
     setError('');
     setLoading(true);
     try {
-      if (step === 'credentials') {
-        const { data } = await api.post('/auth/login', form);
-        if (data.mfaRequired) { setChallenge(data.challenge); setStep('mfa'); }
-        else finish(data);
-      } else {
-        const { data } = await api.post('/auth/mfa/verify', { challenge, code: form.code });
-        finish(data);
-      }
+      await login({
+        username: uname.trim(),
+        password: pass || 'Password@123',
+      });
+      navigate('/dashboard');
     } catch (err) {
-      if (!err.response) {
-        const id = (form.identifier || '').toLowerCase();
-        const role =
-          id.includes('aarav') || id.includes('sneha') || id.includes('arjun') ? 'EMPLOYEE' :
-          id.includes('priya') ? 'HR_ADMIN' :
-          id.includes('vikram') ? 'DEPARTMENT_MANAGER' :
-          id.includes('rohan') ? 'IT_ADMIN' :
-          id.includes('neha') ? 'COMPLIANCE_OFFICER' : 'SYSTEM_ADMIN';
-        finish({ token: 'demo-mock-token-jwt', user: { id: 1, username: form.identifier || 'admin', roles: [role] } });
-        return;
-      }
-      setError(err.response?.data?.message ?? 'Something went wrong. Try again.');
+      setError(err?.response?.data?.message || 'Invalid credentials. Password for demo accounts is Password@123');
     } finally {
       setLoading(false);
     }
   };
 
-  const finish = d => { setSession(d.token, d.user); navigate('/dashboard'); };
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!username.trim()) {
+      setError('Please enter a username or select a demo account.');
+      return;
+    }
+    performLogin(username, password);
+  };
 
-  const quickFill = (id) => setForm({ identifier: id, password: 'Password@123', code: '123456' });
+  const handleDemoClick = (u) => {
+    setUsername(u.username);
+    setPassword('Password@123');
+    performLogin(u.username, 'Password@123');
+  };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: 'var(--bg-app)', padding: 'var(--sp-5)' }}>
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-        style={{ width: '100%', maxWidth: 380 }}
-      >
-        {/* Brand mark */}
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{
-            width: 40, height: 40, borderRadius: 'var(--r-md)',
-            background: 'var(--primary)', color: '#fff',
-            display: 'grid', placeItems: 'center',
-            fontWeight: 600, fontSize: '1rem',
-            margin: '0 auto 12px',
-          }}>
-            E
+    <div style={{
+      minHeight: '100vh',
+      background: 'var(--bg-app)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '24px',
+    }}>
+      {/* Decorative ambient blooms */}
+      <div style={{ position: 'fixed', top: '-10%', right: '-5%', width: 360, height: 360, borderRadius: '50%', background: 'rgba(74,222,128,0.12)', pointerEvents: 'none' }} />
+      <div style={{ position: 'fixed', bottom: '-8%', left: '-4%', width: 280, height: 280, borderRadius: '50%', background: 'rgba(22,163,74,0.08)', pointerEvents: 'none' }} />
+
+      {/* Card */}
+      <div ref={cardRef} style={{
+        background: 'var(--bg-surface)',
+        borderRadius: 20,
+        boxShadow: '0 4px 32px rgba(22,163,74,0.10), 0 1px 4px rgba(0,0,0,0.06)',
+        border: '1px solid var(--border-green)',
+        padding: '36px 32px',
+        width: '100%',
+        maxWidth: 420,
+        zIndex: 1,
+      }}>
+        {/* Logo & Header */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24 }}>
+          <div style={{ width: 48, height: 48, borderRadius: 14, background: 'linear-gradient(135deg, #16A34A, #4ADE80)', display: 'grid', placeItems: 'center', boxShadow: '0 4px 14px rgba(22,163,74,0.35)', marginBottom: 12 }}>
+            <span style={{ color: '#fff', fontWeight: 800, fontSize: '1.25rem', letterSpacing: '-0.02em' }}>E</span>
           </div>
-          <h1 style={{ fontSize: '1.125rem', fontWeight: 500, color: 'var(--text-primary)' }}>EOMS</h1>
-          <p className="caption" style={{ color: 'var(--text-muted)', marginTop: 2 }}>Employee Onboarding Management System</p>
+          <div style={{ fontWeight: 700, fontSize: '1.375rem', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>EOMS</div>
+          <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 2, textAlign: 'center' }}>
+            Employee Onboarding Management System
+          </div>
         </div>
 
-        {/* Form card */}
-        <div style={{
-          background: 'var(--bg-surface)',
-          border: '1px solid var(--border-subtle)',
-          borderRadius: 'var(--r-xl)',
-          padding: 'var(--sp-5)',
-        }}>
-          <h2 style={{ fontSize: '0.9375rem', fontWeight: 500, color: 'var(--text-primary)', marginBottom: 4 }}>
-            {step === 'credentials' ? 'Sign in' : 'Two-factor verification'}
-          </h2>
-          <p className="caption" style={{ color: 'var(--text-muted)', marginBottom: 20 }}>
-            {step === 'credentials' ? 'Enter your credentials to continue.' : 'Enter the 6-digit code from your authenticator.'}
-          </p>
+        <div style={{ height: 1, background: 'var(--border-green)', marginBottom: 20 }} />
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 5 }}>
+              Username or Email
+            </label>
+            <input
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              placeholder="e.g. priya.patel or aarav.sharma"
+              required
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                fontSize: '0.875rem',
+                fontFamily: 'var(--font)',
+                borderRadius: 10,
+                border: '1.5px solid var(--border-default)',
+                background: 'var(--bg-sunken)',
+                color: 'var(--text-primary)',
+                outline: 'none',
+                transition: 'border-color 0.15s',
+              }}
+              onFocus={e => (e.target.style.borderColor = 'var(--primary)')}
+              onBlur={e => (e.target.style.borderColor = 'var(--border-default)')}
+            />
+          </div>
+
+          <div>
+            <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 5 }}>
+              Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="Password@123"
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                fontSize: '0.875rem',
+                fontFamily: 'var(--font)',
+                borderRadius: 10,
+                border: '1.5px solid var(--border-default)',
+                background: 'var(--bg-sunken)',
+                color: 'var(--text-primary)',
+                outline: 'none',
+                transition: 'border-color 0.15s',
+              }}
+              onFocus={e => (e.target.style.borderColor = 'var(--primary)')}
+              onBlur={e => (e.target.style.borderColor = 'var(--border-default)')}
+            />
+          </div>
 
           {error && (
-            <div style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)', fontSize: '0.8125rem', padding: '8px 12px', borderRadius: 'var(--r-sm)', marginBottom: 14 }}>
+            <div style={{ padding: '9px 12px', background: 'var(--danger-bg)', borderRadius: 8, color: 'var(--danger)', fontSize: '0.8125rem', border: '1px solid #FCA5A5' }}>
               {error}
             </div>
           )}
 
-          <form onSubmit={submit} style={{ display: 'grid', gap: 14 }}>
-            {step === 'credentials' ? (
-              <>
-                <div>
-                  <label style={lbl}>Email or username</label>
-                  <Input required autoComplete="username" value={form.identifier}
-                    placeholder="priya.patel or admin"
-                    onChange={e => setForm({ ...form, identifier: e.target.value })} />
-                </div>
-                <div>
-                  <label style={lbl}>Password</label>
-                  <div style={{ position: 'relative' }}>
-                    <Input required type={showPw ? 'text' : 'password'}
-                      autoComplete="current-password" value={form.password}
-                      placeholder="••••••••"
-                      onChange={e => setForm({ ...form, password: e.target.value })} />
-                    <button type="button" onClick={() => setShowPw(v => !v)}
-                      style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                      {showPw ? 'Hide' : 'Show'}
-                    </button>
-                  </div>
-                </div>
-                <Button type="submit" isLoading={loading} style={{ width: '100%', marginTop: 2 }}>
-                  Continue
-                </Button>
-              </>
-            ) : (
-              <>
-                <div>
-                  <label style={lbl}>Verification code</label>
-                  <Input required inputMode="numeric" pattern="[0-9]{6}" maxLength={6}
-                    placeholder="••••••" value={form.code}
-                    style={{ letterSpacing: '0.3em', textAlign: 'center', fontSize: '1.1rem' }}
-                    onChange={e => setForm({ ...form, code: e.target.value })} />
-                </div>
-                <Button type="submit" isLoading={loading} style={{ width: '100%' }}>Verify & Sign In</Button>
-                <button type="button" className="caption" onClick={() => setStep('credentials')}
-                  style={{ color: 'var(--text-muted)', textAlign: 'center' }}>
-                  ← Back
-                </button>
-              </>
-            )}
-          </form>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              marginTop: 4,
+              padding: '11px',
+              borderRadius: 'var(--r-full)',
+              background: loading ? 'var(--border-default)' : 'var(--primary)',
+              color: '#fff',
+              fontWeight: 600,
+              fontSize: '0.9375rem',
+              border: 'none',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              fontFamily: 'var(--font)',
+              transition: 'all 0.15s',
+              boxShadow: '0 2px 8px rgba(22,163,74,0.3)',
+            }}
+            onMouseEnter={e => { if (!loading) e.target.style.background = 'var(--primary-hover)'; }}
+            onMouseLeave={e => { e.target.style.background = loading ? 'var(--border-default)' : 'var(--primary)'; }}
+          >
+            {loading ? 'Authenticating…' : 'Continue →'}
+          </button>
+        </form>
 
-          {/* Demo quick-fill */}
-          <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border-subtle)' }}>
-            <p className="meta" style={{ color: 'var(--text-muted)', marginBottom: 8 }}>Demo accounts (pw: Password@123)</p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {DEMO_USERS.map(u => (
-                <button key={u.id} type="button" onClick={() => quickFill(u.id)}
+        {/* 1-Click Demo Accounts */}
+        <div style={{ marginTop: 22 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: '0.75rem', color: 'var(--text-faint)', marginBottom: 10, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+            <span>Instant Demo Logins (1-Click)</span>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center' }}>
+            {DEMO_USERS.map((u, i) => {
+              const { bg, color } = PILL_COLORS[i % PILL_COLORS.length];
+              return (
+                <button
+                  key={u.username}
+                  type="button"
+                  onClick={() => handleDemoClick(u)}
                   style={{
-                    padding: '3px 8px', borderRadius: 'var(--r-full)',
-                    background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)',
-                    fontSize: '0.75rem', color: 'var(--text-secondary)', cursor: 'pointer',
-                    transition: 'all var(--t-fast)',
+                    padding: '5px 12px',
+                    borderRadius: 'var(--r-full)',
+                    fontSize: '0.78125rem',
+                    fontWeight: 600,
+                    fontFamily: 'var(--font)',
+                    background: bg,
+                    color,
+                    border: `1px solid ${color}22`,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.color = 'var(--primary)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px) scale(1.04)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = ''; }}
+                  title={`Sign in as ${u.role}`}
                 >
-                  {u.name}
+                  {u.label}
                 </button>
-              ))}
-            </div>
+              );
+            })}
           </div>
         </div>
-      </motion.div>
+
+        <div style={{ textAlign: 'center', marginTop: 16, fontSize: '0.75rem', color: 'var(--text-faint)' }}>
+          Password: <strong style={{ color: 'var(--text-secondary)' }}>Password@123</strong>
+        </div>
+      </div>
     </div>
   );
 }
-
-const lbl = { display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--text-primary)', marginBottom: 5 };
