@@ -1,117 +1,143 @@
+/**
+ * EmployeeDashboard.jsx — v2.1
+ * Same Crextio pattern: WelcomeHero + MetricPills + 3-col grid + Collapsibles
+ */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Button, Badge, Avatar, AnimatedList, AnimatedItem, PageHeader } from '../../../components/common/ui';
-import { RadialProgress, Sparkline } from '../../../components/common/charts';
-import { CheckCircle2, Clock, ChevronRight, BookOpen, Laptop, FileCheck } from 'lucide-react';
+import { BookOpen, Laptop, FileCheck, ShieldCheck } from 'lucide-react';
+import { WelcomeHero, MetricPillBar, AvatarHeroCard, DarkTaskCard, CollapsibleRow, Card, Button, Badge } from '../../../components/common/ui';
+import { RadialProgress, Sparkline, ActivityTimeline } from '../../../components/common/charts';
 
-const SPARK = [
-  { d: 'M', v: 2 }, { d: 'T', v: 3 }, { d: 'W', v: 1 }, { d: 'T', v: 4 },
-  { d: 'F', v: 2 }, { d: 'S', v: 0 }, { d: 'S', v: 1 },
+const WEEK = [{ d: 'M', v: 2 }, { d: 'T', v: 4 }, { d: 'W', v: 1 }, { d: 'T', v: 3 }, { d: 'F', v: 2 }, { d: 'S', v: 0 }, { d: 'S', v: 1 }];
+
+const MY_TASKS = [
+  { title: 'Complete POSH Sensitization Quiz', date: 'Due tomorrow', done: false },
+  { title: 'Sign IP & Confidentiality Agreement', date: 'Due this week', done: false },
+  { title: '1:1 Check-in with Vikram Malhotra', date: 'Mar 25', done: false },
+  { title: 'Acknowledge MacBook Pro 16" M3', date: 'Done', done: true },
+  { title: 'Submit PAN Card & Aadhaar', date: 'Done', done: true },
 ];
 
-const TASKS = [
-  { id: 1, title: 'Complete POSH Sensitization Quiz', category: 'Statutory Compliance', due: 'Due tomorrow', icon: FileCheck, route: '/training', done: false },
-  { id: 2, title: '1:1 Check-in with Vikram Malhotra', category: 'Manager Meeting', due: 'Due Mar 25', icon: Clock, route: '/tasks', done: false },
-  { id: 3, title: 'Acknowledge MacBook Pro M3 Asset', category: 'IT Hardware', due: 'Completed', icon: Laptop, route: '/assets', done: true },
+const TRAINING = [
+  { label: 'POSH Act 2013', pct: 68, color: 'var(--chart-green)' },
+  { label: 'Data Protection (DPDP)', pct: 40, color: 'var(--chart-sage)' },
+  { label: 'Engineering Best Practices', pct: 90, color: 'var(--chart-amber)' },
 ];
 
-const MODULES = [
-  { label: 'POSH Act 2013', pct: 68, color: 'var(--chart-blue)' },
-  { label: 'Data Protection (DPDP)', pct: 40, color: 'var(--chart-violet)' },
-  { label: 'Engineering Best Practices', pct: 90, color: 'var(--chart-emerald)' },
+const GOALS = [
+  { title: 'Meet your team', icon: '👥', pct: 100, done: true },
+  { title: 'Set up tools & accounts', icon: '⚙️', pct: 85, done: false },
+  { title: 'Complete POSH training', icon: '📋', pct: 68, done: false },
+  { title: 'Submit all documents', icon: '📄', pct: 72, done: false },
+];
+
+const ACTIVITY = [
+  { title: 'Completed POSH Module Part 1', type: 'success', time: '2h ago', meta: 'Training' },
+  { title: 'Submitted PAN Card', type: 'info', time: 'Yesterday', meta: 'Documents' },
+  { title: 'MacBook Pro 16" acknowledged', type: 'success', time: '2d ago', meta: 'IT Assets' },
+];
+
+const ASSETS = [
+  { label: 'MacBook Pro 16" M3 Max', serial: 'BLR-MBP-2026-108', status: 'Acknowledged', tone: 'success' },
+  { label: 'YubiKey Security Key', serial: 'BLR-YK-2026-044', status: 'Pending', tone: 'warning' },
 ];
 
 export default function EmployeeDashboard() {
-  const [tasks, setTasks] = useState(TASKS);
-  const [showCompleted, setShowCompleted] = useState(false);
   const navigate = useNavigate();
-
-  const pending   = tasks.filter(t => !t.done);
-  const completed = tasks.filter(t => t.done);
-  const visible   = showCompleted ? tasks : pending;
-
   return (
-    <div style={{ display: 'grid', gap: 'var(--sp-5)' }}>
-      <PageHeader title="My Journey" subtitle="Track your onboarding progress and next steps." />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-6)' }}>
+      <WelcomeHero name="Aarav Sharma" role="Platform Engineering · SDE-II" />
 
-      {/* ── Hero Row ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-4)' }}>
-        {/* Progress ring */}
-        <Card style={{ padding: 'var(--sp-5)', display: 'flex', alignItems: 'center', gap: 20 }}>
-          <RadialProgress value={72} size={100} strokeWidth={8} color="var(--chart-blue)" label="72%" sublabel="Complete" />
-          <div>
-            <div style={{ fontSize: '1.125rem', fontWeight: 500, color: 'var(--text-primary)' }}>Aarav Sharma</div>
-            <div className="caption" style={{ color: 'var(--text-muted)', marginTop: 2 }}>SDE-II · Platform Engineering</div>
-            <div className="caption" style={{ color: 'var(--text-muted)', marginTop: 1 }}>Bengaluru Hub · Week 3 of 90</div>
-            <div className="meta" style={{ marginTop: 8, color: 'var(--success-text)', fontWeight: 500 }}>On track for Apr 12 sign-off ✓</div>
-          </div>
-        </Card>
-
-        {/* Activity sparkline */}
-        <Card style={{ padding: 'var(--sp-5)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-            <div>
-              <p className="meta" style={{ fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Weekly Activity</p>
-              <div style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)', marginTop: 2 }}>13 tasks</div>
-              <div className="meta" style={{ color: 'var(--text-muted)' }}>done this week</div>
-            </div>
-            <Badge tone="success">On Track</Badge>
-          </div>
-          <Sparkline data={SPARK} dataKey="v" color="var(--chart-blue)" height={52} />
-        </Card>
+      {/* Metric pills */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 'var(--sp-4)', padding: 'var(--sp-4) var(--sp-5)', background: 'var(--bg-surface)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-card)', border: '1px solid var(--border-green)' }}>
+        <MetricPillBar label="Journey Progress" value={72} delay={0.0} />
+        <MetricPillBar label="POSH Completion" value={68} delay={0.1} />
+        <MetricPillBar label="Documents"       value={85} delay={0.2} />
+        <MetricPillBar label="Tasks Done"      value={57} delay={0.3} color="amber" />
       </div>
 
-      {/* ── Training Progress ── */}
-      <Card>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h2 className="h3">Training Modules</h2>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/training')}>View all <ChevronRight size={13} /></Button>
-        </div>
-        <div style={{ display: 'grid', gap: 14 }}>
-          {MODULES.map(m => (
-            <div key={m.label}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8125rem', marginBottom: 5 }}>
-                <span style={{ color: 'var(--text-secondary)' }}>{m.label}</span>
-                <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{m.pct}%</span>
-              </div>
-              <div style={{ height: 4, borderRadius: 'var(--r-full)', background: 'var(--bg-sunken)', overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${m.pct}%`, background: m.color, borderRadius: 'inherit', transition: 'width 700ms var(--ease)' }} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
+      {/* 3-col grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.8fr 1.5fr', gap: 'var(--sp-4)', alignItems: 'start' }}>
 
-      {/* ── Next Tasks ── */}
-      <Card>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <h2 className="h3">Next Actions</h2>
-          <button onClick={() => setShowCompleted(v => !v)} className="meta" style={{ color: 'var(--text-muted)', cursor: 'pointer', background: 'none', border: 'none' }}>
-            {showCompleted ? 'Hide completed' : `+ ${completed.length} completed`}
-          </button>
+        {/* LEFT */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
+          <AvatarHeroCard name="Aarav Sharma" role="Senior Software Engineer (SDE-II)" sub="🇮🇳 Bengaluru Hub · Week 3 of 90" style={{ minHeight: 210 }} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-4)' }}>
+            <Card style={{ padding: 'var(--sp-4)' }}>
+              <p className="meta" style={{ color: 'var(--text-faint)', marginBottom: 4 }}>Weekly tasks</p>
+              <div className="kpi-number" style={{ fontSize: '1.5rem', marginBottom: 8 }}>13 <span style={{ fontSize: '0.8rem', fontWeight: 400, color: 'var(--text-muted)' }}>done</span></div>
+              <Sparkline data={WEEK} dataKey="v" color="var(--chart-green)" height={44} />
+            </Card>
+            <Card style={{ padding: 'var(--sp-4)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <p className="meta" style={{ color: 'var(--text-faint)' }}>Journey</p>
+              <RadialProgress value={72} size={80} strokeWidth={8} color="var(--chart-green)" label="72%" sublabel="Complete" />
+            </Card>
+          </div>
         </div>
-        <AnimatedList style={{ display: 'grid', gap: 6 }}>
-          {visible.map(task => {
-            const Icon = task.icon;
-            return (
-              <AnimatedItem key={task.id}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', opacity: task.done ? 0.5 : 1, transition: 'opacity var(--t-fast)' }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 'var(--r-sm)', background: task.done ? 'var(--success-bg)' : 'var(--primary-light)', color: task.done ? 'var(--success)' : 'var(--primary)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-                    {task.done ? <CheckCircle2 size={15} /> : <Icon size={15} />}
+
+        {/* MIDDLE: Goals tracker */}
+        <Card style={{ padding: 'var(--sp-4)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+            <h3 className="h3">Goals Tracker</h3>
+            <span className="caption" style={{ color: 'var(--text-muted)' }}>First 2 weeks</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {GOALS.map(g => (
+              <div key={g.title}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: '1rem' }}>{g.icon}</span>
+                    <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: 'var(--text-primary)' }}>{g.title}</span>
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '0.875rem', fontWeight: task.done ? 400 : 500, color: task.done ? 'var(--text-muted)' : 'var(--text-primary)', textDecoration: task.done ? 'line-through' : 'none' }}>{task.title}</div>
-                    <div className="meta" style={{ color: 'var(--text-muted)', marginTop: 1 }}>{task.category} · {task.due}</div>
-                  </div>
-                  {!task.done && (
-                    <Button variant="ghost" size="xs" onClick={() => navigate(task.route)}>Go <ChevronRight size={12} /></Button>
-                  )}
+                  <span style={{ fontSize: '0.8rem', fontWeight: 700, color: g.done ? 'var(--primary)' : 'var(--text-muted)' }}>{g.pct}%</span>
                 </div>
-              </AnimatedItem>
-            );
-          })}
-        </AnimatedList>
-      </Card>
+                <div style={{ height: 5, borderRadius: 'var(--r-full)', background: 'var(--bg-sunken)', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${g.pct}%`, background: g.done ? 'var(--chart-green)' : 'var(--primary-fill)', borderRadius: 'inherit', transition: 'width 0.8s var(--ease-out)' }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* RIGHT: Dark task card */}
+        <DarkTaskCard title="My Tasks" tasks={MY_TASKS} />
+      </div>
+
+      {/* Collapsibles */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+        <CollapsibleRow title="My Training" icon={BookOpen}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {TRAINING.map(t => (
+              <div key={t.label}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8125rem', marginBottom: 4 }}>
+                  <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{t.label}</span>
+                  <span style={{ fontWeight: 600 }}>{t.pct}%</span>
+                </div>
+                <div style={{ height: 5, borderRadius: 'var(--r-full)', background: 'var(--bg-sunken)', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${t.pct}%`, background: t.color, borderRadius: 'inherit', transition: 'width 0.8s var(--ease-out)' }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </CollapsibleRow>
+        <CollapsibleRow title="IT Assets" icon={Laptop}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {ASSETS.map((a, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderBottom: i < ASSETS.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+                <Laptop size={15} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' }}>{a.label}</div>
+                  <div className="caption" style={{ color: 'var(--text-muted)' }}>{a.serial}</div>
+                </div>
+                <Badge tone={a.tone}>{a.status}</Badge>
+              </div>
+            ))}
+          </div>
+        </CollapsibleRow>
+        <CollapsibleRow title="Recent Activity" icon={ShieldCheck}>
+          <ActivityTimeline events={ACTIVITY} />
+        </CollapsibleRow>
+      </div>
     </div>
   );
 }
