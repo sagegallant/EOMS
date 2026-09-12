@@ -1,101 +1,32 @@
 import { useState } from 'react';
-import { Card, Button, Badge, Progress, Avatar, Modal, Input, Select, Label } from '../../components/common/ui';
-import { Compass, Plus, Filter, Calendar, CheckCircle2, Clock, AlertTriangle, ArrowRight } from 'lucide-react';
+import { Card, Button, Badge, Avatar, Modal, Input, Select, Label, AnimatedList, AnimatedItem, PageHeader } from '../../components/common/ui';
+import { StackedBarChart, RadialProgress } from '../../components/common/charts';
+import { Plus, Filter, Calendar, ChevronRight, X } from 'lucide-react';
 
 const INITIAL_COHORTS = [
-  {
-    id: 1,
-    name: 'Aarav Sharma',
-    role: 'Senior Software Engineer (SDE-II)',
-    dept: 'Platform Engineering',
-    hub: 'Bengaluru (Hybrid)',
-    startDate: 'Jan 12, 2026',
-    targetDate: 'Apr 12, 2026',
-    progress: 72,
-    phase: '60 Days: Project Ownership',
-    status: 'On Track',
-    tone: 'success',
-  },
-  {
-    id: 2,
-    name: 'Sneha Kulkarni',
-    role: 'Senior Product Designer',
-    dept: 'Product & UI/UX Design',
-    hub: 'Pune (Hybrid)',
-    startDate: 'Jan 20, 2026',
-    targetDate: 'Apr 20, 2026',
-    progress: 45,
-    phase: '30 Days: Integration',
-    status: 'Needs Review',
-    tone: 'warning',
-  },
-  {
-    id: 3,
-    name: 'Arjun Rao',
-    role: 'Cloud Infrastructure Specialist',
-    dept: 'Cloud & Infrastructure',
-    hub: 'Hyderabad (On-site)',
-    startDate: 'Feb 02, 2026',
-    targetDate: 'May 02, 2026',
-    progress: 88,
-    phase: '90 Days: Final Evaluation',
-    status: 'Ahead of Schedule',
-    tone: 'success',
-  },
-  {
-    id: 4,
-    name: 'Ananya Iyer',
-    role: 'Lead Frontend Architect',
-    dept: 'Platform Engineering',
-    hub: 'Bengaluru (Hybrid)',
-    startDate: 'Feb 10, 2026',
-    targetDate: 'May 10, 2026',
-    progress: 60,
-    phase: '30 Days: Integration',
-    status: 'On Track',
-    tone: 'success',
-  },
-  {
-    id: 5,
-    name: 'Kabir Mehta',
-    role: 'Senior Software Engineer (SDE-II)',
-    dept: 'Platform Engineering',
-    hub: 'Gurugram (Hybrid)',
-    startDate: 'Feb 20, 2026',
-    targetDate: 'May 20, 2026',
-    progress: 35,
-    phase: 'Week 1: Team & Foundations',
-    status: 'On Track',
-    tone: 'info',
-  },
-  {
-    id: 6,
-    name: 'Aditya Sengupta',
-    role: 'Senior Software Engineer (SDE-II)',
-    dept: 'Platform Engineering',
-    hub: 'Remote (Pan-India)',
-    startDate: 'Mar 01, 2026',
-    targetDate: 'Jun 01, 2026',
-    progress: 15,
-    phase: 'Day 1: Orientation',
-    status: 'Just Started',
-    tone: 'info',
-  },
+  { id: 1, name: 'Aarav Sharma',   role: 'Senior Software Engineer (SDE-II)', dept: 'Platform Engineering', hub: 'Bengaluru (Hybrid)',    startDate: 'Jan 12, 2026', progress: 72, phase: '60 Days: Project Ownership', status: 'On Track',          tone: 'success' },
+  { id: 2, name: 'Sneha Kulkarni', role: 'Senior Product Designer',           dept: 'Product & UI/UX Design', hub: 'Pune (Hybrid)',        startDate: 'Jan 20, 2026', progress: 45, phase: '30 Days: Integration',        status: 'Needs Review',      tone: 'warning' },
+  { id: 3, name: 'Arjun Rao',      role: 'Cloud Infrastructure Specialist',   dept: 'Cloud & Infrastructure',  hub: 'Hyderabad (On-site)',  startDate: 'Feb 02, 2026', progress: 88, phase: '90 Days: Final Evaluation',  status: 'Ahead of Schedule', tone: 'success' },
+  { id: 4, name: 'Ananya Iyer',    role: 'Lead Frontend Architect',           dept: 'Platform Engineering',    hub: 'Bengaluru (Hybrid)',   startDate: 'Feb 10, 2026', progress: 60, phase: '30 Days: Integration',        status: 'On Track',          tone: 'success' },
+  { id: 5, name: 'Kabir Mehta',    role: 'Senior Software Engineer (SDE-II)', dept: 'Platform Engineering',    hub: 'Gurugram (Hybrid)',    startDate: 'Feb 20, 2026', progress: 35, phase: 'Week 1: Team & Foundations', status: 'On Track',          tone: 'info' },
+  { id: 6, name: 'Aditya Sengupta',role: 'Senior Software Engineer (SDE-II)', dept: 'Platform Engineering',   hub: 'Remote (Pan-India)',   startDate: 'Mar 01, 2026', progress: 15, phase: 'Day 1: Orientation',          status: 'Just Started',      tone: 'info' },
+];
+
+const PHASE_CHART = [
+  { name: 'Pre-boarding', count: 1 },
+  { name: 'Week 1',       count: 2 },
+  { name: '30 Days',      count: 2 },
+  { name: '60 Days',      count: 1 },
+  { name: '90 Days',      count: 1 },
 ];
 
 export default function OnboardingView() {
   const [cohorts, setCohorts] = useState(INITIAL_COHORTS);
   const [filterDept, setFilterDept] = useState('ALL');
-  const [filterHub, setFilterHub] = useState('ALL');
+  const [filterHub, setFilterHub]   = useState('ALL');
+  const [showFilters, setShowFilters] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newPlan, setNewPlan] = useState({
-    name: '',
-    role: 'Senior Software Engineer (SDE-II)',
-    dept: 'Platform Engineering',
-    hub: 'Bengaluru (Hybrid)',
-    template: 'Engineering 90-Day Ramp-Up (India Tech Hubs)',
-    startDate: new Date().toISOString().slice(0, 10),
-  });
+  const [newPlan, setNewPlan] = useState({ name: '', role: 'Senior Software Engineer (SDE-II)', dept: 'Platform Engineering', hub: 'Bengaluru (Hybrid)', template: 'Engineering 90-Day Ramp-Up', startDate: new Date().toISOString().slice(0, 10) });
 
   const filtered = cohorts.filter(c => {
     if (filterDept !== 'ALL' && c.dept !== filterDept) return false;
@@ -103,229 +34,121 @@ export default function OnboardingView() {
     return true;
   });
 
-  const handleCreatePlan = e => {
+  const handleCreate = e => {
     e.preventDefault();
     if (!newPlan.name.trim()) return;
-
-    const item = {
-      id: Date.now(),
-      name: newPlan.name,
-      role: newPlan.role,
-      dept: newPlan.dept,
-      hub: newPlan.hub,
-      startDate: newPlan.startDate,
-      targetDate: '90 Days from start',
-      progress: 0,
-      phase: 'Pre-boarding',
-      status: 'Just Started',
-      tone: 'info',
-    };
-
-    setCohorts([item, ...cohorts]);
+    setCohorts([{ id: Date.now(), ...newPlan, progress: 0, phase: 'Pre-boarding', status: 'Just Started', tone: 'info', targetDate: '90 Days from start' }, ...cohorts]);
     setIsModalOpen(false);
-    setNewPlan({
-      name: '',
-      role: 'Senior Software Engineer (SDE-II)',
-      dept: 'Platform Engineering',
-      hub: 'Bengaluru (Hybrid)',
-      template: 'Engineering 90-Day Ramp-Up (India Tech Hubs)',
-      startDate: new Date().toISOString().slice(0, 10),
-    });
+    setNewPlan({ name: '', role: 'Senior Software Engineer (SDE-II)', dept: 'Platform Engineering', hub: 'Bengaluru (Hybrid)', template: 'Engineering 90-Day Ramp-Up', startDate: new Date().toISOString().slice(0, 10) });
   };
 
-  return (
-    <div style={{ display: 'grid', gap: 'var(--sp-6)' }} className="animate-fade-in">
-      {/* ── Header ── */}
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--sp-3)' }}>
-        <div>
-          <h1 className="display">Onboarding Cohorts &amp; Journeys</h1>
-          <p className="body" style={{ color: 'var(--text-muted)', marginTop: 4 }}>
-            Monitor and guide new team members across 30, 60, and 90-day milestone phases across India Tech Hubs.
-          </p>
-        </div>
-        <Button icon={Plus} onClick={() => setIsModalOpen(true)}>
-          Assign Onboarding Plan
-        </Button>
-      </header>
+  const avgProgress = Math.round(filtered.reduce((s, c) => s + c.progress, 0) / (filtered.length || 1));
 
-      {/* ── Filters & Stats Bar ── */}
-      <Card style={{ padding: 'var(--sp-4) var(--sp-5)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+  return (
+    <div style={{ display: 'grid', gap: 'var(--sp-5)' }}>
+      <PageHeader
+        title="Onboarding"
+        subtitle={`${filtered.length} employees · ${avgProgress}% avg progress`}
+        action={
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Button variant="secondary" size="sm" icon={Filter} onClick={() => setShowFilters(v => !v)}>
+              Filter {(filterDept !== 'ALL' || filterHub !== 'ALL') && '●'}
+            </Button>
+            <Button size="sm" icon={Plus} onClick={() => setIsModalOpen(true)}>Assign Plan</Button>
+          </div>
+        }
+      />
+
+      {/* Phase chart */}
+      <Card>
+        <h2 className="h3" style={{ marginBottom: 14 }}>Cohort by Phase</h2>
+        <StackedBarChart data={PHASE_CHART} xKey="name" categories={[{ dataKey: 'count', name: 'Employees', color: 'var(--chart-blue)' }]} height={120} />
+      </Card>
+
+      {/* Filters (progressive disclosure) */}
+      {showFilters && (
+        <Card style={{ padding: 'var(--sp-3) var(--sp-4)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
-              <Filter size={15} /> Filters:
-            </div>
-            <select
-              value={filterDept}
-              onChange={e => setFilterDept(e.target.value)}
-              style={{
-                padding: '6px 12px',
-                fontSize: '0.8125rem',
-                borderRadius: 'var(--r-sm)',
-                border: '1px solid var(--border-default)',
-                background: 'var(--bg-surface)',
-                color: 'var(--text-primary)',
-              }}
-            >
+            <select value={filterDept} onChange={e => setFilterDept(e.target.value)}
+              style={{ padding: '5px 10px', fontSize: '0.8125rem', borderRadius: 'var(--r-sm)', border: '1px solid var(--border-default)', background: 'var(--bg-surface)', color: 'var(--text-primary)' }}>
               <option value="ALL">All Departments</option>
               <option value="Platform Engineering">Platform Engineering</option>
               <option value="Product & UI/UX Design">Product & UI/UX Design</option>
               <option value="Cloud & Infrastructure">Cloud & Infrastructure</option>
             </select>
-
-            <select
-              value={filterHub}
-              onChange={e => setFilterHub(e.target.value)}
-              style={{
-                padding: '6px 12px',
-                fontSize: '0.8125rem',
-                borderRadius: 'var(--r-sm)',
-                border: '1px solid var(--border-default)',
-                background: 'var(--bg-surface)',
-                color: 'var(--text-primary)',
-              }}
-            >
-              <option value="ALL">All Tech Hubs</option>
+            <select value={filterHub} onChange={e => setFilterHub(e.target.value)}
+              style={{ padding: '5px 10px', fontSize: '0.8125rem', borderRadius: 'var(--r-sm)', border: '1px solid var(--border-default)', background: 'var(--bg-surface)', color: 'var(--text-primary)' }}>
+              <option value="ALL">All Hubs</option>
               <option value="Bengaluru">Bengaluru</option>
               <option value="Hyderabad">Hyderabad</option>
               <option value="Pune">Pune</option>
               <option value="Gurugram">Gurugram</option>
             </select>
+            {(filterDept !== 'ALL' || filterHub !== 'ALL') && (
+              <button onClick={() => { setFilterDept('ALL'); setFilterHub('ALL'); }} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.8125rem', color: 'var(--danger)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                <X size={12} /> Clear
+              </button>
+            )}
           </div>
+        </Card>
+      )}
 
-          <div style={{ display: 'flex', gap: 16, fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-            <span>Active Cohort: <strong style={{ color: 'var(--text-primary)' }}>{filtered.length}</strong></span>
-            <span>Avg Progress: <strong style={{ color: 'var(--primary)' }}>
-              {Math.round(filtered.reduce((a, c) => a + c.progress, 0) / (filtered.length || 1))}%
-            </strong></span>
-          </div>
-        </div>
-      </Card>
-
-      {/* ── Cohort Cards Grid ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: 'var(--sp-4)' }}>
+      {/* Cohort grid */}
+      <AnimatedList style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 'var(--sp-4)' }}>
         {filtered.map(c => (
-          <Card key={c.id} $hoverable style={{ display: 'grid', gap: 'var(--sp-4)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                <Avatar name={c.name} size={44} />
-                <div>
-                  <h3 className="h3">{c.name}</h3>
-                  <div className="caption" style={{ color: 'var(--text-muted)' }}>{c.role}</div>
+          <AnimatedItem key={c.id}>
+            <Card $hoverable style={{ display: 'grid', gap: 'var(--sp-3)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                  <Avatar name={c.name} size={36} />
+                  <div>
+                    <div className="h3">{c.name}</div>
+                    <div className="meta" style={{ color: 'var(--text-muted)' }}>{c.role}</div>
+                  </div>
+                </div>
+                <Badge tone={c.tone}>{c.status}</Badge>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <RadialProgress value={c.progress} size={72} strokeWidth={6} color={c.tone === 'warning' ? 'var(--warning)' : c.tone === 'info' ? 'var(--chart-sky)' : 'var(--chart-emerald)'} label={`${c.progress}%`} />
+                <div style={{ fontSize: '0.8125rem', display: 'grid', gap: 5, flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Hub</span>
+                    <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{c.hub.split(' ')[0]}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Phase</span>
+                    <span style={{ fontWeight: 500, color: 'var(--primary)', fontSize: '0.75rem' }}>{c.phase.split(':')[0]}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 3 }}><Calendar size={11} /> {c.startDate}</span>
+                    <Button size="xs" variant="ghost">View <ChevronRight size={11} /></Button>
+                  </div>
                 </div>
               </div>
-              <Badge tone={c.tone}>{c.status}</Badge>
-            </div>
-
-            <div style={{ fontSize: '0.8125rem', display: 'grid', gap: 6, padding: '10px 14px', background: 'var(--bg-subtle)', borderRadius: 'var(--r-md)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Department:</span>
-                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{c.dept}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Office Location:</span>
-                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{c.hub}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Current Phase:</span>
-                <span style={{ fontWeight: 600, color: 'var(--primary)' }}>{c.phase}</span>
-              </div>
-            </div>
-
-            <div>
-              <Progress value={c.progress} label="Onboarding Progress" size="md" />
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTop: '1px solid var(--border-subtle)' }}>
-              <div className="meta" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <Calendar size={13} /> Started {c.startDate}
-              </div>
-              <Button size="xs" variant="soft">
-                View Journey <ArrowRight size={13} />
-              </Button>
-            </div>
-          </Card>
+            </Card>
+          </AnimatedItem>
         ))}
-      </div>
+      </AnimatedList>
 
-      {/* ── Assign Plan Modal ── */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Assign New Onboarding Plan"
-        description="Enroll a new team member into an Indian tech hub onboarding cohort."
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleCreatePlan}>Create &amp; Assign Plan</Button>
-          </>
-        }
-      >
-        <form onSubmit={handleCreatePlan} style={{ display: 'grid', gap: 14 }}>
-          <div>
-            <Label>Employee Full Name</Label>
-            <Input
-              required
-              placeholder="e.g. Rohan Sen"
-              value={newPlan.name}
-              onChange={e => setNewPlan({ ...newPlan, name: e.target.value })}
-            />
-          </div>
-          <div>
-            <Label>Department</Label>
-            <Select
-              value={newPlan.dept}
-              onChange={e => setNewPlan({ ...newPlan, dept: e.target.value })}
-            >
-              <option value="Platform Engineering">Platform Engineering</option>
-              <option value="Product & UI/UX Design">Product & UI/UX Design</option>
-              <option value="Cloud & Infrastructure">Cloud & Infrastructure Operations</option>
-              <option value="People Operations">People Operations (HR)</option>
-              <option value="Finance & Payroll">Finance & Payroll</option>
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Assign Onboarding Plan"
+        footer={<><Button variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button><Button onClick={handleCreate}>Create & Assign</Button></>}>
+        <form onSubmit={handleCreate} style={{ display: 'grid', gap: 14 }}>
+          <div><Label>Employee Full Name</Label><Input required placeholder="e.g. Rohan Sen" value={newPlan.name} onChange={e => setNewPlan({ ...newPlan, name: e.target.value })} /></div>
+          <div><Label>Department</Label>
+            <Select value={newPlan.dept} onChange={e => setNewPlan({ ...newPlan, dept: e.target.value })}>
+              <option>Platform Engineering</option><option>Product & UI/UX Design</option>
+              <option>Cloud & Infrastructure</option><option>People Operations</option><option>Finance & Payroll</option>
             </Select>
           </div>
-          <div>
-            <Label>Job Role</Label>
-            <Input
-              required
-              placeholder="e.g. Senior Software Engineer (SDE-II)"
-              value={newPlan.role}
-              onChange={e => setNewPlan({ ...newPlan, role: e.target.value })}
-            />
-          </div>
-          <div>
-            <Label>Tech Hub Location</Label>
-            <Select
-              value={newPlan.hub}
-              onChange={e => setNewPlan({ ...newPlan, hub: e.target.value })}
-            >
-              <option value="Bengaluru (Hybrid)">Bengaluru - Bellandur Tech Hub</option>
-              <option value="Hyderabad (On-site)">Hyderabad - HITEC City</option>
-              <option value="Pune (Hybrid)">Pune - Hinjawadi Phase 1</option>
-              <option value="Gurugram (Hybrid)">Gurugram - Cyber City</option>
-              <option value="Mumbai (On-site)">Mumbai - BKC</option>
-              <option value="Remote (Pan-India)">Remote (Pan-India)</option>
+          <div><Label>Job Role</Label><Input required value={newPlan.role} onChange={e => setNewPlan({ ...newPlan, role: e.target.value })} /></div>
+          <div><Label>Tech Hub</Label>
+            <Select value={newPlan.hub} onChange={e => setNewPlan({ ...newPlan, hub: e.target.value })}>
+              <option>Bengaluru (Hybrid)</option><option>Hyderabad (On-site)</option>
+              <option>Pune (Hybrid)</option><option>Gurugram (Hybrid)</option><option>Remote (Pan-India)</option>
             </Select>
           </div>
-          <div>
-            <Label>Onboarding Template</Label>
-            <Select
-              value={newPlan.template}
-              onChange={e => setNewPlan({ ...newPlan, template: e.target.value })}
-            >
-              <option value="Engineering 90-Day Ramp-Up (India Tech Hubs)">Engineering 90-Day Ramp-Up (India Tech Hubs)</option>
-              <option value="General Corporate & Business Operations">General Corporate & Business Operations</option>
-              <option value="Product Design & UX Immersion">Product Design & UX Immersion</option>
-            </Select>
-          </div>
-          <div>
-            <Label>Start Date</Label>
-            <Input
-              type="date"
-              value={newPlan.startDate}
-              onChange={e => setNewPlan({ ...newPlan, startDate: e.target.value })}
-            />
-          </div>
+          <div><Label>Start Date</Label><Input type="date" value={newPlan.startDate} onChange={e => setNewPlan({ ...newPlan, startDate: e.target.value })} /></div>
         </form>
       </Modal>
     </div>

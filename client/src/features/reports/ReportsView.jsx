@@ -1,135 +1,99 @@
 import { useState } from 'react';
-import { Card, Button, Badge, StatCard } from '../../components/common/ui';
-import { BarChart3, Download, Users, Clock, ShieldCheck, TrendingUp, CheckCircle } from 'lucide-react';
+import { Card, Button, Badge, PageHeader } from '../../components/common/ui';
+import { TrendChart, StackedBarChart, HeatmapGrid, MiniDonut } from '../../components/common/charts';
+import { Download } from 'lucide-react';
 
-const DEPARTMENT_STATS = [
-  { dept: 'Platform Engineering', count: 8, avgDays: 36, compliance: 96, progress: 74 },
-  { dept: 'Cloud & Infrastructure', count: 3, avgDays: 34, compliance: 100, progress: 88 },
-  { dept: 'Product & UI/UX Design', count: 2, avgDays: 42, compliance: 90, progress: 55 },
-  { dept: 'People Operations (HR)', count: 3, avgDays: 30, compliance: 100, progress: 100 },
-  { dept: 'Finance & Payroll', count: 2, avgDays: 28, compliance: 100, progress: 100 },
+const VELOCITY_DATA = [
+  { date: 'Jul', completions: 12, started: 15 },
+  { date: 'Aug', completions: 18, started: 22 },
+  { date: 'Sep', completions: 24, started: 28 },
+  { date: 'Oct', completions: 20, started: 25 },
+  { date: 'Nov', completions: 30, started: 34 },
+  { date: 'Dec', completions: 26, started: 29 },
 ];
 
+const DEPT_DATA = [
+  { dept: 'Platform Eng', employees: 8 },
+  { dept: 'Product & UX', employees: 3 },
+  { dept: 'Cloud & Infra', employees: 4 },
+  { dept: 'People Ops',    employees: 2 },
+  { dept: 'Finance',       employees: 1 },
+];
+
+const SLA_METRICS = [
+  { label: 'Overall SLA Compliance', value: 94, color: 'var(--chart-emerald)' },
+  { label: 'POSH Completion Rate',   value: 98, color: 'var(--chart-blue)' },
+  { label: 'Document Verification',  value: 87, color: 'var(--chart-amber)' },
+  { label: 'Asset Provisioning',     value: 91, color: 'var(--chart-violet)' },
+];
+
+const exportCSV = (data, name) => {
+  const keys = Object.keys(data[0]);
+  const csv  = [keys.join(','), ...data.map(r => keys.map(k => r[k]).join(','))].join('\n');
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })), download: `${name}_${new Date().toISOString().slice(0,10)}.csv` });
+  a.click();
+};
+
 export default function ReportsView() {
-  const [downloading, setDownloading] = useState(false);
-
-  const handleExportCSV = () => {
-    setDownloading(true);
-    const headers = ['Department', 'Active Onboardees', 'Avg Days to 100%', 'Compliance Rate', 'Progress Rate'];
-    const rows = DEPARTMENT_STATS.map(d => [d.dept, d.count, `${d.avgDays} Days`, `${d.compliance}%`, `${d.progress}%`]);
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `EOMS_Onboarding_Executive_Report_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    setTimeout(() => setDownloading(false), 500);
-  };
-
   return (
-    <div style={{ display: 'grid', gap: 'var(--sp-6)' }} className="animate-fade-in">
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--sp-3)' }}>
-        <div>
-          <h1 className="display">Executive Reports &amp; Analytics</h1>
-          <p className="body" style={{ color: 'var(--text-muted)', marginTop: 4 }}>
-            SLA compliance velocity, statutory document turnaround, and Indian hub performance.
-          </p>
-        </div>
-        <Button icon={Download} onClick={handleExportCSV} isLoading={downloading}>
-          Export Executive Report (CSV)
-        </Button>
-      </header>
+    <div style={{ display: 'grid', gap: 'var(--sp-5)' }}>
+      <PageHeader
+        title="Reports & Analytics"
+        subtitle="Cross-functional onboarding metrics and compliance insights."
+        action={<Button variant="secondary" size="sm" icon={Download} onClick={() => exportCSV(VELOCITY_DATA, 'EOMS_Report')}>Export</Button>}
+      />
 
-      {/* ── 4 Executive KPI Cards ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--sp-4)' }}>
-        <StatCard
-          icon={Users}
-          label="Total Active Onboardees"
-          value="18"
-          hint="Across 5 India Tech Hubs"
-          trend="+4 this month"
-          tone="primary"
-        />
-        <StatCard
-          icon={Clock}
-          label="Avg. Time-to-100%"
-          value="38 Days"
-          hint="Company SLA target is ≤ 45 Days"
-          trend="-7 days faster"
-          tone="success"
-        />
-        <StatCard
-          icon={ShieldCheck}
-          label="Statutory POSH &amp; PAN Rate"
-          value="98.2%"
-          hint="Aadhaar, PAN &amp; EPFO verified"
-          trend="+2.1% YoY"
-          tone="success"
-        />
-        <StatCard
-          icon={TrendingUp}
-          label="Day 1 Equipment Readiness"
-          value="100%"
-          hint="0 delayed hardware handovers"
-          trend="Perfect SLA"
-          tone="info"
-        />
+      {/* ── SLA Compliance Donuts ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 'var(--sp-4)' }}>
+        {SLA_METRICS.map(m => (
+          <Card key={m.label} style={{ padding: 'var(--sp-4)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+            <MiniDonut value={m.value} total={100} label={`${m.value}%`} size={72} color={m.color} />
+            <p className="meta" style={{ color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.3 }}>{m.label}</p>
+          </Card>
+        ))}
       </div>
 
-      {/* ── Department Breakdown Table ── */}
-      <Card style={{ padding: 0, overflow: 'hidden' }}>
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-subtle)' }}>
-          <h2 className="h2">Cohort Velocity by Department</h2>
-          <p className="caption" style={{ color: 'var(--text-muted)', marginTop: 2 }}>
-            Real-time telemetry showing average days to full contributor ramp-up
-          </p>
+      {/* ── Onboarding Velocity ── */}
+      <Card>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <div>
+            <h2 className="h3">Onboarding Velocity</h2>
+            <p className="meta" style={{ color: 'var(--text-muted)', marginTop: 2 }}>Monthly started vs completed over the last 6 months</p>
+          </div>
+          <div style={{ display: 'flex', gap: 12, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}><div style={{ width: 10, height: 2, background: 'var(--chart-blue)', borderRadius: 2 }} />Started</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}><div style={{ width: 10, height: 2, background: 'var(--chart-emerald)', borderRadius: 2 }} />Completed</div>
+          </div>
         </div>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.84rem' }}>
-            <thead>
-              <tr style={{ background: 'var(--bg-subtle)', borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase' }}>
-                <th style={{ padding: '12px 20px' }}>Department</th>
-                <th style={{ padding: '12px 16px' }}>Onboardees</th>
-                <th style={{ padding: '12px 16px' }}>Avg. Days to 100%</th>
-                <th style={{ padding: '12px 16px' }}>Compliance Rate</th>
-                <th style={{ padding: '12px 16px' }}>Overall Progress</th>
-                <th style={{ padding: '12px 20px', textAlign: 'right' }}>SLA Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {DEPARTMENT_STATS.map(d => (
-                <tr key={d.dept} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                  <td style={{ padding: '14px 20px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                    {d.dept}
-                  </td>
-                  <td style={{ padding: '14px 16px', fontWeight: 600 }}>
-                    {d.count} Members
-                  </td>
-                  <td style={{ padding: '14px 16px', color: d.avgDays <= 40 ? 'var(--success)' : 'var(--text-secondary)' }}>
-                    {d.avgDays} Days
-                  </td>
-                  <td style={{ padding: '14px 16px', fontWeight: 600 }}>
-                    {d.compliance}%
-                  </td>
-                  <td style={{ padding: '14px 16px', minWidth: 140 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{ flex: 1, height: 6, background: 'var(--bg-sunken)', borderRadius: 3, overflow: 'hidden' }}>
-                        <div style={{ width: `${d.progress}%`, height: '100%', background: 'var(--primary)' }} />
-                      </div>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>{d.progress}%</span>
-                    </div>
-                  </td>
-                  <td style={{ padding: '14px 20px', textAlign: 'right' }}>
-                    <Badge tone="success">Compliant</Badge>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <TrendChart
+          data={VELOCITY_DATA}
+          xKey="date"
+          series={[
+            { dataKey: 'started',     name: 'Started',    color: 'var(--chart-blue)' },
+            { dataKey: 'completions', name: 'Completed',  color: 'var(--chart-emerald)' },
+          ]}
+          height={220}
+          showLegend={false}
+        />
       </Card>
+
+      {/* ── Dept Breakdown + Heatmap ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-4)' }}>
+        <Card>
+          <h2 className="h3" style={{ marginBottom: 16 }}>By Department</h2>
+          <StackedBarChart
+            data={DEPT_DATA}
+            xKey="dept"
+            categories={[{ dataKey: 'employees', name: 'Employees', color: 'var(--chart-blue)' }]}
+            height={180}
+          />
+        </Card>
+        <Card>
+          <h2 className="h3" style={{ marginBottom: 16 }}>Weekly Activity Density</h2>
+          <p className="meta" style={{ color: 'var(--text-muted)', marginBottom: 12 }}>Task completions across the last 12 weeks</p>
+          <HeatmapGrid rows={7} cols={12} label="Days × Weeks" />
+        </Card>
+      </div>
     </div>
   );
 }
