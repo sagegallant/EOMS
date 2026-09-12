@@ -17,16 +17,18 @@ app.use(errorHandler); // → { code, message } JSON; 500s audited
 
 const PORT = process.env.PORT ?? 5000;
 
-sequelize.authenticate()
-  .then(() => app.listen(PORT, () => console.log(`✔ EOMS API ready on port ${PORT}`)))
-  .catch(err => {
-    console.error('DB connection failed:', err.message);
-    // In dev without running DB, still start server for testing if needed
-    if (process.env.NODE_ENV === 'development') {
-      app.listen(PORT, () => console.log(`⚠ EOMS API running in fallback mode on port ${PORT}`));
-    } else {
-      process.exit(1);
-    }
-  });
+if (process.env.NODE_ENV !== 'test') {
+  sequelize.authenticate()
+    .then(() => app.listen(PORT, () => console.log(`✔ EOMS API ready on port ${PORT}`)))
+    .catch(err => {
+      console.error('DB connection failed:', err.message);
+      // In dev without running DB, still start server for testing if needed
+      if (process.env.NODE_ENV === 'development') {
+        app.listen(PORT, () => console.log(`⚠ EOMS API running in fallback mode on port ${PORT}`));
+      } else {
+        process.exit(1);
+      }
+    });
+}
 
 export default app;
