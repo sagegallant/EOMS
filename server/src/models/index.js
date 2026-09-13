@@ -62,11 +62,13 @@ Checklist.belongsTo(OnboardingPlan, { foreignKey: 'plan_id' });
 Checklist.hasMany(Task, { foreignKey: 'checklist_id' });
 Task.belongsTo(Checklist, { foreignKey: 'checklist_id' });
 
+Task.hasMany(TaskProgress, { foreignKey: 'task_id' });
 TaskProgress.belongsTo(Task, { foreignKey: 'task_id' });
 TaskProgress.belongsTo(Employee, { foreignKey: 'employee_id' });
 TaskProgress.belongsTo(SystemUser, { as: 'CompletedByUser', foreignKey: 'completed_by' });
 
 // Document & Verification associations
+Document.belongsTo(Employee, { foreignKey: 'employee_id' });
 Document.belongsTo(DocumentType, { foreignKey: 'type_id' });
 DocumentType.hasMany(Document, { foreignKey: 'type_id' });
 Document.hasMany(DocumentVerification, { foreignKey: 'document_id' });
@@ -77,6 +79,7 @@ DocumentVerification.belongsTo(SystemUser, { as: 'Reviewer', foreignKey: 'review
 TrainingCourse.hasMany(TrainingModule, { foreignKey: 'course_id' });
 TrainingModule.belongsTo(TrainingCourse, { foreignKey: 'course_id' });
 TrainingRecord.belongsTo(TrainingCourse, { foreignKey: 'course_id' });
+TrainingRecord.belongsTo(Employee, { foreignKey: 'employee_id' });
 TrainingCourse.hasMany(TrainingRecord, { foreignKey: 'course_id' });
 
 // Asset associations
