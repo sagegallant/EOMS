@@ -114,10 +114,25 @@ export async function createEmployee(req, res, next) {
       });
     }
 
+    // Check if an employee with this email already exists
+    const existingEmp = await Employee.findOne({ where: { workEmail } });
+    if (existingEmp) {
+      return res.status(409).json({
+        code: 'CONFLICT',
+        message: `An employee with email ${workEmail} is already registered.`,
+      });
+    }
+
     // Check if user account already exists or create one
     let systemUser = await SystemUser.findOne({ where: { email: workEmail } });
     if (!systemUser) {
-      const username = workEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9.]/g, '');
+      const baseUser = workEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9.]/g, '').slice(0, 40);
+      let username = baseUser;
+      let counter = 1;
+      while (await SystemUser.findOne({ where: { username } })) {
+        username = `${baseUser}${counter++}`;
+      }
+
       const defaultPasswordHash = await bcrypt.hash('Password@123', 10);
       systemUser = await SystemUser.create({
         username,
