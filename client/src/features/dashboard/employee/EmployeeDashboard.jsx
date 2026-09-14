@@ -1,117 +1,139 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Button, Badge, Avatar, AnimatedList, AnimatedItem, PageHeader } from '../../../components/common/ui';
-import { RadialProgress, Sparkline } from '../../../components/common/charts';
-import { CheckCircle2, Clock, ChevronRight, BookOpen, Laptop, FileCheck } from 'lucide-react';
+import { Card, CircularArc, DarkPanel, DarkTaskItem, Badge, Button, Avatar, useCountUp, MiniCalendar } from '../../../components/common/ui';
+import { VerticalBarChart } from '../../../components/common/charts';
+import { CheckCircle2, Clock, Laptop, BookOpen, FileText, ChevronRight } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-const SPARK = [
-  { d: 'M', v: 2 }, { d: 'T', v: 3 }, { d: 'W', v: 1 }, { d: 'T', v: 4 },
-  { d: 'F', v: 2 }, { d: 'S', v: 0 }, { d: 'S', v: 1 },
+const WEEKLY = [
+  { day:'Mon', value:2 }, { day:'Tue', value:4 }, { day:'Wed', value:1 },
+  { day:'Thu', value:3 }, { day:'Fri', value:5 }, { day:'Sat', value:0 }, { day:'Sun', value:2 },
 ];
 
 const TASKS = [
-  { id: 1, title: 'Complete POSH Sensitization Quiz', category: 'Statutory Compliance', due: 'Due tomorrow', icon: FileCheck, route: '/training', done: false },
-  { id: 2, title: '1:1 Check-in with Vikram Malhotra', category: 'Manager Meeting', due: 'Due Mar 25', icon: Clock, route: '/tasks', done: false },
-  { id: 3, title: 'Acknowledge MacBook Pro M3 Asset', category: 'IT Hardware', due: 'Completed', icon: Laptop, route: '/assets', done: true },
+  { title:'POSH Act 2013 Certification Quiz', subtitle:'Due tomorrow · 45 min', done:false, icon:BookOpen },
+  { title:'1:1 with Vikram Malhotra (Director)', subtitle:'Due Sep 25 · 30 min', done:false, icon:Clock },
+  { title:'Submit Aadhaar for TDS verification', subtitle:'Compliance · Urgent', done:false, icon:FileText },
+  { title:'MacBook Pro 16" asset acknowledgement', subtitle:'IT Setup · Completed', done:true, icon:Laptop },
 ];
 
+const MILESTONES = ['2026-09-25','2026-10-12','2026-11-01'];
+
 const MODULES = [
-  { label: 'POSH Act 2013', pct: 68, color: 'var(--chart-blue)' },
-  { label: 'Data Protection (DPDP)', pct: 40, color: 'var(--chart-violet)' },
-  { label: 'Engineering Best Practices', pct: 90, color: 'var(--chart-emerald)' },
+  { label:'POSH Act 2013', pct:68, color:'var(--sage-700)' },
+  { label:'DPDP Training', pct:40, color:'var(--sage-500)' },
+  { label:'Engineering Best Practices', pct:90, color:'var(--sage-300)' },
 ];
 
 export default function EmployeeDashboard() {
   const [tasks, setTasks] = useState(TASKS);
-  const [showCompleted, setShowCompleted] = useState(false);
   const navigate = useNavigate();
-
-  const pending   = tasks.filter(t => !t.done);
-  const completed = tasks.filter(t => t.done);
-  const visible   = showCompleted ? tasks : pending;
+  const dayVal = useCountUp(21, 600);
+  const done = tasks.filter(t=>t.done).length;
 
   return (
-    <div style={{ display: 'grid', gap: 'var(--sp-5)' }}>
-      <PageHeader title="My Journey" subtitle="Track your onboarding progress and next steps." />
-
-      {/* ── Hero Row (Bento Grid) ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 'var(--sp-5)' }}>
-        {/* Progress ring */}
-        <Card $hoverable style={{ gridColumn: 'span 8', padding: 'var(--sp-5)', display: 'flex', alignItems: 'center', gap: 24 }}>
-          <RadialProgress value={72} size={120} strokeWidth={10} color="var(--chart-blue)" label="72%" sublabel="Complete" />
-          <div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Aarav Sharma</div>
-            <div className="body" style={{ color: 'var(--text-muted)', marginTop: 4 }}>SDE-II · Platform Engineering</div>
-            <div className="body" style={{ color: 'var(--text-muted)', marginTop: 2 }}>Bengaluru Hub · Week 3 of 90</div>
-            <div className="meta" style={{ marginTop: 12, color: 'var(--success-text)', fontWeight: 600 }}>On track for Apr 12 sign-off ✓</div>
-          </div>
-        </Card>
-
-        {/* Activity sparkline */}
-        <Card $hoverable style={{ gridColumn: 'span 4', padding: 'var(--sp-5)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-            <div>
-              <p className="meta" style={{ fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Weekly Activity</p>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)', marginTop: 4, letterSpacing: '-0.02em' }}>13 tasks</div>
-              <div className="meta" style={{ color: 'var(--text-muted)', fontWeight: 500 }}>done this week</div>
-            </div>
-            <Badge tone="success">On Track</Badge>
-          </div>
-          <Sparkline data={SPARK} dataKey="v" color="var(--chart-blue)" height={56} showDot={false} />
-        </Card>
+    <div style={{ display:'grid', gap:'var(--sp-5)' }}>
+      {/* ── Greeting header ── */}
+      <div>
+        <h1 style={{ fontSize:'1.75rem', fontWeight:700, color:'var(--text-primary)', letterSpacing:'-0.02em' }}>Welcome back, Aarav 👋</h1>
+        <p className="caption" style={{ marginTop:4 }}>Thursday, 18 September 2026 · Platform Engineering, Bengaluru Hub</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 'var(--sp-5)' }}>
-        {/* ── Training Progress ── */}
-        <Card $hoverable style={{ gridColumn: 'span 5', padding: 'var(--sp-5)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--sp-5)' }}>
-            <h2 className="h3">Training Modules</h2>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/training')}>View all <ChevronRight size={13} /></Button>
+      {/* ── Main 3-col: Hero + Chart + Dark panel ── */}
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1.2fr 1fr', gap:'var(--sp-4)' }}>
+
+        {/* Employee hero card */}
+        <Card $p="0" style={{ overflow:'hidden', borderRadius:'var(--r-xl)' }}>
+          <div style={{ background:'linear-gradient(150deg, var(--sage-700) 0%, var(--sage-400) 100%)', padding:'var(--sp-5)', display:'flex', flexDirection:'column', gap:12 }}>
+            <Avatar name="Aarav Sharma" size={56} />
+            <div>
+              <div style={{ fontSize:'1.125rem', fontWeight:700, color:'#fff' }}>Aarav Sharma</div>
+              <div style={{ fontSize:'0.8125rem', color:'rgba(255,255,255,0.75)', marginTop:2 }}>Senior Software Engineer (SDE-II)</div>
+              <div style={{ fontSize:'0.75rem', color:'rgba(255,255,255,0.55)', marginTop:1 }}>Platform Engineering · Bengaluru</div>
+            </div>
+            <div style={{ background:'rgba(255,255,255,0.18)', borderRadius:'var(--r-full)', padding:'6px 14px', display:'inline-flex', alignItems:'center', gap:8, backdropFilter:'blur(4px)', width:'fit-content' }}>
+              <span style={{ color:'#fff', fontSize:'0.875rem', fontWeight:700 }}>{dayVal}</span>
+              <span style={{ color:'rgba(255,255,255,0.75)', fontSize:'0.8125rem' }}>of 90 days</span>
+            </div>
           </div>
-          <div style={{ display: 'grid', gap: 16 }}>
-            {MODULES.map(m => (
-              <div key={m.label}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', marginBottom: 6 }}>
-                  <span style={{ color: 'var(--text-secondary)' }}>{m.label}</span>
-                  <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{m.pct}%</span>
+          <div style={{ padding:'var(--sp-4)', display:'flex', justifyContent:'center' }}>
+            <CircularArc value={72} max={100} size={130} strokeWidth={10} color="var(--sage-600)"
+              centerContent={
+                <div style={{ textAlign:'center' }}>
+                  <div className="kpi-md">72%</div>
+                  <div className="meta">journey</div>
                 </div>
-                <div style={{ height: 4, borderRadius: 'var(--r-full)', background: 'var(--bg-sunken)', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${m.pct}%`, background: m.color, borderRadius: 'inherit', transition: 'width 700ms var(--ease)' }} />
+              } />
+          </div>
+        </Card>
+
+        {/* Weekly activity chart */}
+        <Card $p="var(--sp-5)">
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:4 }}>
+            <div>
+              <h2 className="section-title">Weekly Activity</h2>
+              <div style={{ display:'flex', alignItems:'baseline', gap:6, marginTop:4 }}>
+                <span className="kpi-lg">17</span>
+                <span className="caption">tasks done this week</span>
+              </div>
+            </div>
+            <Badge tone="sage">Active learner</Badge>
+          </div>
+          <VerticalBarChart data={WEEKLY} xKey="day" dataKey="value" height={150} activeIndex={4} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginTop:12 }}>
+            {[['Meetings','2/3','66%'],['Completed','3/10','32%']].map(([l,v,p])=>(
+              <div key={l} style={{ background:'var(--sage-50)', borderRadius:'var(--r-md)', padding:'8px 10px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                <span className="meta">{l}</span>
+                <div style={{ textAlign:'right' }}>
+                  <div style={{ fontWeight:700, fontSize:'0.875rem', color:'var(--text-primary)' }}>{v}</div>
+                  <div className="meta">{p}</div>
                 </div>
               </div>
             ))}
           </div>
         </Card>
 
-        {/* ── Next Tasks ── */}
-        <Card $hoverable style={{ gridColumn: 'span 7', padding: 'var(--sp-5)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--sp-4)' }}>
-            <h2 className="h3">Next Actions</h2>
-            <button onClick={() => setShowCompleted(v => !v)} className="meta" style={{ color: 'var(--text-muted)', cursor: 'pointer', background: 'none', border: 'none', fontWeight: 500 }}>
-              {showCompleted ? 'Hide completed' : `+ ${completed.length} completed`}
-            </button>
+        {/* Dark task panel */}
+        <DarkPanel title="My Tasks" counter={`${done}/${tasks.length}`} subtitle="Onboarding checklist">
+          {tasks.map((t,i)=>(
+            <DarkTaskItem key={i} title={t.title} subtitle={t.subtitle} done={t.done} icon={t.icon}
+              onClick={() => setTasks(ts => ts.map((tt,ii) => ii===i ? { ...tt, done:!tt.done } : tt))} />
+          ))}
+          <button onClick={() => navigate('/tasks')}
+            style={{ marginTop:14, width:'100%', padding:'8px', borderRadius:'var(--r-md)', border:'1px solid rgba(255,255,255,0.15)', background:'rgba(255,255,255,0.05)', color:'rgba(255,255,255,0.7)', fontSize:'0.8125rem', cursor:'pointer', transition:'all var(--t-fast)' }}
+            onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.1)';e.currentTarget.style.color='#fff'}}
+            onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.05)';e.currentTarget.style.color='rgba(255,255,255,0.7)'}}>
+            All tasks ↗
+          </button>
+        </DarkPanel>
+      </div>
+
+      {/* ── Training + Calendar row ── */}
+      <div style={{ display:'grid', gridTemplateColumns:'1.5fr 1fr', gap:'var(--sp-4)' }}>
+        <Card $p="var(--sp-5)">
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+            <h2 className="section-title">Training Modules</h2>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/training')}>View all <ChevronRight size={13}/></Button>
           </div>
-          <AnimatedList style={{ display: 'grid', gap: 8 }}>
-            {visible.map(task => {
-              const Icon = task.icon;
-              return (
-                <AnimatedItem key={task.id}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 16px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', opacity: task.done ? 0.5 : 1, transition: 'opacity var(--t-fast)' }}>
-                    <div style={{ width: 36, height: 36, borderRadius: 'var(--r-sm)', background: task.done ? 'var(--success-bg)' : 'var(--primary-light)', color: task.done ? 'var(--success)' : 'var(--primary)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-                      {task.done ? <CheckCircle2 size={16} /> : <Icon size={16} />}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '0.875rem', fontWeight: task.done ? 400 : 600, color: task.done ? 'var(--text-muted)' : 'var(--text-primary)', textDecoration: task.done ? 'line-through' : 'none' }}>{task.title}</div>
-                      <div className="meta" style={{ color: 'var(--text-muted)', marginTop: 2, fontWeight: 500 }}>{task.category} · {task.due}</div>
-                    </div>
-                    {!task.done && (
-                      <Button variant="soft" size="xs" onClick={() => navigate(task.route)}>Go <ChevronRight size={12} /></Button>
-                    )}
-                  </div>
-                </AnimatedItem>
-              );
-            })}
-          </AnimatedList>
+          <div style={{ display:'grid', gap:14 }}>
+            {MODULES.map(m => (
+              <div key={m.label}>
+                <div style={{ display:'flex', justifyContent:'space-between', fontSize:'0.8125rem', marginBottom:5 }}>
+                  <span style={{ color:'var(--text-secondary)' }}>{m.label}</span>
+                  <span style={{ fontWeight:700, color:'var(--sage-800)', fontFeatureSettings:'"tnum" 1' }}>{m.pct}%</span>
+                </div>
+                <div style={{ height:6, borderRadius:'var(--r-full)', background:'var(--sage-100)', overflow:'hidden' }}>
+                  <motion.div initial={{ width:0 }} animate={{ width:`${m.pct}%` }} transition={{ duration:0.8, ease:[0.16,1,0.3,1] }}
+                    style={{ height:'100%', borderRadius:'inherit', background:m.color }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card $p="var(--sp-5)">
+          <h2 className="section-title" style={{ marginBottom:14 }}>Milestone Calendar</h2>
+          <MiniCalendar highlightDates={MILESTONES} />
         </Card>
       </div>
     </div>

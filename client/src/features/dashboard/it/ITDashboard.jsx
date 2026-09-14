@@ -1,133 +1,114 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Button, Badge, Modal, Input, Select, Label, AnimatedList, AnimatedItem, PageHeader } from '../../../components/common/ui';
-import { MiniDonut, HorizontalBar } from '../../../components/common/charts';
-import { Laptop, Plus, CheckCircle2, ChevronRight } from 'lucide-react';
+import { Card, KpiCard, DarkPanel, DarkTaskItem, Badge, Button, Avatar, AnimatedList, AnimatedItem } from '../../../components/common/ui';
+import { VerticalBarChart, HorizontalBar, MiniDonut } from '../../../components/common/charts';
+import { Laptop, Plus, CheckCircle2, ChevronRight, Users } from 'lucide-react';
 
-const INITIAL_QUEUE = [
-  { employee: 'Sneha Kulkarni',  asset: 'MacBook Pro 16" M3 Max (36GB)',        serial: 'PUN-MBP-2026-109', hub: 'Pune Hinjawadi Hub',      status: 'In Transit',               tone: 'warning' },
-  { employee: 'Arjun Rao',       asset: 'ThinkPad T14s Gen 5 (32GB)',           serial: 'HYD-TP-2026-214',  hub: 'Hyderabad HITEC City',     status: 'Allocated & Acknowledged', tone: 'success' },
-  { employee: 'Aarav Sharma',    asset: 'MacBook Pro 16" M3 Max (36GB)',        serial: 'BLR-MBP-2026-108', hub: 'Bengaluru Bellandur Hub',  status: 'Allocated & Acknowledged', tone: 'success' },
-  { employee: 'Aditya Sengupta', asset: 'Dell UltraSharp 27" 4K Monitor',      serial: 'BLR-MON-2026-088', hub: 'Remote Dispatch',          status: 'Pending Courier',          tone: 'info' },
+const WEEKLY_PROVISIONED = [
+  { day:'Mon', value:3 }, { day:'Tue', value:5 }, { day:'Wed', value:2 },
+  { day:'Thu', value:7 }, { day:'Fri', value:4 }, { day:'Sat', value:0 }, { day:'Sun', value:1 },
 ];
 
 const HUB_ASSETS = [
-  { label: 'Bengaluru',  value: 12, displayValue: '12 assets' },
-  { label: 'Hyderabad',  value: 7,  displayValue: '7 assets' },
-  { label: 'Pune',       value: 5,  displayValue: '5 assets' },
-  { label: 'Gurugram',   value: 4,  displayValue: '4 assets' },
-  { label: 'Remote',     value: 2,  displayValue: '2 assets' },
+  { label:'Bengaluru', value:12, displayValue:'12 assets' },
+  { label:'Hyderabad', value:7,  displayValue:'7 assets' },
+  { label:'Pune',      value:5,  displayValue:'5 assets' },
+  { label:'Gurugram',  value:4,  displayValue:'4 assets' },
+  { label:'Remote',    value:2,  displayValue:'2 assets' },
+];
+
+const QUEUE = [
+  { employee:'Sneha Kulkarni',  asset:'MacBook Pro 14" M3 Pro', hub:'Pune',       status:'In Transit',   tone:'warning' },
+  { employee:'Kabir Mehta',     asset:'Dell Latitude 5540',     hub:'Gurugram',    status:'Pending',      tone:'info'    },
+  { employee:'Pooja Desai',     asset:'MacBook Pro 16" M3 Max', hub:'Remote',      status:'Ready',        tone:'sage'    },
+  { employee:'Aditya Sengupta', asset:'LG UltraFine 5K 27"',   hub:'Bengaluru',   status:'Dispatched',   tone:'info'    },
+];
+
+const URGENT_TASKS = [
+  { title:'Provision laptop — Sneha Kulkarni', subtitle:'Pune Hinjawadi · Urgent', done:false },
+  { title:'YubiKey setup — Kabir Mehta',        subtitle:'Gurugram · Security',    done:false },
+  { title:'VPN config — Pooja Desai',           subtitle:'Remote · Today',         done:true  },
+  { title:'Access revoke — ex-employee',        subtitle:'Compliance task',        done:false },
 ];
 
 export default function ITDashboard() {
-  const [queue, setQueue]         = useState(INITIAL_QUEUE);
-  const [showAll, setShowAll]     = useState(false);
-  const [isModalOpen, setModal]   = useState(false);
-  const [newAsset, setNew]        = useState({ employee: '', asset: 'MacBook Pro 16" M3 Max (36GB)', serial: `BLR-ASSET-${Math.floor(100 + Math.random() * 900)}`, hub: 'Bengaluru Bellandur Hub' });
+  const [queue, setQueue] = useState(QUEUE);
+  const [tasks, setTasks] = useState(URGENT_TASKS);
   const navigate = useNavigate();
-
-  const pending   = queue.filter(q => q.tone !== 'success');
-  const allocated = queue.filter(q => q.tone === 'success');
-  const visible   = showAll ? queue : queue.slice(0, 3);
-
-  const handleRegister = e => {
-    e.preventDefault();
-    if (!newAsset.employee.trim()) return;
-    setQueue([{ ...newAsset, status: 'Ready for Pickup', tone: 'info' }, ...queue]);
-    setModal(false);
-    setNew({ employee: '', asset: 'MacBook Pro 16" M3 Max (36GB)', serial: `BLR-ASSET-${Math.floor(100 + Math.random() * 900)}`, hub: 'Bengaluru Bellandur Hub' });
-  };
+  const allocated = queue.filter(q=>q.tone==='success').length;
 
   return (
-    <div style={{ display: 'grid', gap: 'var(--sp-5)' }}>
-      <PageHeader
-        title="IT Provisioning"
-        subtitle="Asset allocation queue and hardware inventory status."
-        action={<Button size="sm" icon={Plus} onClick={() => setModal(true)}>Register Asset</Button>}
-      />
-
-      {/* ── Charts Row (Bento Grid) ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 'var(--sp-5)' }}>
-        <Card $hoverable style={{ gridColumn: 'span 7', padding: 'var(--sp-5)' }}>
-          <p className="meta" style={{ fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 'var(--sp-5)' }}>Provisioning Queue</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-            <MiniDonut value={allocated.length} total={queue.length} label={`${allocated.length}`} sublabel="allocated" size={100} color="var(--chart-emerald)" />
-            <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, fontSize: '0.9375rem' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Allocated</span>
-                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{allocated.length}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9375rem' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Pending</span>
-                <span style={{ fontWeight: 600, color: 'var(--warning-text)' }}>{pending.length}</span>
-              </div>
-            </div>
-          </div>
-        </Card>
-        <Card $hoverable style={{ gridColumn: 'span 5', padding: 'var(--sp-5)' }}>
-          <p className="meta" style={{ fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 'var(--sp-5)' }}>Assets by Hub</p>
-          <HorizontalBar items={HUB_ASSETS} colorVar="--chart-blue" />
-        </Card>
+    <div style={{ display:'grid', gap:'var(--sp-5)' }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:12 }}>
+        <div>
+          <h1 style={{ fontSize:'1.75rem', fontWeight:700, color:'var(--text-primary)', letterSpacing:'-0.02em' }}>IT Provisioning 💻</h1>
+          <p className="caption" style={{ marginTop:4 }}>Hardware queue and access management for India tech hubs</p>
+        </div>
+        <Button icon={Plus}>Register Asset</Button>
       </div>
 
-      {/* ── Provisioning Queue ── */}
-      <Card $hoverable style={{ padding: 'var(--sp-5)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--sp-4)' }}>
-          <h2 className="h3">Queue</h2>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/assets')}>All assets <ChevronRight size={13} /></Button>
+      {/* KPI strip */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))', gap:'var(--sp-4)' }}>
+        <KpiCard icon={Laptop} label="Total Assets" value={30} hint="Across all hubs" />
+        <KpiCard icon={CheckCircle2} label="Allocated" value={22} hint="Acknowledged" />
+        <KpiCard icon={Users} label="Pending Queue" value={queue.length} hint="Needs action" />
+        <KpiCard icon={Laptop} label="This Week" value={22} hint="Provisioned" />
+      </div>
+
+      {/* Charts + Dark panel */}
+      <div style={{ display:'grid', gridTemplateColumns:'1.2fr 1fr 1fr', gap:'var(--sp-4)' }}>
+        <Card $p="var(--sp-5)">
+          <div style={{ marginBottom:4 }}>
+            <h2 className="section-title">Weekly Provisioned</h2>
+            <div style={{ display:'flex', alignItems:'baseline', gap:6, marginTop:4 }}>
+              <span className="kpi-md">22</span>
+              <span className="caption">assets this week</span>
+            </div>
+          </div>
+          <VerticalBarChart data={WEEKLY_PROVISIONED} xKey="day" dataKey="value" height={150} activeIndex={3} />
+        </Card>
+
+        <Card $p="var(--sp-5)">
+          <h2 className="section-title" style={{ marginBottom:14 }}>Assets by Hub</h2>
+          <HorizontalBar items={HUB_ASSETS} colorVar="--chart-1" />
+        </Card>
+
+        <DarkPanel title="Urgent Actions" counter={`${tasks.filter(t=>!t.done).length} open`} subtitle="Today's provisioning">
+          {tasks.map((t,i)=>(
+            <DarkTaskItem key={i} title={t.title} subtitle={t.subtitle} done={t.done}
+              onClick={() => setTasks(ts => ts.map((tt,ii) => ii===i ? { ...tt, done:!tt.done } : tt))} />
+          ))}
+        </DarkPanel>
+      </div>
+
+      {/* Queue */}
+      <Card $p="var(--sp-5)">
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+          <h2 className="section-title">Provisioning Queue</h2>
+          <Button variant="ghost" size="sm" onClick={() => navigate('/assets')}>All assets <ChevronRight size={13}/></Button>
         </div>
-        <AnimatedList style={{ display: 'grid', gap: 8 }}>
-          {visible.map((item, i) => (
+        <AnimatedList style={{ display:'grid', gap:6 }}>
+          {queue.map((item,i) => (
             <AnimatedItem key={i}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 16px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', flexWrap: 'wrap' }}>
-                <div style={{ width: 36, height: 36, borderRadius: 'var(--r-sm)', background: 'var(--bg-subtle)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-                  <Laptop size={16} style={{ color: 'var(--text-muted)' }} />
+              <div style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 12px', borderRadius:'var(--r-md)', border:'1px solid var(--border-subtle)', background:'var(--bg-surface)', flexWrap:'wrap' }}>
+                <div style={{ width:32, height:32, borderRadius:'var(--r-md)', background:'var(--sage-100)', display:'grid', placeItems:'center', flexShrink:0 }}>
+                  <Laptop size={15} style={{ color:'var(--sage-700)' }} />
                 </div>
-                <div style={{ flex: '1 1 200px', minWidth: 0 }}>
-                  <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary)' }}>{item.employee}</div>
-                  <div className="meta" style={{ color: 'var(--text-muted)', marginTop: 2, fontWeight: 500 }}>{item.asset} · {item.serial}</div>
+                <div style={{ flex:'1 1 200px', minWidth:0 }}>
+                  <div style={{ fontWeight:500, fontSize:'0.875rem', color:'var(--text-primary)' }}>{item.employee}</div>
+                  <div className="meta">{item.asset} · {item.hub}</div>
                 </div>
                 <Badge tone={item.tone}>{item.status}</Badge>
                 {item.tone !== 'success' && (
-                  <Button variant="soft" size="xs" onClick={() => {
-                    setQueue(q => q.map((it, idx) => idx === queue.indexOf(item) ? { ...it, status: 'Allocated & Acknowledged', tone: 'success' } : it));
-                  }}>
-                    <CheckCircle2 size={13} /> Allocate
+                  <Button variant="soft" size="xs" icon={CheckCircle2} onClick={() => setQueue(q => q.map((it,idx) => idx===i ? { ...it, status:'Acknowledged', tone:'success' } : it))}>
+                    Allocate
                   </Button>
                 )}
               </div>
             </AnimatedItem>
           ))}
         </AnimatedList>
-        {queue.length > 3 && (
-          <button onClick={() => setShowAll(v => !v)}
-            style={{ marginTop: 12, width: '100%', padding: '8px', borderRadius: 'var(--r-md)', border: '1px dashed var(--border-subtle)', background: 'transparent', color: 'var(--text-muted)', fontSize: '0.875rem', cursor: 'pointer', fontWeight: 500 }}>
-            {showAll ? '↑ Collapse' : `+ ${queue.length - 3} more items`}
-          </button>
-        )}
       </Card>
-
-      <Modal isOpen={isModalOpen} onClose={() => setModal(false)} title="Register Asset" description="Add a hardware asset to the provisioning queue."
-        footer={<><Button variant="secondary" onClick={() => setModal(false)}>Cancel</Button><Button onClick={handleRegister}>Register</Button></>}>
-        <form onSubmit={handleRegister} style={{ display: 'grid', gap: 14 }}>
-          <div><Label>Employee Name</Label><Input required placeholder="e.g. Tanvi Reddy" value={newAsset.employee} onChange={e => setNew({ ...newAsset, employee: e.target.value })} /></div>
-          <div><Label>Asset Type</Label>
-            <Select value={newAsset.asset} onChange={e => setNew({ ...newAsset, asset: e.target.value })}>
-              <option>MacBook Pro 16" M3 Max (36GB)</option>
-              <option>ThinkPad T14s Gen 5 (32GB)</option>
-              <option>Dell UltraSharp 27" 4K Monitor</option>
-              <option>Dell Latitude 5540 (16GB)</option>
-            </Select>
-          </div>
-          <div><Label>Serial / Asset Tag</Label><Input placeholder="e.g. BLR-MBP-2026-110" value={newAsset.serial} onChange={e => setNew({ ...newAsset, serial: e.target.value })} /></div>
-          <div><Label>Tech Hub</Label>
-            <Select value={newAsset.hub} onChange={e => setNew({ ...newAsset, hub: e.target.value })}>
-              <option>Bengaluru Bellandur Hub</option><option>Hyderabad HITEC City</option>
-              <option>Pune Hinjawadi Hub</option><option>Gurugram Cyber City</option><option>Remote Dispatch</option>
-            </Select>
-          </div>
-        </form>
-      </Modal>
     </div>
   );
 }

@@ -1,193 +1,230 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Card, KpiCard, SegmentedProgress, CircularArc, DarkPanel, DarkTaskItem, MiniCalendar, PageHeader, Avatar, Badge, Button, useCountUp } from '../../../components/common/ui';
+import { VerticalBarChart, TrendChart, HorizontalBar } from '../../../components/common/charts';
+import { Users, Calendar, ShieldCheck, TrendingUp, Clock, ChevronRight, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Card, Button, Badge, Avatar, Modal, Input, Select, Label, AnimatedList, AnimatedItem, PageHeader, StatCard } from '../../../components/common/ui';
-import { MiniDonut, Sparkline, StackedBarChart, HorizontalBar } from '../../../components/common/charts';
-import { Users, Clock, ShieldCheck, Award, Plus, Download, ChevronRight } from 'lucide-react';
 
-const SPARK = [
-  { w: 'W1', v: 12 }, { w: 'W2', v: 15 }, { w: 'W3', v: 11 }, { w: 'W4', v: 18 },
-  { w: 'W5', v: 14 }, { w: 'W6', v: 20 }, { w: 'W7', v: 18 },
+/* ── Seed data (Indian references) ──────────────────────── */
+const WEEKLY_COMPLETIONS = [
+  { day:'Mon', value:5 }, { day:'Tue', value:8 }, { day:'Wed', value:6 },
+  { day:'Thu', value:11 }, { day:'Fri', value:9 }, { day:'Sat', value:2 }, { day:'Sun', value:7 },
 ];
 
-const PHASE_DATA = [
-  { name: 'Pre-boarding', count: 2 },
-  { name: 'Week 1',       count: 3 },
-  { name: '30 Days',      count: 5 },
-  { name: '60 Days',      count: 6 },
-  { name: '90 Days',      count: 2 },
+const COHORT_SEGMENTS = [
+  { label:'Pre-boarding', value:15, color:'var(--sage-200)' },
+  { label:'Week 1',       value:25, color:'var(--sage-300)' },
+  { label:'30 Days',      value:30, color:'var(--sage-500)' },
+  { label:'60 Days',      value:20, color:'var(--sage-700)' },
+  { label:'90 Days',      value:10, color:'var(--sage-900)' },
 ];
 
-const HUB_DATA = [
-  { label: 'Bengaluru',  value: 8,  displayValue: '8 employees' },
-  { label: 'Hyderabad',  value: 4,  displayValue: '4 employees' },
-  { label: 'Pune',       value: 3,  displayValue: '3 employees' },
-  { label: 'Gurugram',   value: 2,  displayValue: '2 employees' },
-  { label: 'Remote',     value: 1,  displayValue: '1 employee' },
+const ONBOARDING_TASKS = [
+  { title:'Onboard Aarav Sharma',   subtitle:'Platform Eng · Day 21',  done:true,  icon:Users },
+  { title:'Review Sneha Kulkarni docs', subtitle:'Product & UX · Pending',done:false, icon:ShieldCheck },
+  { title:'Schedule 30-day 1:1 — Kabir Mehta', subtitle:'Due today',   done:false, icon:Clock },
+  { title:'Assign MacBook — Pooja Desai', subtitle:'IT Provisioning',   done:false, icon:ShieldCheck },
+  { title:'POSH sign-off — Arjun Rao',   subtitle:'Compliance',        done:false, icon:ShieldCheck },
 ];
 
-const INITIAL_COHORT = [
-  { name: 'Aarav Sharma',   role: 'Senior Software Engineer (SDE-II)', dept: 'Platform Engineering', hub: 'Bengaluru', progress: 72, phase: '60 Days', status: 'On Track',     tone: 'success' },
-  { name: 'Sneha Kulkarni', role: 'Senior Product Designer',           dept: 'Product & UI/UX Design', hub: 'Pune',      progress: 45, phase: '30 Days', status: 'Needs Review', tone: 'warning' },
-  { name: 'Arjun Rao',      role: 'Cloud Infrastructure Specialist',   dept: 'Cloud & Infrastructure',  hub: 'Hyderabad', progress: 88, phase: '90 Days', status: 'On Track',     tone: 'success' },
-  { name: 'Ananya Iyer',    role: 'Lead Frontend Architect',           dept: 'Platform Engineering',     hub: 'Bengaluru', progress: 60, phase: '30 Days', status: 'On Track',     tone: 'success' },
-  { name: 'Kabir Mehta',    role: 'Senior Software Engineer (SDE-II)', dept: 'Platform Engineering',     hub: 'Gurugram',  progress: 35, phase: 'Week 1', status: 'Just Started', tone: 'info' },
+const HUB_DIST = [
+  { label:'Bengaluru', value:8,  displayValue:'8 employees' },
+  { label:'Hyderabad', value:4,  displayValue:'4 employees' },
+  { label:'Pune',      value:3,  displayValue:'3 employees' },
+  { label:'Gurugram',  value:2,  displayValue:'2 employees' },
+  { label:'Remote',    value:1,  displayValue:'1 employee' },
+];
+
+const MILESTONE_DATES = [
+  '2026-09-18','2026-09-22','2026-09-25','2026-09-29',
+];
+
+const VELOCITY = [
+  { month:'Apr', started:10, completed:8 }, { month:'May', started:14, completed:11 },
+  { month:'Jun', started:18, completed:15 }, { month:'Jul', started:16, completed:14 },
+  { month:'Aug', started:22, completed:19 }, { month:'Sep', started:18, completed:16 },
 ];
 
 export default function HRDashboard() {
-  const [cohort, setCohort] = useState(INITIAL_COHORT);
-  const [showAll, setShowAll] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newHire, setNewHire] = useState({ name: '', role: 'Senior Software Engineer (SDE-II)', dept: 'Platform Engineering', hub: 'Bengaluru' });
+  const [tasks, setTasks] = useState(ONBOARDING_TASKS);
   const navigate = useNavigate();
-
-  const handleExport = () => {
-    const csv = 'Name,Role,Department,Hub,Progress,Phase,Status\n' +
-      cohort.map(c => `${c.name},${c.role},${c.dept},${c.hub},${c.progress}%,${c.phase},${c.status}`).join('\n');
-    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })), download: `EOMS_HR_Cohort_${new Date().toISOString().slice(0,10)}.csv` });
-    a.click();
-  };
-
-  const handleAdd = e => {
-    e.preventDefault();
-    if (!newHire.name.trim()) return;
-    setCohort([{ name: newHire.name, role: newHire.role, dept: newHire.dept, hub: newHire.hub, progress: 0, phase: 'Day 1', status: 'Just Started', tone: 'info' }, ...cohort]);
-    setIsModalOpen(false);
-    setNewHire({ name: '', role: 'Senior Software Engineer (SDE-II)', dept: 'Platform Engineering', hub: 'Bengaluru' });
-  };
-
-  const visible = showAll ? cohort : cohort.slice(0, 3);
+  const doneCount = tasks.filter(t=>t.done).length;
+  const slaVal = useCountUp(98, 900, 0);
 
   return (
-    <div style={{ display: 'grid', gap: 'var(--sp-5)' }}>
-      <PageHeader
-        title="People Operations"
-        subtitle="India-wide onboarding cohort status and statutory compliance."
-        action={
-          <div style={{ display: 'flex', gap: 8 }}>
-            <Button variant="secondary" size="sm" icon={Download} onClick={handleExport}>Export CSV</Button>
-            <Button size="sm" icon={Plus} onClick={() => setIsModalOpen(true)}>Onboard</Button>
-          </div>
-        }
-      />
-
-      {/* ── KPI Row (Bento Grid) ── */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(12, 1fr)',
-        gap: 'var(--sp-5)'
-      }}>
-        {/* Active onboardees with sparkline */}
-        <Card $hoverable style={{ gridColumn: 'span 4', padding: 'var(--sp-5)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <p className="meta" style={{ fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Active Onboardees</p>
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, marginTop: 'var(--sp-4)' }}>
-            <div>
-              <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1, letterSpacing: '-0.03em' }}>18</div>
-              <div className="meta" style={{ marginTop: 6, color: 'var(--chart-blue)', fontWeight: 500 }}>4 starting this week</div>
-            </div>
-            <div style={{ width: 100, flexShrink: 0 }}>
-              <Sparkline data={SPARK} dataKey="v" color="var(--chart-blue)" height={48} />
-            </div>
-          </div>
-        </Card>
-
-        {/* Avg time with donut */}
-        <Card $hoverable style={{ gridColumn: 'span 4', padding: 'var(--sp-5)' }}>
-          <p className="meta" style={{ fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 'var(--sp-4)' }}>Avg. Time to 100%</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <MiniDonut value={38} total={45} label="38d" sublabel="/ 45d" size={72} color="var(--chart-emerald)" />
-            <div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>38 days</div>
-              <div className="meta" style={{ color: 'var(--success-text)', marginTop: 4, fontWeight: 500 }}>-7d vs SLA target</div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Compliance donut */}
-        <Card $hoverable style={{ gridColumn: 'span 4', padding: 'var(--sp-5)' }}>
-          <p className="meta" style={{ fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 'var(--sp-4)' }}>POSH & Statutory</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <MiniDonut value={98.2} total={100} label="98%" size={72} color="var(--chart-violet)" />
-            <div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>98.2%</div>
-              <div className="meta" style={{ color: 'var(--text-muted)', marginTop: 4 }}>+2.4% from last month</div>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* ── Charts Row ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 'var(--sp-5)' }}>
-        <Card $hoverable style={{ gridColumn: 'span 8', padding: 'var(--sp-5)' }}>
-          <h2 className="h3" style={{ marginBottom: 'var(--sp-5)' }}>Cohort by Phase</h2>
-          <StackedBarChart
-            data={PHASE_DATA}
-            xKey="name"
-            categories={[{ dataKey: 'count', name: 'Employees', color: 'var(--chart-blue)' }]}
-            height={200}
-          />
-        </Card>
-        <Card $hoverable style={{ gridColumn: 'span 4', padding: 'var(--sp-5)' }}>
-          <h2 className="h3" style={{ marginBottom: 'var(--sp-5)' }}>Distribution by Hub</h2>
-          <HorizontalBar items={HUB_DATA} colorVar="--chart-violet" />
-        </Card>
-      </div>
-
-      {/* ── Current Cohort ── */}
-      <Card $hoverable style={{ gridColumn: 'span 12', padding: 'var(--sp-5)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--sp-4)' }}>
-          <h2 className="h3">Current Cohort</h2>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/onboarding')}>View all <ChevronRight size={14} /></Button>
+    <div style={{ display:'grid', gap:'var(--sp-5)' }}>
+      {/* ── Greeting ── */}
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:12 }}>
+        <div>
+          <h1 style={{ fontSize:'1.75rem', fontWeight:700, color:'var(--text-primary)', letterSpacing:'-0.02em' }}>
+            Good morning, Priya 👋
+          </h1>
+          <p className="caption" style={{ marginTop:4 }}>Thursday, 18 September 2026 · EOMS India Operations</p>
         </div>
-        <AnimatedList style={{ display: 'grid', gap: 8 }}>
-          {visible.map(emp => (
-            <AnimatedItem key={emp.name}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', flexWrap: 'wrap' }}>
-                <Avatar name={emp.name} size={36} />
-                <div style={{ flex: '1 1 180px', minWidth: 0 }}>
-                  <div style={{ fontWeight: 500, fontSize: '0.875rem', color: 'var(--text-primary)' }}>{emp.name}</div>
-                  <div className="meta" style={{ color: 'var(--text-muted)' }}>{emp.dept} · {emp.hub}</div>
-                </div>
-                <div style={{ width: 120 }}>
-                  <div style={{ height: 3, borderRadius: 'var(--r-full)', background: 'var(--bg-sunken)', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${emp.progress}%`, background: 'var(--primary)', borderRadius: 'inherit', transition: 'width 600ms var(--ease)' }} />
-                  </div>
-                  <div className="meta" style={{ marginTop: 3, textAlign: 'right', color: 'var(--text-muted)' }}>{emp.progress}%</div>
-                </div>
-                <Badge tone={emp.tone}>{emp.status}</Badge>
-              </div>
-            </AnimatedItem>
-          ))}
-        </AnimatedList>
-        {cohort.length > 3 && (
-          <button onClick={() => setShowAll(v => !v)}
-            style={{ marginTop: 10, width: '100%', padding: '7px', borderRadius: 'var(--r-md)', border: '1px dashed var(--border-subtle)', background: 'transparent', color: 'var(--text-muted)', fontSize: '0.8125rem', cursor: 'pointer', transition: 'all var(--t-fast)' }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.color = 'var(--primary)'; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; e.currentTarget.style.color = 'var(--text-muted)'; }}>
-            {showAll ? '↑ Collapse' : `+ ${cohort.length - 3} more employees`}
-          </button>
-        )}
+        <Button icon={Plus} onClick={() => navigate('/onboarding')}>New Onboarding Plan</Button>
+      </div>
+
+      {/* ── KPI Strip — Crextio giant number style ── */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:'var(--sp-4)' }}>
+        <KpiCard icon={Users}    label="Active Onboarding" value={18}  hint="↑ 3 from last week" />
+        <KpiCard icon={Calendar} label="Joining This Week"  value={4}   hint="Expected start dates" />
+        <KpiCard icon={ShieldCheck} label="SLA Compliance"  value={slaVal} suffix="%" hint="Target: 95%" />
+        <KpiCard icon={TrendingUp}  label="Avg Completion"  value={38}  unit="days" hint="90-day programme" />
+      </div>
+
+      {/* ── Progress Strip (Crextio cohort phase bar) ── */}
+      <Card $p="var(--sp-5)">
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
+          <h2 className="section-title">Cohort by Onboarding Phase</h2>
+          <Button variant="ghost" size="sm" onClick={() => navigate('/onboarding')}>View all <ChevronRight size={13}/></Button>
+        </div>
+        <SegmentedProgress segments={COHORT_SEGMENTS} />
       </Card>
 
-      {/* ── Modal ── */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Onboard New Employee" description="Initiate a 30-60-90 day onboarding journey."
-        footer={<><Button variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button><Button onClick={handleAdd}>Enroll & Start</Button></>}>
-        <form onSubmit={handleAdd} style={{ display: 'grid', gap: 14 }}>
-          <div><Label>Full Name</Label><Input required placeholder="e.g. Ramesh Chandra" value={newHire.name} onChange={e => setNewHire({ ...newHire, name: e.target.value })} /></div>
-          <div><Label>Department</Label>
-            <Select value={newHire.dept} onChange={e => setNewHire({ ...newHire, dept: e.target.value })}>
-              <option>Platform Engineering</option><option>Product & UI/UX Design</option>
-              <option>Cloud & Infrastructure</option><option>People Operations (HR)</option><option>Finance & Payroll</option>
-            </Select>
+      {/* ── Main 3-column grid (Crextio layout) ── */}
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1.1fr 1fr', gap:'var(--sp-4)' }}>
+
+        {/* Col 1: Employee of the week / latest joinee */}
+        <Card $p="0" style={{ overflow:'hidden', borderRadius:'var(--r-xl)', border:'1px solid var(--border-subtle)' }}>
+          <div style={{ background:'linear-gradient(135deg, var(--sage-800) 0%, var(--sage-600) 100%)', padding:'var(--sp-5)', minHeight:180, display:'flex', flexDirection:'column', justifyContent:'flex-end' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
+              <Avatar name="Aarav Sharma" size={48} />
+              <div>
+                <div style={{ fontSize:'1.1rem', fontWeight:700, color:'#fff' }}>Aarav Sharma</div>
+                <div style={{ fontSize:'0.8rem', color:'rgba(255,255,255,0.7)', marginTop:2 }}>SDE-II · Platform Engineering</div>
+              </div>
+            </div>
+            <div style={{ background:'rgba(255,255,255,0.15)', borderRadius:'var(--r-full)', padding:'6px 14px', display:'inline-flex', alignItems:'center', gap:8, backdropFilter:'blur(4px)', width:'fit-content' }}>
+              <div style={{ width:7, height:7, borderRadius:'50%', background:'#86EFAC', flexShrink:0 }} />
+              <span style={{ color:'#fff', fontSize:'0.8125rem', fontWeight:600 }}>Day 21 of 90 · Bengaluru Hub</span>
+            </div>
           </div>
-          <div><Label>Job Role</Label><Input required placeholder="e.g. Senior Software Engineer (SDE-II)" value={newHire.role} onChange={e => setNewHire({ ...newHire, role: e.target.value })} /></div>
-          <div><Label>Tech Hub</Label>
-            <Select value={newHire.hub} onChange={e => setNewHire({ ...newHire, hub: e.target.value })}>
-              <option>Bengaluru</option><option>Hyderabad</option><option>Pune</option><option>Gurugram</option><option>Remote</option>
-            </Select>
+          <div style={{ padding:'var(--sp-4)' }}>
+            <div className="label-caps" style={{ marginBottom:10 }}>Programme Progress</div>
+            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5, fontSize:'0.8125rem' }}>
+              <span style={{ color:'var(--text-muted)' }}>Overall</span>
+              <span style={{ fontWeight:700, color:'var(--sage-700)' }}>72%</span>
+            </div>
+            <div style={{ height:6, borderRadius:'var(--r-full)', background:'var(--sage-100)', overflow:'hidden' }}>
+              <motion.div initial={{ width:0 }} animate={{ width:'72%' }} transition={{ duration:0.9, ease:[0.16,1,0.3,1] }}
+                style={{ height:'100%', borderRadius:'inherit', background:'var(--sage-700)' }} />
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginTop:14 }}>
+              {[['POSH Quiz','68%'],['DPDP Training','40%']].map(([k,v])=>(
+                <div key={k} style={{ background:'var(--sage-50)', borderRadius:'var(--r-md)', padding:'8px 10px' }}>
+                  <div className="meta" style={{ marginBottom:2 }}>{k}</div>
+                  <div style={{ fontWeight:700, color:'var(--sage-800)', fontSize:'0.9375rem' }}>{v}</div>
+                </div>
+              ))}
+            </div>
           </div>
-        </form>
-      </Modal>
+        </Card>
+
+        {/* Col 2: Weekly bar chart (Crextio Progress widget) */}
+        <Card $p="var(--sp-5)">
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:4 }}>
+            <div>
+              <h2 className="section-title">Task Completions</h2>
+              <div style={{ display:'flex', alignItems:'baseline', gap:6, marginTop:4 }}>
+                <span className="kpi-md">48</span>
+                <span className="caption">tasks this week</span>
+              </div>
+            </div>
+            <Badge tone="sage">↑ 12% vs last week</Badge>
+          </div>
+          <VerticalBarChart data={WEEKLY_COMPLETIONS} xKey="day" dataKey="value" height={150} activeIndex={4} />
+        </Card>
+
+        {/* Col 3: Circular arc — overall SLA compliance */}
+        <Card $p="var(--sp-5)" style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16 }}>
+          <h2 className="section-title" style={{ alignSelf:'flex-start', width:'100%' }}>SLA Compliance</h2>
+          <CircularArc value={94} max={100} size={150} strokeWidth={12} color="var(--sage-600)"
+            centerContent={
+              <div style={{ textAlign:'center' }}>
+                <div className="kpi-md">94%</div>
+                <div className="meta">of 18</div>
+              </div>
+            }
+            label="On-time onboarding rate"
+          />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, width:'100%' }}>
+            {[['On Track','14','success'],['Needs Review','3','warning'],['Ahead','1','sage'],['Blocked','0','neutral']].map(([l,v,t])=>(
+              <div key={l} style={{ background:'var(--sage-50)', borderRadius:'var(--r-md)', padding:'8px 10px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                <span className="meta">{l}</span>
+                <span style={{ fontWeight:700, fontSize:'0.9375rem', color:'var(--text-primary)' }}>{v}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+
+      {/* ── Bottom row: Hub distribution + Calendar + Dark task panel ── */}
+      <div style={{ display:'grid', gridTemplateColumns:'1.1fr 1fr 1fr', gap:'var(--sp-4)' }}>
+
+        {/* Velocity trend */}
+        <Card $p="var(--sp-5)">
+          <div style={{ marginBottom:14 }}>
+            <h2 className="section-title">Onboarding Velocity</h2>
+            <p className="meta" style={{ marginTop:2 }}>Started vs completed (6 months)</p>
+          </div>
+          <TrendChart data={VELOCITY} xKey="month"
+            series={[
+              { dataKey:'started',   name:'Started',   color:'var(--sage-300)' },
+              { dataKey:'completed', name:'Completed', color:'var(--sage-700)' },
+            ]} height={140} />
+          <div style={{ display:'flex', gap:12, marginTop:6 }}>
+            {[['Started','var(--sage-300)'],['Completed','var(--sage-700)']].map(([l,c])=>(
+              <div key={l} style={{ display:'flex', alignItems:'center', gap:5, fontSize:'0.75rem', color:'var(--text-muted)' }}>
+                <div style={{ width:10, height:2, background:c, borderRadius:2 }}/>{l}
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* Mini Calendar */}
+        <Card $p="var(--sp-5)">
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+            <h2 className="section-title">Milestone Dates</h2>
+            <Button variant="ghost" size="xs" onClick={() => navigate('/tasks')}><Calendar size={12}/> Schedule</Button>
+          </div>
+          <MiniCalendar highlightDates={MILESTONE_DATES} />
+          <div style={{ marginTop:14, display:'flex', flexDirection:'column', gap:6 }}>
+            <div className="label-caps" style={{ marginBottom:4 }}>Upcoming</div>
+            {[{ date:'Sep 18', label:'Aarav — 30d check-in', tone:'sage' },{ date:'Sep 22', label:'Kabir — Week 1 review', tone:'info' }].map((ev,i)=>(
+              <div key={i} style={{ display:'flex', gap:10, alignItems:'center', padding:'6px 8px', borderRadius:'var(--r-md)', background:'var(--sage-50)' }}>
+                <div style={{ fontWeight:700, color:'var(--sage-700)', fontSize:'0.8rem', flexShrink:0, width:42 }}>{ev.date}</div>
+                <div style={{ fontSize:'0.8rem', color:'var(--text-secondary)' }}>{ev.label}</div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* Dark task panel — Crextio right panel */}
+        <DarkPanel title="Onboarding Tasks" counter={`${doneCount}/${tasks.length}`} subtitle="Today's pending actions">
+          {tasks.map((t,i) => (
+            <DarkTaskItem key={i} title={t.title} subtitle={t.subtitle} done={t.done} icon={t.icon}
+              onClick={() => setTasks(ts => ts.map((tt,ii) => ii===i ? { ...tt, done:!tt.done } : tt))} />
+          ))}
+          <button onClick={() => navigate('/onboarding')}
+            style={{ marginTop:16, width:'100%', padding:'9px', borderRadius:'var(--r-md)', border:'1px solid rgba(255,255,255,0.15)', background:'rgba(255,255,255,0.05)', color:'rgba(255,255,255,0.7)', fontSize:'0.8125rem', cursor:'pointer', transition:'all var(--t-fast)' }}
+            onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.1)';e.currentTarget.style.color='#fff'}}
+            onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.05)';e.currentTarget.style.color='rgba(255,255,255,0.7)'}}>
+            View all onboarding tasks ↗
+          </button>
+        </DarkPanel>
+      </div>
+
+      {/* ── Hub distribution ── */}
+      <Card $p="var(--sp-5)">
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
+          <div>
+            <h2 className="section-title">Distribution by Tech Hub</h2>
+            <p className="meta" style={{ marginTop:2 }}>Active onboarding employees across India</p>
+          </div>
+          <Button variant="ghost" size="sm" onClick={() => navigate('/employees')}>Directory <ChevronRight size={13}/></Button>
+        </div>
+        <HorizontalBar items={HUB_DIST} colorVar="--chart-1" />
+      </Card>
     </div>
   );
 }

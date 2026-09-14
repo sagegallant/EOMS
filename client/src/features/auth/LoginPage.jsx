@@ -1,174 +1,140 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../../api/client';
 import { useAuthStore } from '../../store/authStore';
-import { Input, Button } from '../../components/common/ui';
-import { motion } from 'framer-motion';
+import { Button, Input, Label } from '../../components/common/ui';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Eye, EyeOff, ArrowRight } from 'lucide-react';
 
-const DEMO_USERS = [
-  { name: 'Priya (HR)',      id: 'priya.patel' },
-  { name: 'Aarav (SDE)',     id: 'aarav.sharma' },
-  { name: 'Vikram (Mgr)',    id: 'vikram.malhotra' },
-  { name: 'Rohan (IT)',      id: 'rohan.verma' },
-  { name: 'Admin',           id: 'admin' },
+const DEMOS = [
+  { label:'HR Admin',    id:'priya.patel',     role:'HR_ADMIN' },
+  { label:'Employee',    id:'aarav.sharma',    role:'EMPLOYEE' },
+  { label:'Manager',     id:'vikram.malhotra', role:'MANAGER' },
+  { label:'IT Admin',    id:'rohan.verma',     role:'IT_ADMIN' },
+  { label:'System Admin',id:'admin',           role:'ADMIN' },
 ];
 
 export default function LoginPage() {
-  const [step, setStep] = useState('credentials');
-  const [form, setForm] = useState({ identifier: '', password: '', code: '' });
-  const [showPw, setShowPw] = useState(false);
-  const [error, setError] = useState('');
+  const [form, setForm] = useState({ username:'', password:'' });
+  const [showPwd, setShowPwd] = useState(false);
+  const [err, setErr] = useState('');
   const [loading, setLoading] = useState(false);
-  const [challenge, setChallenge] = useState(null);
-  const setSession = useAuthStore(s => s.setSession);
+  const { login } = useAuthStore();
   const navigate = useNavigate();
+
+  const fill = demo => setForm({ username: demo.id, password:'Password@123' });
 
   const submit = async e => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
+    setErr(''); setLoading(true);
     try {
-      if (step === 'credentials') {
-        const { data } = await api.post('/auth/login', form);
-        if (data.mfaRequired) { setChallenge(data.challenge); setStep('mfa'); }
-        else finish(data);
-      } else {
-        const { data } = await api.post('/auth/mfa/verify', { challenge, code: form.code });
-        finish(data);
-      }
-    } catch (err) {
-      if (!err.response) {
-        const id = (form.identifier || '').toLowerCase();
-        const role =
-          id.includes('aarav') || id.includes('sneha') || id.includes('arjun') ? 'EMPLOYEE' :
-          id.includes('priya') ? 'HR_ADMIN' :
-          id.includes('vikram') ? 'DEPARTMENT_MANAGER' :
-          id.includes('rohan') ? 'IT_ADMIN' :
-          id.includes('neha') ? 'COMPLIANCE_OFFICER' : 'SYSTEM_ADMIN';
-        finish({ token: 'demo-mock-token-jwt', user: { id: 1, username: form.identifier || 'admin', roles: [role] } });
-        return;
-      }
-      setError(err.response?.data?.message ?? 'Something went wrong. Try again.');
-    } finally {
-      setLoading(false);
-    }
+      await login(form.username, form.password);
+      navigate('/');
+    } catch (e) {
+      setErr(e.message || 'Invalid credentials');
+    } finally { setLoading(false); }
   };
 
-  const finish = d => { setSession(d.token, d.user); navigate('/dashboard'); };
-
-  const quickFill = (id) => setForm({ identifier: id, password: 'Password@123', code: '123456' });
-
   return (
-    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: 'var(--bg-app)', padding: 'var(--sp-5)' }}>
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-        style={{ width: '100%', maxWidth: 380 }}
-      >
-        {/* Brand mark */}
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{
-            width: 40, height: 40, borderRadius: 'var(--r-md)',
-            background: 'var(--primary)', color: '#fff',
-            display: 'grid', placeItems: 'center',
-            fontWeight: 600, fontSize: '1rem',
-            margin: '0 auto 12px',
-          }}>
-            E
+    <div style={{ minHeight:'100vh', display:'grid', gridTemplateColumns:'1fr 1fr', background:'var(--bg-app)' }}>
+      {/* ── Left brand panel ── */}
+      <div style={{ background:'var(--sage-900)', display:'flex', flexDirection:'column', justifyContent:'space-between', padding:'48px 56px', position:'relative', overflow:'hidden' }}>
+        {/* Background decoration */}
+        <div style={{ position:'absolute', top:-80, right:-80, width:300, height:300, borderRadius:'50%', background:'rgba(255,255,255,0.04)' }} />
+        <div style={{ position:'absolute', bottom:-40, left:-40, width:200, height:200, borderRadius:'50%', background:'rgba(255,255,255,0.03)' }} />
+
+        <div>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            <div style={{ width:36, height:36, borderRadius:'var(--r-md)', background:'var(--sage-600)', color:'#fff', display:'grid', placeItems:'center', fontWeight:700, fontSize:'1.1rem' }}>E</div>
+            <span style={{ color:'#fff', fontSize:'1rem', fontWeight:700 }}>EOMS</span>
           </div>
-          <h1 style={{ fontSize: '1.125rem', fontWeight: 500, color: 'var(--text-primary)' }}>EOMS</h1>
-          <p className="caption" style={{ color: 'var(--text-muted)', marginTop: 2 }}>Employee Onboarding Management System</p>
         </div>
 
-        {/* Form card */}
-        <div style={{
-          background: 'var(--bg-surface)',
-          border: '1px solid var(--border-subtle)',
-          borderRadius: 'var(--r-xl)',
-          padding: 'var(--sp-5)',
-        }}>
-          <h2 style={{ fontSize: '0.9375rem', fontWeight: 500, color: 'var(--text-primary)', marginBottom: 4 }}>
-            {step === 'credentials' ? 'Sign in' : 'Two-factor verification'}
-          </h2>
-          <p className="caption" style={{ color: 'var(--text-muted)', marginBottom: 20 }}>
-            {step === 'credentials' ? 'Enter your credentials to continue.' : 'Enter the 6-digit code from your authenticator.'}
+        <div>
+          <p style={{ color:'rgba(255,255,255,0.5)', fontSize:'0.8125rem', marginBottom:20, fontWeight:500, letterSpacing:'0.05em', textTransform:'uppercase' }}>Employee Onboarding</p>
+          <h1 style={{ fontSize:'2.75rem', fontWeight:700, color:'#fff', lineHeight:1.1, letterSpacing:'-0.03em', marginBottom:20 }}>
+            Onboarding<br />made human.
+          </h1>
+          <p style={{ color:'rgba(255,255,255,0.6)', lineHeight:1.7, maxWidth:360, fontSize:'0.9375rem' }}>
+            Streamline your 90-day onboarding journey — for HR teams, managers, and every new hire across India's top tech hubs.
           </p>
+          <div style={{ marginTop:40, display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12 }}>
+            {[['18','Active plans'],['98%','SLA rate'],['5','Tech hubs']].map(([v,l])=>(
+              <div key={l} style={{ background:'rgba(255,255,255,0.06)', borderRadius:'var(--r-lg)', padding:'16px', border:'1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ fontSize:'1.5rem', fontWeight:700, color:'#fff' }}>{v}</div>
+                <div style={{ fontSize:'0.75rem', color:'rgba(255,255,255,0.5)', marginTop:4 }}>{l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
 
-          {error && (
-            <div style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)', fontSize: '0.8125rem', padding: '8px 12px', borderRadius: 'var(--r-sm)', marginBottom: 14 }}>
-              {error}
-            </div>
-          )}
+        <div style={{ display:'flex', gap:16 }}>
+          {['Bengaluru','Hyderabad','Pune','Gurugram','Remote'].map(h => (
+            <span key={h} style={{ fontSize:'0.75rem', color:'rgba(255,255,255,0.35)', fontWeight:500 }}>{h}</span>
+          ))}
+        </div>
+      </div>
 
-          <form onSubmit={submit} style={{ display: 'grid', gap: 14 }}>
-            {step === 'credentials' ? (
-              <>
-                <div>
-                  <label style={lbl}>Email or username</label>
-                  <Input required autoComplete="username" value={form.identifier}
-                    placeholder="priya.patel or admin"
-                    onChange={e => setForm({ ...form, identifier: e.target.value })} />
-                </div>
-                <div>
-                  <label style={lbl}>Password</label>
-                  <div style={{ position: 'relative' }}>
-                    <Input required type={showPw ? 'text' : 'password'}
-                      autoComplete="current-password" value={form.password}
-                      placeholder="••••••••"
-                      onChange={e => setForm({ ...form, password: e.target.value })} />
-                    <button type="button" onClick={() => setShowPw(v => !v)}
-                      style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                      {showPw ? 'Hide' : 'Show'}
-                    </button>
-                  </div>
-                </div>
-                <Button type="submit" isLoading={loading} style={{ width: '100%', marginTop: 2 }}>
-                  Continue
-                </Button>
-              </>
-            ) : (
-              <>
-                <div>
-                  <label style={lbl}>Verification code</label>
-                  <Input required inputMode="numeric" pattern="[0-9]{6}" maxLength={6}
-                    placeholder="••••••" value={form.code}
-                    style={{ letterSpacing: '0.3em', textAlign: 'center', fontSize: '1.1rem' }}
-                    onChange={e => setForm({ ...form, code: e.target.value })} />
-                </div>
-                <Button type="submit" isLoading={loading} style={{ width: '100%' }}>Verify & Sign In</Button>
-                <button type="button" className="caption" onClick={() => setStep('credentials')}
-                  style={{ color: 'var(--text-muted)', textAlign: 'center' }}>
-                  ← Back
-                </button>
-              </>
-            )}
-          </form>
+      {/* ── Right form panel ── */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', padding:'48px 56px' }}>
+        <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.4, ease:[0.16,1,0.3,1] }}
+          style={{ width:'100%', maxWidth:400 }}>
+          <div style={{ marginBottom:32 }}>
+            <h2 style={{ fontSize:'1.75rem', fontWeight:700, color:'var(--text-primary)', letterSpacing:'-0.02em' }}>Welcome back</h2>
+            <p className="caption" style={{ marginTop:6 }}>Sign in to your EOMS account to continue.</p>
+          </div>
 
           {/* Demo quick-fill */}
-          <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border-subtle)' }}>
-            <p className="meta" style={{ color: 'var(--text-muted)', marginBottom: 8 }}>Demo accounts (pw: Password@123)</p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {DEMO_USERS.map(u => (
-                <button key={u.id} type="button" onClick={() => quickFill(u.id)}
-                  style={{
-                    padding: '3px 8px', borderRadius: 'var(--r-full)',
-                    background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)',
-                    fontSize: '0.75rem', color: 'var(--text-secondary)', cursor: 'pointer',
-                    transition: 'all var(--t-fast)',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.color = 'var(--primary)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
-                >
-                  {u.name}
+          <div style={{ marginBottom:24 }}>
+            <div className="label-caps" style={{ marginBottom:8 }}>Quick sign-in as</div>
+            <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+              {DEMOS.map(d => (
+                <button key={d.id} onClick={() => fill(d)}
+                  style={{ padding:'5px 12px', fontSize:'0.75rem', fontWeight:600, borderRadius:'var(--r-full)', border:'1.5px solid var(--border-default)', background: form.username===d.id ? 'var(--sage-100)' : '#fff', color: form.username===d.id ? 'var(--sage-800)' : 'var(--text-secondary)', cursor:'pointer', transition:'all var(--t-fast)' }}>
+                  {d.label}
                 </button>
               ))}
             </div>
           </div>
-        </div>
-      </motion.div>
+
+          <form onSubmit={submit} style={{ display:'grid', gap:16 }}>
+            <div>
+              <Label>Username</Label>
+              <Input type="text" placeholder="username" value={form.username} autoComplete="username" required
+                onChange={e => setForm(f => ({ ...f, username:e.target.value }))} />
+            </div>
+            <div>
+              <Label>Password</Label>
+              <div style={{ position:'relative' }}>
+                <Input type={showPwd?'text':'password'} placeholder="Password@123" value={form.password} autoComplete="current-password" required
+                  onChange={e => setForm(f => ({ ...f, password:e.target.value }))}
+                  style={{ paddingRight:42 }} />
+                <button type="button" onClick={() => setShowPwd(s=>!s)}
+                  style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', color:'var(--text-muted)', background:'none', border:'none', cursor:'pointer', display:'grid', placeItems:'center' }}>
+                  {showPwd ? <EyeOff size={16}/> : <Eye size={16}/>}
+                </button>
+              </div>
+            </div>
+
+            <AnimatePresence>
+              {err && (
+                <motion.div initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:'auto' }} exit={{ opacity:0, height:0 }}
+                  style={{ padding:'10px 14px', borderRadius:'var(--r-md)', background:'var(--danger-bg)', border:'1px solid var(--danger-border)', color:'var(--danger)', fontSize:'0.875rem' }}>
+                  {err}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <Button type="submit" isLoading={loading} icon={ArrowRight}
+              style={{ justifyContent:'center', marginTop:4 }}>
+              Sign in to EOMS
+            </Button>
+          </form>
+
+          <p className="meta" style={{ marginTop:24, textAlign:'center' }}>
+            Protected by RBAC · Session encrypted · MFA ready
+          </p>
+        </motion.div>
+      </div>
     </div>
   );
 }
-
-const lbl = { display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--text-primary)', marginBottom: 5 };
