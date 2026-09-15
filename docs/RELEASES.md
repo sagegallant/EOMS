@@ -1,6 +1,6 @@
 # Release Notes & Changelog
 
-All notable changes to the Enterprise Onboarding Management System (EOMS) are documented in this file in reverse chronological order.
+All notable changes to the Employee Onboarding Management System (EOMS) are documented in this file in reverse chronological order.
 
 ---
 

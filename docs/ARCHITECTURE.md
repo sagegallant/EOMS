@@ -1,6 +1,6 @@
-# Enterprise Architecture & System Design Document
+# System Architecture & Technical Design Document
 
-This document provides an exhaustive architectural overview of the Enterprise Onboarding Management System (EOMS).
+This document provides an exhaustive architectural overview of the Employee Onboarding Management System (EOMS).
 
 ---
 

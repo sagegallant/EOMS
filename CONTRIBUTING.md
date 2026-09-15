@@ -1,4 +1,4 @@
-# Contributing to Enterprise Onboarding Management System (EOMS)
+# Contributing to Employee Onboarding Management System (EOMS)
 
 Thank you for your interest in contributing to EOMS! We welcome contributions from developers, designers, compliance specialists, and HR tech enthusiasts.
 

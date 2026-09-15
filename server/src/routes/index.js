@@ -18,7 +18,7 @@ router.get('/health', (req, res) => {
   res.json({
     status: 'ok',
     version: '1.0.0',
-    service: 'Enterprise Onboarding Management System (EOMS) API',
+    service: 'Employee Onboarding Management System (EOMS) API',
     timestamp: new Date().toISOString(),
   });
 });

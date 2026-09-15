@@ -1,6 +1,6 @@
 # Security Policy
 
-The Enterprise Onboarding Management System (EOMS) team takes the security of our platform and employee data extremely seriously.
+The Employee Onboarding Management System (EOMS) team takes the security of our platform and employee data extremely seriously.
 
 ---
 

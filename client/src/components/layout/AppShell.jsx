@@ -67,7 +67,7 @@ function Logo() {
           EOMS
         </div>
         <div style={{ fontSize: '0.68rem', color: '#94A3B8', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-          Enterprise Onboarding
+          Employee Onboarding
         </div>
       </div>
     </div>

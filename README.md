@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🏢 Enterprise Onboarding Management System (EOMS)
+# 🏢 Employee Onboarding Management System (EOMS)
 
-**A mission-critical, enterprise-grade onboarding and statutory compliance platform built for high-growth modern technology organizations.**
+**A mission-critical onboarding and statutory compliance platform built for high-growth modern technology organizations.**
 
 [![Release](https://img.shields.io/badge/release-v1.0.0-indigo.svg?style=for-the-badge)](docs/RELEASES.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
@@ -18,7 +18,7 @@
 
 ## 📌 Executive Overview
 
-The **Enterprise Onboarding Management System (EOMS)** is a comprehensive full-stack solution architected to eliminate administrative friction across People Operations, IT Infrastructure, Department Leadership, and Legal Compliance.
+The **Employee Onboarding Management System (EOMS)** is a comprehensive full-stack solution architected to eliminate administrative friction across People Operations, IT Infrastructure, Department Leadership, and Legal Compliance.
 
 Engineered with deep statutory alignment for the **Indian Corporate Ecosystem** (Aadhaar e-KYC, PAN validation, EPFO Form 11, and the POSH Act 2013), EOMS automates the complete employee integration lifecycle—from pre-boarding offer acceptance to Day-30 independent delivery.
 

@@ -1,5 +1,5 @@
 # ==============================================================================
-# Enterprise Onboarding Management System (EOMS) - Windows Production Deployment
+# Employee Onboarding Management System (EOMS) - Windows Production Deployment
 # ==============================================================================
 
 $ErrorActionPreference = "Stop"

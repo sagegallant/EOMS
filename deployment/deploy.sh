@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Enterprise Onboarding Management System (EOMS) - Production Deployment Script
+# Employee Onboarding Management System (EOMS) - Production Deployment Script
 # ==============================================================================
 
 set -euo pipefail
