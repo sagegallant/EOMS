@@ -17,14 +17,28 @@ app.use(errorHandler); // → { code, message } JSON; 500s audited
 
 const PORT = process.env.PORT ?? 5000;
 
+function startServer(port) {
+  const server = app.listen(port, () => console.log(`✔ EOMS API ready on port ${port}`));
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`\n❌ Port ${port} is already in use by another process.`);
+      console.error(`To free port ${port} on Windows, run:\n  Stop-Process -Id (Get-NetTCPConnection -LocalPort ${port}).OwningProcess -Force\n`);
+      process.exit(1);
+    } else {
+      throw err;
+    }
+  });
+  return server;
+}
+
 if (process.env.NODE_ENV !== 'test') {
   sequelize.authenticate()
-    .then(() => app.listen(PORT, () => console.log(`✔ EOMS API ready on port ${PORT}`)))
+    .then(() => startServer(PORT))
     .catch(err => {
       console.error('DB connection failed:', err.message);
       // In dev without running DB, still start server for testing if needed
       if (process.env.NODE_ENV === 'development') {
-        app.listen(PORT, () => console.log(`⚠ EOMS API running in fallback mode on port ${PORT}`));
+        startServer(PORT);
       } else {
         process.exit(1);
       }
