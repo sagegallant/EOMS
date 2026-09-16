@@ -65,10 +65,10 @@ function HelpView() {
 
 function DashboardRouter() {
   const { user } = useAuthStore();
-  const role = user?.roles?.[0] || 'EMPLOYEE';
-  if (role === 'HR_ADMIN' || role === 'SYSTEM_ADMIN' || role === 'HR_SPECIALIST') return <HRDashboard />;
-  if (role === 'DEPARTMENT_MANAGER') return <ManagerDashboard />;
-  if (role === 'IT_ADMIN') return <ITDashboard />;
+  const roles = user?.roles || [];
+  if (roles.some(r => ['HR_ADMIN', 'SYSTEM_ADMIN', 'HR_SPECIALIST'].includes(r))) return <HRDashboard />;
+  if (roles.includes('MANAGER') || roles.includes('DEPARTMENT_MANAGER')) return <ManagerDashboard />;
+  if (roles.includes('IT_ADMIN')) return <ITDashboard />;
   return <EmployeeDashboard />;
 }
 
@@ -76,6 +76,7 @@ export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route element={<RoleRoute />}>
         <Route element={<AppShell />}>
           <Route path="/dashboard" element={<DashboardRouter />} />

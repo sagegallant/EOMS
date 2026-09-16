@@ -28,7 +28,7 @@ export default function LoginPage() {
     setErr(''); setLoading(true);
     try {
       await login(form.username, form.password);
-      navigate('/');
+      navigate('/dashboard');
     } catch (e) {
       setErr(e.message || 'Invalid credentials');
     } finally { setLoading(false); }
