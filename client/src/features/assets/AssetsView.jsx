@@ -1,114 +1,77 @@
 import { useState } from 'react';
-import { Card, Button, Badge, Modal, Input, Select, Label, AnimatedList, AnimatedItem, PageHeader } from '../../components/common/ui';
-import { StackedBarChart, HorizontalBar } from '../../components/common/charts';
+import { Card, Button, Badge, AnimatedList, AnimatedItem, PageHeader, KpiCard } from '../../components/common/ui';
+import { MiniDonut, HorizontalBar, StackedBarChart } from '../../components/common/charts';
 import { Laptop, Plus, CheckCircle2 } from 'lucide-react';
 
 const INITIAL_ASSETS = [
-  { id: 1, employee: 'Aarav Sharma',   type: 'Laptop', asset: 'MacBook Pro 16" M3 Max (36GB)',  serial: 'BLR-MBP-2026-108', hub: 'Bengaluru', status: 'Acknowledged',  tone: 'success' },
-  { id: 2, employee: 'Sneha Kulkarni', type: 'Laptop', asset: 'MacBook Pro 14" M3 Pro (18GB)',  serial: 'PUN-MBP-2026-109', hub: 'Pune',       status: 'In Transit',    tone: 'warning' },
-  { id: 3, employee: 'Arjun Rao',      type: 'Laptop', asset: 'ThinkPad T14s Gen 5 (32GB)',     serial: 'HYD-TP-2026-214',  hub: 'Hyderabad',  status: 'Acknowledged',  tone: 'success' },
-  { id: 4, employee: 'Kabir Mehta',    type: 'Laptop', asset: 'Dell Latitude 5540 (16GB)',      serial: 'GGN-DL-2026-301',  hub: 'Gurugram',   status: 'Pending',       tone: 'info' },
-  { id: 5, employee: 'Ananya Iyer',    type: 'Monitor', asset: 'LG UltraFine 5K 27"',          serial: 'BLR-MON-2026-045', hub: 'Bengaluru',  status: 'Acknowledged',  tone: 'success' },
+  { id:1, employee:'Aarav Sharma',   asset:'MacBook Pro 16" M3 Max', serial:'BLR-MBP-2026-108', hub:'Bengaluru', status:'Acknowledged', tone:'sage'    },
+  { id:2, employee:'Sneha Kulkarni', asset:'MacBook Pro 14" M3 Pro',  serial:'PUN-MBP-2026-109', hub:'Pune',      status:'In Transit',   tone:'warning' },
+  { id:3, employee:'Arjun Rao',      asset:'ThinkPad T14s Gen 5',     serial:'HYD-TP-2026-214',  hub:'Hyderabad', status:'Acknowledged', tone:'sage'    },
+  { id:4, employee:'Kabir Mehta',    asset:'Dell Latitude 5540',      serial:'GGN-DL-2026-301',  hub:'Gurugram',  status:'Pending',      tone:'info'    },
+  { id:5, employee:'Ananya Iyer',    asset:'LG UltraFine 5K 27"',    serial:'BLR-MON-2026-045', hub:'Bengaluru', status:'Acknowledged', tone:'sage'    },
 ];
 
 const BY_HUB = [
-  { label: 'Bengaluru', value: 2, displayValue: '2 assets' },
-  { label: 'Hyderabad', value: 1, displayValue: '1 asset' },
-  { label: 'Pune',      value: 1, displayValue: '1 asset' },
-  { label: 'Gurugram',  value: 1, displayValue: '1 asset' },
+  { label:'Bengaluru', value:2, displayValue:'2 assets' },
+  { label:'Hyderabad', value:1, displayValue:'1 asset' },
+  { label:'Pune',      value:1, displayValue:'1 asset' },
+  { label:'Gurugram',  value:1, displayValue:'1 asset' },
 ];
 
 const BY_CAT = [
-  { name: 'Laptops',   count: 4 },
-  { name: 'Monitors',  count: 1 },
-  { name: 'Keyboards', count: 0 },
-  { name: 'Software',  count: 0 },
+  { name:'Laptops', count:4 }, { name:'Monitors', count:1 }, { name:'Keyboards', count:0 }, { name:'Software', count:0 },
 ];
 
 export default function AssetsView() {
   const [assets, setAssets] = useState(INITIAL_ASSETS);
-  const [isModalOpen, setModal] = useState(false);
-  const [newAsset, setNew] = useState({ employee: '', type: 'Laptop', asset: 'MacBook Pro 16" M3 Max (36GB)', serial: '', hub: 'Bengaluru' });
-
-  const handleAdd = e => {
-    e.preventDefault();
-    if (!newAsset.employee.trim()) return;
-    setAssets([{ id: Date.now(), ...newAsset, status: 'Pending', tone: 'info' }, ...assets]);
-    setModal(false);
-    setNew({ employee: '', type: 'Laptop', asset: 'MacBook Pro 16" M3 Max (36GB)', serial: '', hub: 'Bengaluru' });
-  };
-
-  const acknowledge = id => setAssets(as => as.map(a => a.id === id ? { ...a, status: 'Acknowledged', tone: 'success' } : a));
+  const acknowledged = assets.filter(a=>a.tone==='sage').length;
 
   return (
-    <div style={{ display: 'grid', gap: 'var(--sp-5)' }}>
-      <PageHeader title="Assets" subtitle="Hardware provisioning and acknowledgement tracking."
-        action={<Button size="sm" icon={Plus} onClick={() => setModal(true)}>Add Asset</Button>} />
+    <div style={{ display:'grid', gap:'var(--sp-5)' }}>
+      <PageHeader title="Assets" subtitle="Hardware provisioning and acknowledgement tracking for India tech hubs."
+        action={<Button size="sm" icon={Plus}>Add Asset</Button>} />
 
-      {/* ── Charts (Bento Grid) ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 'var(--sp-5)' }}>
-        <Card $hoverable style={{ gridColumn: 'span 7', padding: 'var(--sp-5)' }}>
-          <h2 className="h3" style={{ marginBottom: 'var(--sp-4)' }}>By Category</h2>
-          <StackedBarChart data={BY_CAT} xKey="name" categories={[{ dataKey: 'count', name: 'Assets', color: 'var(--chart-blue)' }]} height={140} />
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:'var(--sp-4)' }}>
+        <KpiCard icon={Laptop} label="Total Assets"  value={assets.length} />
+        <KpiCard icon={CheckCircle2} label="Acknowledged" value={acknowledged} />
+        <KpiCard icon={Laptop} label="Pending"       value={assets.length-acknowledged} />
+      </div>
+
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'var(--sp-4)' }}>
+        <Card $p="var(--sp-5)">
+          <h2 className="section-title" style={{ marginBottom:14 }}>By Category</h2>
+          <StackedBarChart data={BY_CAT} xKey="name" categories={[{ dataKey:'count', name:'Assets', color:'var(--chart-1)' }]} height={120} />
         </Card>
-        <Card $hoverable style={{ gridColumn: 'span 5', padding: 'var(--sp-5)' }}>
-          <h2 className="h3" style={{ marginBottom: 'var(--sp-4)' }}>By Tech Hub</h2>
-          <HorizontalBar items={BY_HUB} colorVar="--chart-violet" />
+        <Card $p="var(--sp-5)">
+          <h2 className="section-title" style={{ marginBottom:12 }}>By Tech Hub</h2>
+          <HorizontalBar items={BY_HUB} colorVar="--chart-1" />
         </Card>
       </div>
 
-      {/* ── Asset List ── */}
-      <Card $hoverable style={{ padding: 'var(--sp-5)' }}>
-        <h2 className="h3" style={{ marginBottom: 'var(--sp-4)' }}>Asset Registry</h2>
-        <AnimatedList style={{ display: 'grid', gap: 8 }}>
-          {assets.map(asset => (
-            <AnimatedItem key={asset.id}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 16px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', flexWrap: 'wrap', transition: 'border-color var(--t-fast)' }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; }}
-              >
-                <div style={{ width: 36, height: 36, borderRadius: 'var(--r-sm)', background: 'var(--bg-subtle)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-                  <Laptop size={16} style={{ color: 'var(--text-muted)' }} />
+      <Card $p="var(--sp-5)">
+        <h2 className="section-title" style={{ marginBottom:14 }}>Asset Registry</h2>
+        <AnimatedList style={{ display:'grid', gap:6 }}>
+          {assets.map(a => (
+            <AnimatedItem key={a.id}>
+              <div style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 12px', borderRadius:'var(--r-md)', border:'1px solid var(--border-subtle)', background:'var(--bg-surface)', flexWrap:'wrap', transition:'all var(--t-fast)' }}
+                onMouseEnter={e=>{e.currentTarget.style.background='var(--sage-50)';e.currentTarget.style.borderColor='var(--sage-200)'}}
+                onMouseLeave={e=>{e.currentTarget.style.background='var(--bg-surface)';e.currentTarget.style.borderColor='var(--border-subtle)'}}>
+                <div style={{ width:32, height:32, borderRadius:'var(--r-md)', background:'var(--sage-100)', display:'grid', placeItems:'center', flexShrink:0 }}>
+                  <Laptop size={15} style={{ color:'var(--sage-700)' }} />
                 </div>
-                <div style={{ flex: '1 1 200px', minWidth: 0 }}>
-                  <div style={{ fontWeight: 600, fontSize: '0.9375rem', color: 'var(--text-primary)' }}>{asset.asset}</div>
-                  <div className="meta" style={{ color: 'var(--text-muted)', marginTop: 2, fontWeight: 500 }}>{asset.employee} · {asset.serial} · {asset.hub}</div>
+                <div style={{ flex:'1 1 200px', minWidth:0 }}>
+                  <div style={{ fontWeight:500, fontSize:'0.875rem', color:'var(--text-primary)' }}>{a.asset}</div>
+                  <div className="meta">{a.employee} · {a.serial} · {a.hub}</div>
                 </div>
-                <Badge tone={asset.tone}>{asset.status}</Badge>
-                {asset.status !== 'Acknowledged' && (
-                  <Button variant="soft" size="xs" icon={CheckCircle2} onClick={() => acknowledge(asset.id)}>Acknowledge</Button>
+                <Badge tone={a.tone}>{a.status}</Badge>
+                {a.tone!=='sage' && (
+                  <Button variant="soft" size="xs" icon={CheckCircle2} onClick={() => setAssets(as => as.map((it,idx) => it.id===a.id ? { ...it, status:'Acknowledged', tone:'sage' } : it))}>Acknowledge</Button>
                 )}
               </div>
             </AnimatedItem>
           ))}
         </AnimatedList>
       </Card>
-
-      <Modal isOpen={isModalOpen} onClose={() => setModal(false)} title="Register Asset"
-        footer={<><Button variant="secondary" onClick={() => setModal(false)}>Cancel</Button><Button onClick={handleAdd}>Register</Button></>}>
-        <form onSubmit={handleAdd} style={{ display: 'grid', gap: 14 }}>
-          <div><Label>Employee Name</Label><Input required placeholder="e.g. Tanvi Reddy" value={newAsset.employee} onChange={e => setNew({ ...newAsset, employee: e.target.value })} /></div>
-          <div><Label>Asset Type</Label>
-            <Select value={newAsset.type} onChange={e => setNew({ ...newAsset, type: e.target.value })}>
-              <option>Laptop</option><option>Monitor</option><option>Keyboard</option><option>Software License</option>
-            </Select>
-          </div>
-          <div><Label>Model</Label>
-            <Select value={newAsset.asset} onChange={e => setNew({ ...newAsset, asset: e.target.value })}>
-              <option>MacBook Pro 16" M3 Max (36GB)</option>
-              <option>ThinkPad T14s Gen 5 (32GB)</option>
-              <option>Dell Latitude 5540 (16GB)</option>
-              <option>LG UltraFine 5K 27"</option>
-            </Select>
-          </div>
-          <div><Label>Serial / Asset Tag</Label><Input placeholder="e.g. BLR-MBP-2026-110" value={newAsset.serial} onChange={e => setNew({ ...newAsset, serial: e.target.value })} /></div>
-          <div><Label>Tech Hub</Label>
-            <Select value={newAsset.hub} onChange={e => setNew({ ...newAsset, hub: e.target.value })}>
-              <option>Bengaluru</option><option>Hyderabad</option><option>Pune</option><option>Gurugram</option><option>Remote</option>
-            </Select>
-          </div>
-        </form>
-      </Modal>
     </div>
   );
 }
