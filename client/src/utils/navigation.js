@@ -1,68 +1,84 @@
-/**
- * navigation.js — Flat tab structure for horizontal TopNav
- * Each role gets a flat array of tabs (no sections needed for top nav)
- */
-
-export const TABS = {
+export const NAV = {
   SYSTEM_ADMIN: [
-    { label: 'Dashboard',     to: '/dashboard' },
-    { label: 'Employees',     to: '/employees' },
-    { label: 'Onboarding',    to: '/onboarding' },
-    { label: 'Tasks',         to: '/tasks' },
-    { label: 'Documents',     to: '/documents' },
-    { label: 'Training',      to: '/training' },
-    { label: 'Assets',        to: '/assets' },
-    { label: 'Reports',       to: '/reports' },
-    { label: 'Audit',         to: '/audit' },
-    { label: 'Settings',      to: '/settings' },
+    { section: 'Core', items: [
+      { label: 'Dashboard',    to: '/dashboard',      icon: 'grid' },
+      { label: 'Employees',   to: '/employees',      icon: 'users' },
+      { label: 'Onboarding',  to: '/onboarding',     icon: 'route' },
+      { label: 'Tasks',       to: '/tasks',           icon: 'check' },
+      { label: 'Documents',   to: '/documents',       icon: 'file' },
+      { label: 'Training',    to: '/training',        icon: 'cap' },
+      { label: 'Assets',      to: '/assets',          icon: 'laptop' },
+    ]},
+    { section: 'System', items: [
+      { label: 'Notifications', to: '/notifications', icon: 'bell' },
+      { label: 'Reports',     to: '/reports',         icon: 'chart' },
+      { label: 'Audit',       to: '/audit',           icon: 'list' },
+      { label: 'Settings',    to: '/settings',        icon: 'gear' },
+      { label: 'Help',        to: '/help',            icon: 'help' },
+    ]},
   ],
   HR_ADMIN: [
-    { label: 'Dashboard',     to: '/dashboard' },
-    { label: 'Employees',     to: '/employees' },
-    { label: 'Onboarding',    to: '/onboarding' },
-    { label: 'Tasks',         to: '/tasks' },
-    { label: 'Documents',     to: '/documents' },
-    { label: 'Training',      to: '/training' },
-    { label: 'Assets',        to: '/assets' },
-    { label: 'Reports',       to: '/reports' },
-    { label: 'Settings',      to: '/settings' },
+    { section: 'Core', items: [
+      { label: 'Dashboard',   to: '/dashboard',       icon: 'grid' },
+      { label: 'Employees',   to: '/employees',       icon: 'users' },
+      { label: 'Onboarding',  to: '/onboarding',      icon: 'route' },
+      { label: 'Tasks',       to: '/tasks',            icon: 'check' },
+      { label: 'Documents',   to: '/documents',        icon: 'file' },
+      { label: 'Training',    to: '/training',         icon: 'cap' },
+      { label: 'Assets',      to: '/assets',           icon: 'laptop' },
+    ]},
+    { section: 'Insight', items: [
+      { label: 'Notifications', to: '/notifications', icon: 'bell' },
+      { label: 'Reports',     to: '/reports',          icon: 'chart' },
+      { label: 'Audit',       to: '/audit',            icon: 'list' },
+      { label: 'Settings',    to: '/settings',         icon: 'gear' },
+      { label: 'Help',        to: '/help',             icon: 'help' },
+    ]},
   ],
   DEPARTMENT_MANAGER: [
-    { label: 'Dashboard',     to: '/dashboard' },
-    { label: 'My Team',       to: '/employees' },
-    { label: 'Tasks',         to: '/tasks' },
-    { label: 'Documents',     to: '/documents' },
-    { label: 'Training',      to: '/training' },
-    { label: 'Reports',       to: '/reports' },
+    { section: 'Team', items: [
+      { label: 'Dashboard',   to: '/dashboard',        icon: 'grid' },
+      { label: 'My Team',     to: '/employees',        icon: 'users' },
+      { label: 'Tasks',       to: '/tasks',             icon: 'check' },
+      { label: 'Documents',   to: '/documents',         icon: 'file' },
+      { label: 'Training',    to: '/training',          icon: 'cap' },
+    ]},
+    { section: 'General', items: [
+      { label: 'Notifications', to: '/notifications',  icon: 'bell' },
+      { label: 'Reports',     to: '/reports',           icon: 'chart' },
+      { label: 'Help',        to: '/help',              icon: 'help' },
+    ]},
   ],
   IT_ADMIN: [
-    { label: 'Dashboard',     to: '/dashboard' },
-    { label: 'Assets',        to: '/assets' },
-    { label: 'Employees',     to: '/employees' },
-    { label: 'Tasks',         to: '/tasks' },
+    { section: 'Ops', items: [
+      { label: 'Dashboard',   to: '/dashboard',        icon: 'grid' },
+      { label: 'Queue',       to: '/tasks',             icon: 'check' },
+      { label: 'Assets',      to: '/assets',            icon: 'laptop' },
+      { label: 'Employees',   to: '/employees',         icon: 'users' },
+    ]},
+    { section: 'General', items: [
+      { label: 'Notifications', to: '/notifications',  icon: 'bell' },
+      { label: 'Help',        to: '/help',              icon: 'help' },
+    ]},
   ],
   EMPLOYEE: [
-    { label: 'Dashboard',     to: '/dashboard' },
-    { label: 'Tasks',         to: '/tasks' },
-    { label: 'Documents',     to: '/documents' },
-    { label: 'Training',      to: '/training' },
-    { label: 'Assets',        to: '/assets' },
-    { label: 'Profile',       to: '/profile' },
-  ],
-  COMPLIANCE_OFFICER: [
-    { label: 'Dashboard',     to: '/dashboard' },
-    { label: 'Documents',     to: '/documents' },
-    { label: 'Training',      to: '/training' },
-    { label: 'Audit',         to: '/audit' },
-    { label: 'Reports',       to: '/reports' },
+    { section: 'My Journey', items: [
+      { label: 'Dashboard',   to: '/dashboard',        icon: 'grid' },
+      { label: 'Tasks',       to: '/tasks',             icon: 'check' },
+      { label: 'Documents',   to: '/documents',         icon: 'file' },
+      { label: 'Training',    to: '/training',          icon: 'cap' },
+      { label: 'Assets',      to: '/assets',            icon: 'laptop' },
+    ]},
+    { section: 'Account', items: [
+      { label: 'Notifications', to: '/notifications',  icon: 'bell' },
+      { label: 'Profile',     to: '/profile',           icon: 'user' },
+      { label: 'Settings',    to: '/settings',          icon: 'gear' },
+      { label: 'Help',        to: '/help',              icon: 'help' },
+    ]},
   ],
 };
 
-export const tabsFor = (roles = []) => {
-  if (!roles || !roles.length) return TABS.EMPLOYEE;
-  return TABS[roles[0]] ?? TABS.EMPLOYEE;
+export const navFor = (roles = []) => {
+  if (!roles || !roles.length) return NAV.EMPLOYEE;
+  return NAV[roles[0]] ?? NAV.EMPLOYEE;
 };
-
-// Keep backward compat alias
-export const NAV = TABS;
-export const navFor = tabsFor;

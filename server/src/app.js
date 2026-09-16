@@ -31,17 +31,13 @@ function startServer(port) {
   return server;
 }
 
-import { fileURLToPath } from 'url';
-
-const isDirectRun = process.argv[1] === fileURLToPath(import.meta.url);
-
-if (process.env.NODE_ENV !== 'test' && isDirectRun) {
+if (process.env.NODE_ENV !== 'test') {
   sequelize.authenticate()
     .then(() => startServer(PORT))
     .catch(err => {
       console.error('DB connection failed:', err.message);
       // In dev without running DB, still start server for testing if needed
-      if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
+      if (process.env.NODE_ENV === 'development') {
         startServer(PORT);
       } else {
         process.exit(1);

@@ -1,229 +1,201 @@
-/**
- * HRDashboard.jsx — v2.1
- * Direct inspiration from HR_Dashboard.webp (Crextio design)
- *
- * Layout:
- *   [WelcomeHero] "Welcome in," + role + date
- *   [MetricPillBars row] Active 18 | Compliance 98% | SLA 84% | Pending 3
- *   [KPI row] 18 👥 · 98% ✓ · 3 ⚠
- *   [3-col grid]
- *     Left:  AvatarHeroCard (Priya Patel) + week progress chart
- *     Mid:   Compliance ring + schedule/week calendar
- *     Right: DarkTaskCard (Onboarding Tasks 4/12)
- *   [Collapsibles] Pension & EPFO | Document Queue | Training Compliance
- */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, CheckCircle2, AlertTriangle, TrendingUp, FileText, BookOpen } from 'lucide-react';
-import {
-  WelcomeHero, MetricPillBar, KPIStat, AvatarHeroCard,
-  DarkTaskCard, CollapsibleRow, Card, Button, Badge, Avatar,
-} from '../../../components/common/ui';
-import { MiniDonut, Sparkline, StackedBarChart, RadialProgress, ActivityTimeline } from '../../../components/common/charts';
-import { useScrollReveal } from '../../../utils/animations';
+import { motion } from 'framer-motion';
+import { Card, Button, Badge, Avatar, Modal, Input, Select, Label, AnimatedList, AnimatedItem, PageHeader, StatCard } from '../../../components/common/ui';
+import { MiniDonut, Sparkline, StackedBarChart, HorizontalBar } from '../../../components/common/charts';
+import { Users, Clock, ShieldCheck, Award, Plus, Download, ChevronRight } from 'lucide-react';
 
-/* ── Static data ── */
-const WEEK_ACTIVITY = [
-  { d: 'Mon', v: 14 }, { d: 'Tue', v: 18 }, { d: 'Wed', v: 11 },
-  { d: 'Thu', v: 20 }, { d: 'Fri', v: 16 }, { d: 'Sat', v: 6 }, { d: 'Sun', v: 3 },
+const SPARK = [
+  { w: 'W1', v: 12 }, { w: 'W2', v: 15 }, { w: 'W3', v: 11 }, { w: 'W4', v: 18 },
+  { w: 'W5', v: 14 }, { w: 'W6', v: 20 }, { w: 'W7', v: 18 },
 ];
 
-const COHORT_PHASE = [
-  { phase: 'Pre', count: 2 }, { phase: 'Wk 1', count: 4 },
-  { phase: '30d', count: 5 }, { phase: '60d', count: 4 }, { phase: '90d', count: 3 },
+const PHASE_DATA = [
+  { name: 'Pre-boarding', count: 2 },
+  { name: 'Week 1',       count: 3 },
+  { name: '30 Days',      count: 5 },
+  { name: '60 Days',      count: 6 },
+  { name: '90 Days',      count: 2 },
 ];
 
-const ONBOARDING_TASKS = [
-  { title: 'Aadhaar Verification — Aarav', date: 'Sep 13', done: true },
-  { title: 'EPFO Form 11 — Sneha', date: 'Sep 13', done: true },
-  { title: 'POSH Training — Kabir', date: 'Sep 14', done: false },
-  { title: 'Asset Assignment — Pooja', date: 'Sep 15', done: false },
-  { title: '1:1 Check-in — Ananya', date: 'Sep 16', done: false },
+const HUB_DATA = [
+  { label: 'Bengaluru',  value: 8,  displayValue: '8 employees' },
+  { label: 'Hyderabad',  value: 4,  displayValue: '4 employees' },
+  { label: 'Pune',       value: 3,  displayValue: '3 employees' },
+  { label: 'Gurugram',   value: 2,  displayValue: '2 employees' },
+  { label: 'Remote',     value: 1,  displayValue: '1 employee' },
 ];
 
-const SCHEDULE_EVENTS = [
-  { title: 'Aarav — POSH Session', time: '10:00 AM', tone: 'success' },
-  { title: 'Sneha — Doc Review', time: '2:30 PM', tone: 'amber' },
-  { title: 'Kabir — IT Onboarding', time: '4:00 PM', tone: 'info' },
-];
-
-const COHORT = [
-  { name: 'Aarav Sharma',   role: 'SDE-II',                   dept: 'Platform Eng', hub: 'Bengaluru', progress: 72, tone: 'success' },
-  { name: 'Sneha Kulkarni', role: 'Sr. Product Designer',     dept: 'Product & UX', hub: 'Pune',       progress: 45, tone: 'warning' },
-  { name: 'Arjun Rao',      role: 'Cloud Infra Specialist',   dept: 'Cloud & Infra', hub: 'Hyderabad', progress: 88, tone: 'success' },
-  { name: 'Kabir Mehta',    role: 'SDE-II',                   dept: 'Platform Eng', hub: 'Gurugram',   progress: 35, tone: 'info' },
-];
-
-const PENDING_DOCS = [
-  { name: 'Sneha Kulkarni', doc: 'Aadhaar Card',    date: 'Mar 15' },
-  { name: 'Kabir Mehta',    doc: 'Relieving Letter', date: 'Mar 18' },
-  { name: 'Pooja Desai',    doc: 'Cancelled Cheque', date: 'Mar 14' },
-];
-
-const TRAINING_ITEMS = [
-  { label: 'POSH Act 2013',       pct: 98, color: 'var(--chart-green)' },
-  { label: 'Data Protection Act', pct: 84, color: 'var(--chart-sage)' },
-  { label: 'Induction Module',    pct: 76, color: 'var(--chart-amber)' },
+const INITIAL_COHORT = [
+  { name: 'Aarav Sharma',   role: 'Senior Software Engineer (SDE-II)', dept: 'Platform Engineering', hub: 'Bengaluru', progress: 72, phase: '60 Days', status: 'On Track',     tone: 'success' },
+  { name: 'Sneha Kulkarni', role: 'Senior Product Designer',           dept: 'Product & UI/UX Design', hub: 'Pune',      progress: 45, phase: '30 Days', status: 'Needs Review', tone: 'warning' },
+  { name: 'Arjun Rao',      role: 'Cloud Infrastructure Specialist',   dept: 'Cloud & Infrastructure',  hub: 'Hyderabad', progress: 88, phase: '90 Days', status: 'On Track',     tone: 'success' },
+  { name: 'Ananya Iyer',    role: 'Lead Frontend Architect',           dept: 'Platform Engineering',     hub: 'Bengaluru', progress: 60, phase: '30 Days', status: 'On Track',     tone: 'success' },
+  { name: 'Kabir Mehta',    role: 'Senior Software Engineer (SDE-II)', dept: 'Platform Engineering',     hub: 'Gurugram',  progress: 35, phase: 'Week 1', status: 'Just Started', tone: 'info' },
 ];
 
 export default function HRDashboard() {
+  const [cohort, setCohort] = useState(INITIAL_COHORT);
+  const [showAll, setShowAll] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newHire, setNewHire] = useState({ name: '', role: 'Senior Software Engineer (SDE-II)', dept: 'Platform Engineering', hub: 'Bengaluru' });
   const navigate = useNavigate();
-  const rowRef   = useScrollReveal({ delay: 0.05 });
-  const gridRef  = useScrollReveal({ delay: 0.1 });
+
+  const handleExport = () => {
+    const csv = 'Name,Role,Department,Hub,Progress,Phase,Status\n' +
+      cohort.map(c => `${c.name},${c.role},${c.dept},${c.hub},${c.progress}%,${c.phase},${c.status}`).join('\n');
+    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })), download: `EOMS_HR_Cohort_${new Date().toISOString().slice(0,10)}.csv` });
+    a.click();
+  };
+
+  const handleAdd = e => {
+    e.preventDefault();
+    if (!newHire.name.trim()) return;
+    setCohort([{ name: newHire.name, role: newHire.role, dept: newHire.dept, hub: newHire.hub, progress: 0, phase: 'Day 1', status: 'Just Started', tone: 'info' }, ...cohort]);
+    setIsModalOpen(false);
+    setNewHire({ name: '', role: 'Senior Software Engineer (SDE-II)', dept: 'Platform Engineering', hub: 'Bengaluru' });
+  };
+
+  const visible = showAll ? cohort : cohort.slice(0, 3);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-6)' }}>
+    <div style={{ display: 'grid', gap: 'var(--sp-5)' }}>
+      <PageHeader
+        title="People Operations"
+        subtitle="India-wide onboarding cohort status and statutory compliance."
+        action={
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Button variant="secondary" size="sm" icon={Download} onClick={handleExport}>Export CSV</Button>
+            <Button size="sm" icon={Plus} onClick={() => setIsModalOpen(true)}>Onboard</Button>
+          </div>
+        }
+      />
 
-      {/* ── 1. Welcome hero ── */}
-      <WelcomeHero name="Priya Patel" role="People Operations" />
+      {/* ── KPI Row ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--sp-4)' }}>
+        {/* Active onboardees with sparkline */}
+        <Card style={{ padding: 'var(--sp-4)' }}>
+          <p className="meta" style={{ fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Active Onboardees</p>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 }}>
+            <div>
+              <div style={{ fontSize: '2rem', fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1 }}>18</div>
+              <div className="meta" style={{ marginTop: 4, color: 'var(--text-muted)' }}>4 starting this week</div>
+            </div>
+            <div style={{ width: 80, flexShrink: 0 }}>
+              <Sparkline data={SPARK} dataKey="v" color="var(--chart-blue)" height={36} />
+            </div>
+          </div>
+        </Card>
 
-      {/* ── 2. Metric pill bars (Crextio row) ── */}
-      <div ref={rowRef} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 'var(--sp-4)', padding: 'var(--sp-4) var(--sp-5)', background: 'var(--bg-surface)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-card)', border: '1px solid var(--border-green)' }}>
-        <MetricPillBar label="Active Onboardees" value={72} delay={0.0} />
-        <MetricPillBar label="Compliance"        value={98} delay={0.1} />
-        <MetricPillBar label="SLA Performance"   value={84} delay={0.2} />
-        <MetricPillBar label="Pending Docs"      value={33} delay={0.3} color="amber" />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-6)', marginLeft: 'auto', flexShrink: 0, borderLeft: '1px solid var(--border-subtle)', paddingLeft: 'var(--sp-5)' }}>
-          <KPIStat icon={Users}        value={18}  label="Employees" />
-          <KPIStat icon={CheckCircle2} value={98}  label="Compliance" suffix="%" />
-          <KPIStat icon={AlertTriangle} value={3}  label="Pending" />
-        </div>
+        {/* Avg time with donut */}
+        <Card style={{ padding: 'var(--sp-4)' }}>
+          <p className="meta" style={{ fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Avg. Time to 100%</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <MiniDonut value={38} total={45} label="38d" sublabel="/ 45d" size={64} color="var(--chart-emerald)" />
+            <div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)' }}>38 days</div>
+              <div className="meta" style={{ color: 'var(--success-text)', marginTop: 2 }}>-7d vs SLA target</div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Compliance donut */}
+        <Card style={{ padding: 'var(--sp-4)' }}>
+          <p className="meta" style={{ fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>POSH & Statutory</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <MiniDonut value={98.2} total={100} label="98%" size={64} color="var(--chart-emerald)" />
+            <div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)' }}>98.2%</div>
+              <div className="meta" style={{ color: 'var(--text-muted)', marginTop: 2 }}>+2.4% from last month</div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Pending verifications */}
+        <Card style={{ padding: 'var(--sp-4)' }}>
+          <p className="meta" style={{ fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Pending Verifications</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <MiniDonut value={3} total={18} label="3" size={64} color="var(--warning)" />
+            <div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)' }}>3</div>
+              <div className="meta" style={{ color: 'var(--text-muted)', marginTop: 2 }}>Aadhaar / EPFO queue</div>
+            </div>
+          </div>
+        </Card>
       </div>
 
-      {/* ── 3. Main 3-column grid ── */}
-      <div ref={gridRef} style={{ display: 'grid', gridTemplateColumns: '2.2fr 1.8fr 1.5fr', gap: 'var(--sp-4)', alignItems: 'start' }}>
+      {/* ── Charts Row ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-4)' }}>
+        <Card>
+          <h2 className="h3" style={{ marginBottom: 16 }}>Cohort by Phase</h2>
+          <StackedBarChart
+            data={PHASE_DATA}
+            xKey="name"
+            categories={[{ dataKey: 'count', name: 'Employees', color: 'var(--chart-blue)' }]}
+            height={160}
+          />
+        </Card>
+        <Card>
+          <h2 className="h3" style={{ marginBottom: 16 }}>Distribution by Hub</h2>
+          <HorizontalBar items={HUB_DATA} colorVar="--chart-violet" />
+        </Card>
+      </div>
 
-        {/* LEFT: Avatar hero + week chart */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
-          <AvatarHeroCard name="Priya Patel" role="HR Administrator" sub="₹ People Operations · Bengaluru" style={{ minHeight: 220 }} />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-4)' }}>
-            {/* Progress / week chart */}
-            <Card style={{ padding: 'var(--sp-4)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-                <div>
-                  <p className="meta" style={{ color: 'var(--text-faint)', marginBottom: 2 }}>Week in review</p>
-                  <div className="kpi-number" style={{ fontSize: '1.5rem' }}>18 <span style={{ fontSize: '0.8rem', fontWeight: 400, color: 'var(--text-muted)' }}>active</span></div>
-                </div>
-                <TrendingUp size={16} style={{ color: 'var(--primary)', marginTop: 4 }} />
-              </div>
-              <Sparkline data={WEEK_ACTIVITY} dataKey="v" color="var(--chart-green)" height={56} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-                {['M','T','W','T','F','S','S'].map((d, i) => (
-                  <span key={i} style={{ fontSize: '0.65rem', color: 'var(--text-faint)' }}>{d}</span>
-                ))}
-              </div>
-            </Card>
-            {/* Compliance ring */}
-            <Card style={{ padding: 'var(--sp-4)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <p className="meta" style={{ color: 'var(--text-faint)' }}>Compliance</p>
-              <RadialProgress value={98} size={84} strokeWidth={8} color="var(--chart-green)" label="98%" sublabel="POSH" />
-            </Card>
-          </div>
+      {/* ── Current Cohort ── */}
+      <Card>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--sp-4)' }}>
+          <h2 className="h3">Current Cohort</h2>
+          <Button variant="ghost" size="sm" onClick={() => navigate('/onboarding')}>View all <ChevronRight size={14} /></Button>
         </div>
-
-        {/* MIDDLE: Schedule + cohort phases */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
-          {/* Schedule */}
-          <Card style={{ padding: 'var(--sp-4)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <h3 className="h3">Schedule</h3>
-              <span className="caption" style={{ color: 'var(--primary)', fontWeight: 600 }}>Sep 2026</span>
-            </div>
-            {/* Mini week row */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 14 }}>
-              {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((d, i) => (
-                <div key={i} style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.65rem', color: 'var(--text-faint)', marginBottom: 3 }}>{d}</div>
-                  <div style={{ width: 26, height: 26, borderRadius: '50%', margin: '0 auto', background: i === 2 ? 'var(--bg-dark)' : i === 0 ? 'var(--primary-light)' : 'transparent', color: i === 2 ? '#fff' : i === 0 ? 'var(--primary)' : 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: i <= 2 ? 600 : 400, display: 'grid', placeItems: 'center' }}>
-                    {16 + i}
+        <AnimatedList style={{ display: 'grid', gap: 8 }}>
+          {visible.map(emp => (
+            <AnimatedItem key={emp.name}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)', flexWrap: 'wrap' }}>
+                <Avatar name={emp.name} size={36} />
+                <div style={{ flex: '1 1 180px', minWidth: 0 }}>
+                  <div style={{ fontWeight: 500, fontSize: '0.875rem', color: 'var(--text-primary)' }}>{emp.name}</div>
+                  <div className="meta" style={{ color: 'var(--text-muted)' }}>{emp.dept} · {emp.hub}</div>
+                </div>
+                <div style={{ width: 120 }}>
+                  <div style={{ height: 3, borderRadius: 'var(--r-full)', background: 'var(--bg-sunken)', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${emp.progress}%`, background: 'var(--primary)', borderRadius: 'inherit', transition: 'width 600ms var(--ease)' }} />
                   </div>
+                  <div className="meta" style={{ marginTop: 3, textAlign: 'right', color: 'var(--text-muted)' }}>{emp.progress}%</div>
                 </div>
-              ))}
-            </div>
-            {/* Events */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {SCHEDULE_EVENTS.map((ev, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 'var(--r-sm)', background: ev.tone === 'success' ? 'var(--success-bg)' : ev.tone === 'amber' ? 'var(--amber-bg)' : 'var(--info-bg)', border: `1px solid ${ev.tone === 'success' ? 'var(--border-green)' : ev.tone === 'amber' ? 'var(--amber-border)' : 'rgba(59,130,246,0.2)'}` }}>
-                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: ev.tone === 'success' ? 'var(--primary)' : ev.tone === 'amber' ? 'var(--amber)' : 'var(--info)', flexShrink: 0 }} />
-                  <div style={{ flex: 1, fontSize: '0.8rem', fontWeight: 500, color: 'var(--text-primary)' }}>{ev.title}</div>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{ev.time}</span>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          {/* Cohort phase chart */}
-          <Card style={{ padding: 'var(--sp-4)' }}>
-            <h3 className="h3" style={{ marginBottom: 12 }}>Cohort by Phase</h3>
-            <StackedBarChart data={COHORT_PHASE} xKey="phase" categories={[{ dataKey: 'count', name: 'Employees', color: 'var(--chart-green)' }]} height={110} />
-          </Card>
-        </div>
-
-        {/* RIGHT: Dark task card */}
-        <DarkTaskCard title="Onboarding Tasks" tasks={ONBOARDING_TASKS} />
-      </div>
-
-      {/* ── 4. Collapsibles (Crextio bottom section) ── */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
-        {/* Document Queue */}
-        <CollapsibleRow title="Document Queue" icon={FileText}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {PENDING_DOCS.map((d, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: i < PENDING_DOCS.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
-                <Avatar name={d.name} size={30} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' }}>{d.name}</div>
-                  <div className="caption" style={{ color: 'var(--text-muted)' }}>{d.doc} · Due {d.date}</div>
-                </div>
-                <Badge tone="warning">Pending</Badge>
-                <Button size="xs" variant="soft">Review</Button>
+                <Badge tone={emp.tone}>{emp.status}</Badge>
               </div>
-            ))}
-          </div>
-        </CollapsibleRow>
+            </AnimatedItem>
+          ))}
+        </AnimatedList>
+        {cohort.length > 3 && (
+          <button onClick={() => setShowAll(v => !v)}
+            style={{ marginTop: 10, width: '100%', padding: '7px', borderRadius: 'var(--r-md)', border: '1px dashed var(--border-subtle)', background: 'transparent', color: 'var(--text-muted)', fontSize: '0.8125rem', cursor: 'pointer', transition: 'all var(--t-fast)' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.color = 'var(--primary)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-subtle)'; e.currentTarget.style.color = 'var(--text-muted)'; }}>
+            {showAll ? '↑ Collapse' : `+ ${cohort.length - 3} more employees`}
+          </button>
+        )}
+      </Card>
 
-        {/* Training Compliance */}
-        <CollapsibleRow title="Training Compliance" icon={BookOpen}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {TRAINING_ITEMS.map(t => (
-              <div key={t.label}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8125rem', marginBottom: 5 }}>
-                  <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{t.label}</span>
-                  <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{t.pct}%</span>
-                </div>
-                <div style={{ height: 5, borderRadius: 'var(--r-full)', background: 'var(--bg-sunken)', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${t.pct}%`, background: t.color, borderRadius: 'inherit', transition: 'width 0.8s var(--ease-out)' }} />
-                </div>
-              </div>
-            ))}
+      {/* ── Modal ── */}
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Onboard New Employee" description="Initiate a 30-60-90 day onboarding journey."
+        footer={<><Button variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button><Button onClick={handleAdd}>Enroll & Start</Button></>}>
+        <form onSubmit={handleAdd} style={{ display: 'grid', gap: 14 }}>
+          <div><Label>Full Name</Label><Input required placeholder="e.g. Ramesh Chandra" value={newHire.name} onChange={e => setNewHire({ ...newHire, name: e.target.value })} /></div>
+          <div><Label>Department</Label>
+            <Select value={newHire.dept} onChange={e => setNewHire({ ...newHire, dept: e.target.value })}>
+              <option>Platform Engineering</option><option>Product & UI/UX Design</option>
+              <option>Cloud & Infrastructure</option><option>People Operations (HR)</option><option>Finance & Payroll</option>
+            </Select>
           </div>
-        </CollapsibleRow>
-
-        {/* Cohort Summary */}
-        <CollapsibleRow title="Active Cohort" icon={Users} defaultOpen>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {COHORT.map(emp => (
-              <div key={emp.name} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '6px 0', borderBottom: '1px solid var(--border-subtle)' }}>
-                <Avatar name={emp.name} size={32} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{emp.name}</div>
-                  <div className="caption" style={{ color: 'var(--text-muted)' }}>{emp.role} · {emp.dept}</div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                  🇮🇳 <span>{emp.hub}</span>
-                </div>
-                <div style={{ width: 80 }}>
-                  <div style={{ height: 4, borderRadius: 'var(--r-full)', background: 'var(--bg-sunken)', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${emp.progress}%`, background: 'var(--primary-fill)', borderRadius: 'inherit', transition: 'width 0.8s var(--ease-out)' }} />
-                  </div>
-                  <div className="meta" style={{ marginTop: 2, textAlign: 'right', color: 'var(--text-muted)' }}>{emp.progress}%</div>
-                </div>
-                <Badge tone={emp.tone}>{emp.tone === 'success' ? 'On Track' : emp.tone === 'warning' ? 'Review' : 'Started'}</Badge>
-              </div>
-            ))}
+          <div><Label>Job Role</Label><Input required placeholder="e.g. Senior Software Engineer (SDE-II)" value={newHire.role} onChange={e => setNewHire({ ...newHire, role: e.target.value })} /></div>
+          <div><Label>Tech Hub</Label>
+            <Select value={newHire.hub} onChange={e => setNewHire({ ...newHire, hub: e.target.value })}>
+              <option>Bengaluru</option><option>Hyderabad</option><option>Pune</option><option>Gurugram</option><option>Remote</option>
+            </Select>
           </div>
-        </CollapsibleRow>
-      </div>
+        </form>
+      </Modal>
     </div>
   );
 }

@@ -1,329 +1,307 @@
-/**
- * ui.jsx — EOMS Common UI Components v2.1
- * Inspired by HR_Dashboard.webp (Crextio) design system
- * Components: Card, Button, Badge, Avatar, Input, Select, Label,
- *             MetricPillBar, KPIStat, WelcomeHero, DarkTaskCard,
- *             AvatarHeroCard, CollapsibleRow, AnimatedList, AnimatedItem,
- *             PageHeader, Modal, Progress, EmptyState
- */
-import { useState, useRef, useEffect } from 'react';
+import styled from 'styled-components';
+import { forwardRef } from 'react';
+import { X, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, CheckCircle2, X } from 'lucide-react';
-import { useMetricPillFill, useCountUp, useScrollReveal, useStaggerReveal } from '../../utils/animations';
 
-/* ─────────────────────────────────────────
-   Card
-───────────────────────────────────────── */
-export function Card({ children, style, className = '', $hoverable, onClick }) {
-  return (
-    <div
-      onClick={onClick}
-      className={className}
-      style={{
-        background: 'var(--bg-surface)',
-        borderRadius: 'var(--r-lg)',
-        boxShadow: 'var(--shadow-card)',
-        padding: 'var(--sp-5)',
-        border: '1px solid var(--border-subtle)',
-        transition: 'box-shadow var(--t-normal), transform var(--t-normal)',
-        cursor: $hoverable ? 'pointer' : undefined,
-        ...style,
-      }}
-      onMouseEnter={$hoverable ? e => { e.currentTarget.style.boxShadow = 'var(--shadow-hover)'; e.currentTarget.style.transform = 'translateY(-1px)'; } : undefined}
-      onMouseLeave={$hoverable ? e => { e.currentTarget.style.boxShadow = 'var(--shadow-card)'; e.currentTarget.style.transform = 'translateY(0)'; } : undefined}
-    >
-      {children}
-    </div>
-  );
-}
+/* ── Card ─────────────────────────────────────────────────── */
+export const Card = styled.section`
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-lg);
+  padding: ${({ $p }) => $p || 'var(--sp-5)'};
+  transition: border-color var(--t-fast) var(--ease);
 
-/* ─────────────────────────────────────────
-   Button
-───────────────────────────────────────── */
-const BTN_STYLES = {
-  primary:     { background: 'var(--primary)', color: '#fff', border: 'none' },
-  secondary:   { background: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border-default)' },
-  soft:        { background: 'var(--primary-light)', color: 'var(--primary-text)', border: 'none' },
-  ghost:       { background: 'transparent', color: 'var(--text-muted)', border: 'none' },
-  danger:      { background: 'var(--danger)', color: '#fff', border: 'none' },
-  dangerSoft:  { background: 'var(--danger-bg)', color: 'var(--danger)', border: 'none' },
-  dark:        { background: 'var(--bg-dark)', color: '#fff', border: 'none' },
-};
-const BTN_SIZES = {
-  xs: { padding: '3px 8px', fontSize: '0.75rem', borderRadius: 'var(--r-sm)', gap: 3 },
-  sm: { padding: '6px 14px', fontSize: '0.8125rem', borderRadius: 'var(--r-md)', gap: 5 },
-  md: { padding: '9px 18px', fontSize: '0.875rem', borderRadius: 'var(--r-md)', gap: 6 },
-  lg: { padding: '12px 24px', fontSize: '0.9375rem', borderRadius: 'var(--r-lg)', gap: 8 },
-};
-export function Button({ children, variant = 'primary', size = 'md', icon: Icon, onClick, type = 'button', disabled, style }) {
-  const bStyle = BTN_STYLES[variant] || BTN_STYLES.primary;
-  const bSize  = BTN_SIZES[size] || BTN_SIZES.md;
-  return (
-    <button type={type} onClick={onClick} disabled={disabled}
-      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font)', fontWeight: 500, cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1, transition: 'all var(--t-fast)', whiteSpace: 'nowrap', ...bStyle, ...bSize, ...style }}
-      onMouseEnter={e => { if (!disabled) e.currentTarget.style.filter = 'brightness(0.92)'; }}
-      onMouseLeave={e => { e.currentTarget.style.filter = ''; }}
-    >
-      {Icon && <Icon size={size === 'xs' ? 12 : size === 'sm' ? 13 : 15} />}
-      {children}
-    </button>
-  );
-}
+  &:hover {
+    border-color: ${({ $hoverable }) => ($hoverable ? 'var(--border-default)' : 'var(--border-subtle)')};
+  }
+`;
 
-/* ─────────────────────────────────────────
-   Badge
-───────────────────────────────────────── */
+/* ── Button ───────────────────────────────────────────────── */
+export const Button = forwardRef(({
+  variant = 'primary',
+  size = 'md',
+  isLoading = false,
+  icon: IconComponent,
+  children,
+  ...props
+}, ref) => (
+  <StyledButton
+    ref={ref}
+    $variant={variant}
+    $size={size}
+    disabled={props.disabled || isLoading}
+    {...props}
+  >
+    {isLoading
+      ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} />
+      : IconComponent ? <IconComponent size={14} /> : null}
+    {children}
+  </StyledButton>
+));
+
+const StyledButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 500;
+  white-space: nowrap;
+  border-radius: var(--r-sm);
+  transition: all var(--t-fast) var(--ease);
+  user-select: none;
+
+  ${({ $size }) => ({
+    xs: 'padding: 3px 8px; font-size: 0.75rem;',
+    sm: 'padding: 5px 10px; font-size: 0.8125rem;',
+    md: 'padding: 7px 14px; font-size: 0.875rem;',
+    lg: 'padding: 10px 18px; font-size: 0.9375rem;',
+  }[$size])}
+
+  ${({ $variant }) => ({
+    primary: `
+      background: var(--primary);
+      color: #ffffff;
+      &:hover:not(:disabled) { background: var(--primary-hover); opacity: 0.95; }
+      &:active:not(:disabled) { background: var(--primary-active); }
+    `,
+    secondary: `
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      border: 1px solid var(--border-default);
+      &:hover:not(:disabled) { background: var(--bg-subtle); border-color: var(--border-strong); }
+      &:active:not(:disabled) { background: var(--bg-sunken); }
+    `,
+    soft: `
+      background: var(--primary-light);
+      color: var(--primary);
+      &:hover:not(:disabled) { background: rgba(37, 99, 235, 0.12); }
+      &:active:not(:disabled) { background: rgba(37, 99, 235, 0.18); }
+    `,
+    ghost: `
+      background: transparent;
+      color: var(--text-muted);
+      &:hover:not(:disabled) { background: var(--bg-subtle); color: var(--text-primary); }
+    `,
+    danger: `
+      background: var(--danger);
+      color: #ffffff;
+      &:hover:not(:disabled) { background: var(--danger-hover); }
+    `,
+    dangerSoft: `
+      background: var(--danger-bg);
+      color: var(--danger);
+      border: 1px solid var(--danger-border);
+      &:hover:not(:disabled) { background: rgba(239, 68, 68, 0.12); }
+    `,
+  }[$variant])}
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+`;
+
+/* ── Input ────────────────────────────────────────────────── */
+export const Input = styled.input`
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-sm);
+  transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+
+  &::placeholder { color: var(--text-muted); }
+  &:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-ring);
+  }
+  &[aria-invalid='true'] {
+    border-color: var(--danger);
+    box-shadow: 0 0 0 3px rgba(239,68,68,0.15);
+  }
+`;
+
+export const Select = styled.select`
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  &:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-ring); }
+`;
+
+export const Label = styled.label`
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 5px;
+`;
+
+/* ── Badge ────────────────────────────────────────────────── */
 const BADGE_STYLES = {
-  success: { background: 'var(--success-bg)', color: 'var(--success-text)' },
-  warning: { background: 'var(--warning-bg)', color: 'var(--warning-text)' },
-  danger:  { background: 'var(--danger-bg)',  color: 'var(--danger-text)' },
-  info:    { background: 'var(--info-bg)',     color: 'var(--info-text)' },
-  neutral: { background: '#F3F4F6',            color: '#374151' },
-  amber:   { background: 'var(--amber-bg)',    color: '#92400E' },
-  dark:    { background: 'var(--bg-dark)',     color: '#fff' },
+  success: { bg: 'var(--success-bg)', text: 'var(--success-text)', dot: 'var(--success)' },
+  warning: { bg: 'var(--warning-bg)', text: 'var(--warning-text)', dot: 'var(--warning)' },
+  danger:  { bg: 'var(--danger-bg)',  text: 'var(--danger-text)',  dot: 'var(--danger)' },
+  info:    { bg: 'var(--info-bg)',    text: 'var(--info-text)',    dot: 'var(--chart-blue)' },
+  neutral: { bg: 'var(--neutral-bg)', text: 'var(--neutral-text)', dot: 'var(--neutral)' },
 };
-export function Badge({ children, tone = 'neutral', style }) {
-  const b = BADGE_STYLES[tone] || BADGE_STYLES.neutral;
+
+export function Badge({ tone = 'neutral', showDot = true, children }) {
+  const s = BADGE_STYLES[tone] || BADGE_STYLES.neutral;
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 'var(--r-full)', fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.01em', whiteSpace: 'nowrap', ...b, ...style }}>
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 5,
+      background: s.bg, borderRadius: 'var(--r-full)',
+      padding: '2px 8px', fontSize: '0.75rem', fontWeight: 500,
+      color: s.text, whiteSpace: 'nowrap',
+    }}>
+      {showDot && <span style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: s.dot, flexShrink: 0 }} />}
       {children}
     </span>
   );
 }
 
-/* ─────────────────────────────────────────
-   Avatar
-───────────────────────────────────────── */
-const AVATAR_COLORS = [
-  ['#DCFCE7','#16A34A'], ['#DBEAFE','#1D4ED8'], ['#FEF3C7','#D97706'],
-  ['#FCE7F3','#BE185D'], ['#EDE9FE','#7C3AED'], ['#FFEDD5','#C2410C'],
-  ['#F0FDF4','#15803D'], ['#E0F2FE','#0369A1'],
+/* ── Progress ─────────────────────────────────────────────── */
+export function Progress({ value = 0, label, size = 'md', showValue = true }) {
+  const h = { sm: 3, md: 4, lg: 6 }[size];
+  const pct = Math.min(100, Math.max(0, Math.round(value)));
+  return (
+    <div role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} style={{ width: '100%' }}>
+      {label && showValue && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5, fontSize: '0.8125rem' }}>
+          <span style={{ color: 'var(--text-muted)' }}>{label}</span>
+          <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{pct}%</span>
+        </div>
+      )}
+      <div style={{ height: h, borderRadius: 'var(--r-full)', background: 'var(--bg-sunken)', overflow: 'hidden' }}>
+        <div style={{
+          width: `${pct}%`,
+          height: '100%',
+          borderRadius: 'inherit',
+          background: pct >= 100 ? 'var(--success)' : 'var(--primary)',
+          transition: 'width 500ms var(--ease)',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+/* ── Avatar ───────────────────────────────────────────────── */
+const AVATAR_PALETTE = [
+  '#2563EB', '#7C3AED', '#0EA5E9', '#D97706', '#DC2626',
+  '#059669', '#DB2777', '#65A30D', '#EA580C', '#0891B2',
 ];
-function getAvatarColor(name = '') {
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h += name.charCodeAt(i);
-  return AVATAR_COLORS[h % AVATAR_COLORS.length];
-}
-export function Avatar({ name = '', size = 36, style }) {
-  const [bg, fg] = getAvatarColor(name);
-  const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
+export function Avatar({ name = 'User', size = 32 }) {
+  const parts = (name || 'U').trim().split(' ');
+  const initials = parts.length > 1
+    ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+    : parts[0].slice(0, 2).toUpperCase();
+  const colorIdx = Math.abs(name.split('').reduce((a, c) => a + c.charCodeAt(0), 0)) % AVATAR_PALETTE.length;
+  const bg = AVATAR_PALETTE[colorIdx];
   return (
-    <div style={{ width: size, height: size, borderRadius: '50%', background: bg, color: fg, fontWeight: 700, fontSize: size * 0.38, display: 'grid', placeItems: 'center', flexShrink: 0, fontFamily: 'var(--font)', ...style }}>
+    <span aria-hidden="true" style={{
+      width: size, height: size, borderRadius: '50%', flexShrink: 0,
+      display: 'grid', placeItems: 'center',
+      fontSize: size * 0.36, fontWeight: 500,
+      background: bg + '22', color: bg,
+      border: `1px solid ${bg}33`,
+    }}>
       {initials}
-    </div>
+    </span>
   );
 }
 
-/* ─────────────────────────────────────────
-   Input / Select / Label
-───────────────────────────────────────── */
-const inputBase = { width: '100%', padding: '8px 12px', fontSize: '0.875rem', fontFamily: 'var(--font)', borderRadius: 'var(--r-md)', border: '1px solid var(--border-default)', background: 'var(--bg-sunken)', color: 'var(--text-primary)', outline: 'none', transition: 'border-color var(--t-fast)' };
-export function Input({ style, onFocus, onBlur, ...props }) {
-  return <input style={{ ...inputBase, ...style }} onFocus={e => { e.target.style.borderColor = 'var(--primary)'; onFocus?.(e); }} onBlur={e => { e.target.style.borderColor = 'var(--border-default)'; onBlur?.(e); }} {...props} />;
-}
-export function Select({ children, style, ...props }) {
-  return <select style={{ ...inputBase, ...style }} {...props}>{children}</select>;
-}
-export function Label({ children, style }) {
-  return <label style={{ fontSize: '0.8125rem', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4, display: 'block', ...style }}>{children}</label>;
-}
-
-/* ─────────────────────────────────────────
-   MetricPillBar  ← Crextio signature component
-   Label top + dashed pill track + animated fill + value chip
-───────────────────────────────────────── */
-export function MetricPillBar({ label, value, max = 100, color = 'green', delay = 0 }) {
-  const pct = Math.min(100, Math.round((value / max) * 100));
-  const fillRef = useMetricPillFill(pct, delay);
-  const fillColor = color === 'amber' ? 'var(--amber)' : color === 'info' ? 'var(--info)' : 'var(--primary-fill)';
+/* ── StatCard (with optional sparkline) ─────────────────── */
+export function StatCard({ icon: IconComponent, label, value, hint, trend, tone = 'primary', sparkData, sparkColor }) {
+  const TONE_MAP = {
+    primary: { accent: 'var(--primary)', bg: 'var(--primary-light)' },
+    success: { accent: 'var(--success)', bg: 'var(--success-bg)' },
+    warning: { accent: 'var(--warning)', bg: 'var(--warning-bg)' },
+    info:    { accent: 'var(--chart-blue)', bg: 'var(--info-bg)' },
+  };
+  const t = TONE_MAP[tone] || TONE_MAP.primary;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 140 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>{label}</span>
-        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-primary)', background: 'var(--bg-surface)', borderRadius: 'var(--r-full)', padding: '1px 7px', boxShadow: 'var(--shadow-card)', border: '1px solid var(--border-subtle)' }}>
-          {typeof value === 'string' ? value : `${value}${max === 100 ? '%' : ''}`}
+    <Card style={{ padding: 'var(--sp-4)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+        <span className="meta" style={{ fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          {label}
         </span>
-      </div>
-      <div className="metric-pill-track">
-        <div ref={fillRef} className="metric-pill-fill" style={{ background: fillColor, transformOrigin: 'left center' }} />
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────
-   KPIStat  ← Crextio "78 Employee" giant number
-───────────────────────────────────────── */
-export function KPIStat({ icon: Icon, value, label, suffix = '', prefix = '', color = 'var(--primary)', style }) {
-  const numRef = useCountUp(typeof value === 'number' ? value : 0, { suffix, prefix, duration: 1.1 });
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, ...style }}>
-      {Icon && <div style={{ color: 'var(--text-muted)' }}><Icon size={20} /></div>}
-      <div>
-        <div className="kpi-number" ref={numRef} style={{ color: 'var(--text-primary)' }}>
-          {prefix}{typeof value === 'number' ? value : value}{suffix}
-        </div>
-        <div className="caption" style={{ marginTop: 1 }}>{label}</div>
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────
-   WelcomeHero  ← Crextio "Welcome in," heading
-───────────────────────────────────────── */
-export function WelcomeHero({ name, role, date, children }) {
-  const today = date || new Date().toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
-  return (
-    <div style={{ marginBottom: 'var(--sp-6)' }} className="animate-slide-up">
-      <div className="greeting">Welcome in,</div>
-      <div style={{ marginTop: 4, color: 'var(--text-muted)', fontSize: '0.9375rem', fontWeight: 400 }}>
-        {role} · {today}
-      </div>
-      {children}
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────
-   AvatarHeroCard  ← Crextio photo/profile card
-───────────────────────────────────────── */
-export function AvatarHeroCard({ name, role, sub, children, style }) {
-  return (
-    <div className="avatar-hero-card" style={style}>
-      <div className="avatar-hero-overlay" />
-      <div style={{ padding: 'var(--sp-5)', position: 'relative', display: 'flex', justifyContent: 'center', paddingTop: 32 }}>
-        <Avatar name={name} size={88} style={{ border: '3px solid rgba(255,255,255,0.8)', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }} />
-      </div>
-      <div className="avatar-hero-content">
-        <div style={{ fontWeight: 700, fontSize: '1.0625rem', color: '#fff' }}>{name}</div>
-        <div style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,0.75)', marginTop: 2 }}>{role}</div>
-        {sub && (
-          <div style={{ marginTop: 8, display: 'inline-block', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(6px)', padding: '3px 10px', borderRadius: 'var(--r-full)', fontSize: '0.75rem', color: '#fff', border: '1px solid rgba(255,255,255,0.3)' }}>
-            {sub}
+        {IconComponent && (
+          <div style={{ width: 28, height: 28, borderRadius: 'var(--r-sm)', background: t.bg, color: t.accent, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+            <IconComponent size={14} />
           </div>
         )}
-        {children}
       </div>
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────
-   DarkTaskCard  ← Crextio right-panel #1C2128 card
-───────────────────────────────────────── */
-export function DarkTaskCard({ title, tasks = [], done = 0 }) {
-  const [localTasks, setLocalTasks] = useState(tasks);
-  const toggle = (idx) => setLocalTasks(prev => prev.map((t, i) => i === idx ? { ...t, done: !t.done } : t));
-  const doneCount = localTasks.filter(t => t.done).length;
-
-  return (
-    <div className="dark-card" style={{ padding: 'var(--sp-5)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', height: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span className="h3" style={{ color: 'var(--text-on-dark)' }}>{title}</span>
-        <span style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--text-on-dark)' }}>{doneCount}/{localTasks.length}</span>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
-        {localTasks.map((task, i) => (
-          <div key={i} onClick={() => toggle(i)} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', padding: '6px 0', borderBottom: '1px solid var(--border-dark)', userSelect: 'none' }}>
-            <div className={`task-radio ${task.done ? 'done' : ''}`}>
-              {task.done && <CheckCircle2 size={11} />}
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: '0.8125rem', color: task.done ? 'var(--text-on-dark-2)' : 'var(--text-on-dark)', textDecoration: task.done ? 'line-through' : 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {task.title}
-              </div>
-              {task.date && <div style={{ fontSize: '0.7rem', color: 'var(--text-on-dark-3)', marginTop: 1 }}>{task.date}</div>}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────
-   CollapsibleRow  ← Crextio "Pension contributions ↕"
-───────────────────────────────────────── */
-export function CollapsibleRow({ title, icon: Icon, children, defaultOpen = false }) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div style={{ borderRadius: 'var(--r-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-card)', border: '1px solid var(--border-subtle)' }}>
-      <div className="collapsible-header" onClick={() => setOpen(v => !v)}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {Icon && <div style={{ width: 28, height: 28, borderRadius: 'var(--r-sm)', background: 'var(--primary-light)', color: 'var(--primary)', display: 'grid', placeItems: 'center' }}><Icon size={14} /></div>}
-          <span className="h3">{title}</span>
+      <div style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1, marginBottom: 4 }}>{value}</div>
+      {(hint || trend) && (
+        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', gap: 6, alignItems: 'center' }}>
+          {trend && <span style={{ color: 'var(--success)', fontWeight: 500 }}>{trend}</span>}
+          {hint && <span>{hint}</span>}
         </div>
-        <ChevronDown size={16} className={`collapsible-chevron ${open ? 'open' : ''}`} />
-      </div>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }} className="collapsible-body">
-            <div style={{ padding: 'var(--sp-5)' }}>{children}</div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+      )}
+    </Card>
   );
 }
 
-/* ─────────────────────────────────────────
-   AnimatedList / AnimatedItem  — stagger entrance
-───────────────────────────────────────── */
-export function AnimatedList({ children, style }) {
-  const ref = useStaggerReveal({ stagger: 0.06 });
-  return <div ref={ref} style={style}>{children}</div>;
-}
-export function AnimatedItem({ children }) {
-  return <div>{children}</div>;
-}
-
-/* ─────────────────────────────────────────
-   PageHeader  — title + subtitle + optional action
-───────────────────────────────────────── */
-export function PageHeader({ title, subtitle, action, style }) {
-  return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--sp-5)', ...style }} className="animate-slide-up">
-      <div>
-        <h1 className="h1">{title}</h1>
-        {subtitle && <p className="caption" style={{ marginTop: 4, color: 'var(--text-muted)' }}>{subtitle}</p>}
-      </div>
-      {action && <div>{action}</div>}
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────
-   Modal  — Framer Motion
-───────────────────────────────────────── */
-export function Modal({ isOpen, onClose, title, description, children, footer }) {
-  useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') onClose?.(); };
-    if (isOpen) window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [isOpen, onClose]);
-
+/* ── Modal (Framer Motion) ───────────────────────────────── */
+export function Modal({ isOpen, onClose, title, description, children, footer, maxWidth = 500 }) {
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(12,16,16,0.45)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 24 }}
-          onClick={e => { if (e.target === e.currentTarget) onClose?.(); }}
+        <motion.div
+          role="dialog"
+          aria-modal="true"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 999,
+            display: 'grid', placeItems: 'center',
+            padding: 'var(--sp-4)',
+            background: 'rgba(23, 23, 23, 0.4)',
+            backdropFilter: 'blur(6px)',
+          }}
+          onClick={e => e.target === e.currentTarget && onClose()}
         >
-          <motion.div initial={{ scale: 0.94, opacity: 0, y: 12 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.94, opacity: 0, y: 12 }} transition={{ duration: 0.22, ease: [0, 0, 0.2, 1] }}
-            style={{ background: 'var(--bg-surface)', borderRadius: 'var(--r-xl)', boxShadow: 'var(--shadow-modal)', width: '100%', maxWidth: 480, overflow: 'hidden' }}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 8 }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            style={{
+              width: '100%', maxWidth,
+              background: 'var(--bg-surface)',
+              borderRadius: 'var(--r-xl)',
+              border: '1px solid var(--border-subtle)',
+              boxShadow: 'var(--shadow-xl)',
+              overflow: 'hidden',
+            }}
           >
-            <div style={{ padding: 'var(--sp-6)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: description ? 4 : 20 }}>
-                <h2 className="h2">{title}</h2>
-                <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 2 }}><X size={18} /></button>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h3 className="h2">{title}</h3>
+                {description && <p className="meta" style={{ marginTop: 2 }}>{description}</p>}
               </div>
-              {description && <p className="caption" style={{ marginBottom: 20, color: 'var(--text-muted)' }}>{description}</p>}
-              {children}
+              <button onClick={onClose} aria-label="Close" style={{ width: 28, height: 28, borderRadius: 'var(--r-sm)', display: 'grid', placeItems: 'center', color: 'var(--text-muted)', transition: 'all var(--t-fast)' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-subtle)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}
+              >
+                <X size={16} />
+              </button>
             </div>
+            <div style={{ padding: '18px 20px', maxHeight: '70vh', overflowY: 'auto' }}>{children}</div>
             {footer && (
-              <div style={{ padding: 'var(--sp-4) var(--sp-6)', borderTop: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'flex-end', gap: 'var(--sp-3)', background: 'var(--bg-subtle)' }}>
+              <div style={{ padding: '12px 20px', borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-subtle)', display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
                 {footer}
               </div>
             )}
@@ -334,31 +312,99 @@ export function Modal({ isOpen, onClose, title, description, children, footer })
   );
 }
 
-/* ─────────────────────────────────────────
-   Progress  — thin animated horizontal bar
-───────────────────────────────────────── */
-export function Progress({ value, max = 100, color = 'var(--primary-fill)', height = 4, style, delay = 0 }) {
-  const fillRef = useProgressBarFill ? undefined : undefined; // JS fill handled inline
-  const pct = Math.min(100, (value / max) * 100);
+/* ── EmptyState ───────────────────────────────────────────── */
+export function EmptyState({ icon: IconComponent, title, hint, action }) {
   return (
-    <div style={{ height, borderRadius: 'var(--r-full)', background: 'var(--bg-sunken)', overflow: 'hidden', ...style }}>
-      <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 'inherit', transition: `width 0.8s ${delay}s var(--ease-out)` }} />
+    <div style={{ textAlign: 'center', padding: 'var(--sp-7) var(--sp-4)' }} role="status">
+      {IconComponent && (
+        <div style={{ width: 40, height: 40, borderRadius: 'var(--r-md)', background: 'var(--bg-subtle)', color: 'var(--text-muted)', display: 'grid', placeItems: 'center', margin: '0 auto 12px' }}>
+          <IconComponent size={20} />
+        </div>
+      )}
+      <h3 className="h3" style={{ marginBottom: 4 }}>{title}</h3>
+      {hint && <p className="caption" style={{ color: 'var(--text-muted)', maxWidth: 360, margin: '0 auto' }}>{hint}</p>}
+      {action && <div style={{ marginTop: 'var(--sp-3)' }}>{action}</div>}
     </div>
   );
 }
 
-/* ─────────────────────────────────────────
-   EmptyState
-───────────────────────────────────────── */
-export function EmptyState({ icon: Icon, title, description, action }) {
+/* ── AnimatedList: Stagger wrapper ───────────────────────── */
+const LIST_CONTAINER = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.05 } },
+};
+const LIST_ITEM = {
+  hidden: { opacity: 0, y: 6 },
+  show:   { opacity: 1, y: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } },
+};
+
+export function AnimatedList({ children, style }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'var(--sp-12) var(--sp-8)', gap: 'var(--sp-4)', textAlign: 'center' }}>
-      {Icon && <div style={{ width: 48, height: 48, borderRadius: 'var(--r-md)', background: 'var(--primary-light)', color: 'var(--primary)', display: 'grid', placeItems: 'center' }}><Icon size={22} /></div>}
+    <motion.div variants={LIST_CONTAINER} initial="hidden" animate="show" style={style}>
+      {children}
+    </motion.div>
+  );
+}
+export function AnimatedItem({ children, style }) {
+  return <motion.div variants={LIST_ITEM} style={style}>{children}</motion.div>;
+}
+
+/* ── Collapsible: Progressive disclosure ─────────────────── */
+export function Collapsible({ title, children, defaultOpen = false, rightContent }) {
+  const [open, setOpen] = import('react').then ? null : null; // see below
+  return <CollapsibleInner title={title} children={children} defaultOpen={defaultOpen} rightContent={rightContent} />;
+}
+
+import { useState } from 'react';
+import { ChevronRight } from 'lucide-react';
+
+function CollapsibleInner({ title, children, defaultOpen = false, rightContent }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '10px 0', background: 'none', border: 'none', cursor: 'pointer',
+          borderTop: '1px solid var(--border-subtle)',
+        }}
+      >
+        <span className="h3">{title}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {rightContent}
+          <motion.div animate={{ rotate: open ? 90 : 0 }} transition={{ duration: 0.2 }}>
+            <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />
+          </motion.div>
+        </div>
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div style={{ paddingBottom: 'var(--sp-4)' }}>{children}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+/* ── PageHeader ───────────────────────────────────────────── */
+export function PageHeader({ title, subtitle, action, breadcrumb }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 'var(--sp-5)' }}>
       <div>
-        <div className="h3" style={{ marginBottom: 4 }}>{title}</div>
-        {description && <p className="caption">{description}</p>}
+        {breadcrumb && <div className="meta" style={{ marginBottom: 4, color: 'var(--text-muted)' }}>{breadcrumb}</div>}
+        <h1 className="page-title">{title}</h1>
+        {subtitle && <p className="caption" style={{ marginTop: 3, maxWidth: 480 }}>{subtitle}</p>}
       </div>
-      {action}
+      {action && <div style={{ flexShrink: 0 }}>{action}</div>}
     </div>
   );
 }
