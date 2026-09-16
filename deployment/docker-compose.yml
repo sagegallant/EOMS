@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # MySQL 8.0 Enterprise Database
+  mysql:
+    image: mysql:8.0
+    container_name: eoms-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: eoms
+      MYSQL_USER: eoms_user
+      MYSQL_PASSWORD: eoms_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - eoms-mysql-data:/var/lib/mysql
+      - ../database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ../database/views.sql:/docker-entrypoint-initdb.d/02-views.sql
+    networks:
+      - eoms-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 5
+
+  # Node.js Express REST API Backend
+  api:
+    build:
+      context: ../server
+      dockerfile: Dockerfile
+    container_name: eoms-api
+    restart: always
+    environment:
+      PORT: 5000
+      NODE_ENV: production
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: eoms
+      DB_USER: eoms_user
+      DB_PASS: eoms_password
+      JWT_SECRET: eoms_super_secret_jwt_key_change_in_production_2026
+      CLIENT_URL: http://localhost:3000
+    ports:
+      - "5000:5000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - eoms-network
+
+  # React Vite Frontend Web Application
+  client:
+    build:
+      context: ../client
+      dockerfile: Dockerfile
+    container_name: eoms-client
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    networks:
+      - eoms-network
+
+networks:
+  eoms-network:
+    driver: bridge
+
+volumes:
+  eoms-mysql-data:
+    driver: local
