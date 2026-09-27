@@ -7,6 +7,7 @@ import {
   updatePlan,
   listTemplates,
   getTemplateById,
+  checkSlaEndpoint,
 } from '../controllers/onboarding.controller.js';
 import { requireAuth } from '../middleware/auth.js';
 import { requireRole } from '../middleware/rbac.js';
@@ -19,7 +20,9 @@ router.get('/templates/:id', requireAuth, getTemplateById);
 router.get('/employee/:employeeId', requireAuth, getPlanByEmployeeId);
 router.get('/', requireAuth, listPlans);
 router.get('/:id', requireAuth, getPlanById);
+router.post('/sla-check', requireAuth, requireRole('HR_ADMIN', 'HR_SPECIALIST', 'SYSTEM_ADMIN'), checkSlaEndpoint);
 router.post('/', requireAuth, requireRole('HR_ADMIN', 'HR_SPECIALIST', 'RECRUITER'), createPlan);
 router.patch('/:id', requireAuth, requireRole('HR_ADMIN', 'HR_SPECIALIST', 'DEPARTMENT_MANAGER'), updatePlan);
 
 export default router;
+

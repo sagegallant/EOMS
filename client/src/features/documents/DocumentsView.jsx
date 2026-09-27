@@ -1,118 +1,590 @@
-import { useState } from 'react';
-import { Card, Button, Badge, Modal, AnimatedList, AnimatedItem, PageHeader } from '../../components/common/ui';
+import { useState, useEffect, useCallback } from 'react';
+import {
+  Card,
+  Button,
+  Badge,
+  Modal,
+  Input,
+  Select,
+  AnimatedList,
+  AnimatedItem,
+  PageHeader,
+} from '../../components/common/ui';
 import { MiniDonut, HorizontalBar } from '../../components/common/charts';
-import { FileCheck, FileWarning, FileMinus, Eye, CheckCircle2, XCircle, Upload } from 'lucide-react';
+import {
+  FileCheck,
+  FileWarning,
+  FileMinus,
+  Eye,
+  CheckCircle2,
+  XCircle,
+  Upload,
+  Download,
+  RefreshCw,
+  Plus,
+  AlertCircle,
+  HelpCircle,
+} from 'lucide-react';
+import { documentApi } from '../../api/documents';
+import { employeeApi } from '../../api/employees';
+import { useAuthStore } from '../../store/authStore';
 
-const INITIAL_DOCS = [
-  { id:1, employee:'Aarav Sharma',   type:'PAN Card',           status:'VERIFIED',  reviewer:'Priya Patel',  date:'Mar 10, 2026', tone:'sage'    },
-  { id:2, employee:'Sneha Kulkarni', type:'Aadhaar Card',       status:'PENDING',   reviewer:'—',            date:'Mar 15, 2026', tone:'warning' },
-  { id:3, employee:'Arjun Rao',      type:'EPFO Form 11 (UAN)', status:'VERIFIED',  reviewer:'Neha Nair',    date:'Mar 08, 2026', tone:'sage'    },
-  { id:4, employee:'Kabir Mehta',    type:'Relieving Letter',   status:'PENDING',   reviewer:'—',            date:'Mar 18, 2026', tone:'warning' },
-  { id:5, employee:'Ananya Iyer',    type:'POSH Sign-off',      status:'VERIFIED',  reviewer:'Neha Nair',    date:'Mar 12, 2026', tone:'sage'    },
-  { id:6, employee:'Pooja Desai',    type:'Cancelled Cheque',   status:'REJECTED',  reviewer:'Priya Patel',  date:'Mar 14, 2026', tone:'danger'  },
-];
+const ICON_MAP = {
+  approved: FileCheck,
+  pending: FileWarning,
+  rejected: XCircle,
+  requires_resubmission: FileMinus,
+};
 
-const STATUS_BARS = [
-  { label:'Verified', value:3, displayValue:'3 docs', color:'var(--chart-1)' },
-  { label:'Pending',  value:2, displayValue:'2 docs', color:'var(--warning)' },
-  { label:'Rejected', value:1, displayValue:'1 doc',  color:'var(--danger)'  },
-];
-
-const ICON_MAP = { VERIFIED:FileCheck, PENDING:FileWarning, REJECTED:FileMinus };
+const TONE_MAP = {
+  approved: 'sage',
+  pending: 'warning',
+  rejected: 'danger',
+  requires_resubmission: 'warning',
+};
 
 export default function DocumentsView() {
-  const [docs, setDocs] = useState(INITIAL_DOCS);
-  const [reviewing, setReviewing] = useState(null);
+  const { user } = useAuthStore();
+  const [docs, setDocs] = useState([]);
+  const [docTypes, setDocTypes] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filter, setFilter] = useState('ALL');
 
-  const updateStatus = (id, status) => {
-    setDocs(ds => ds.map(d => d.id===id ? { ...d, status, tone:status==='VERIFIED'?'sage':status==='REJECTED'?'danger':'warning', reviewer:'Priya Patel' } : d));
-    setReviewing(null);
+  // Review state
+  const [reviewing, setReviewing] = useState(null);
+  const [reviewNotes, setReviewNotes] = useState('');
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+
+  // Upload modal state
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [uploadForm, setUploadForm] = useState({
+    employeeId: user?.employeeId || '',
+    typeId: '',
+    file: null,
+  });
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
+
+  const isStaff = user?.roles?.some(r =>
+    ['HR_ADMIN', 'HR_SPECIALIST', 'COMPLIANCE_OFFICER', 'SYSTEM_ADMIN'].includes(r)
+  );
+
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const [docsRes, typesRes] = await Promise.all([
+        documentApi.list(),
+        documentApi.listTypes(),
+      ]);
+      setDocs(docsRes.data || []);
+      setDocTypes(typesRes.data || []);
+
+      if (isStaff) {
+        try {
+          const empRes = await employeeApi.list();
+          setEmployees(empRes.data || []);
+        } catch {
+          // non-critical if employee list fails
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load documents data:', err);
+      setError(err?.response?.data?.message || 'Failed to load document records from server.');
+    } finally {
+      setLoading(false);
+    }
+  }, [isStaff]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const handleVerify = async (status) => {
+    if (!reviewing) return;
+    try {
+      setReviewSubmitting(true);
+      await documentApi.verify(reviewing.documentId, {
+        status,
+        comments: reviewNotes || undefined,
+      });
+      setReviewing(null);
+      setReviewNotes('');
+      await loadData();
+    } catch (err) {
+      console.error('Verification failed:', err);
+      alert(err?.response?.data?.message || 'Failed to update verification status.');
+    } finally {
+      setReviewSubmitting(false);
+    }
   };
 
-  const visible = filter==='ALL' ? docs : docs.filter(d=>d.status===filter);
-  const verified = docs.filter(d=>d.status==='VERIFIED').length;
+  const handleDownload = async (doc) => {
+    try {
+      const response = await documentApi.downloadBlob(doc.documentId);
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', doc.fileName || 'document.pdf');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download failed:', err);
+      alert('Unable to download file. Please check permissions or file availability.');
+    }
+  };
+
+  const handleUploadSubmit = async (e) => {
+    e.preventDefault();
+    if (!uploadForm.typeId) {
+      setUploadError('Please select a document type.');
+      return;
+    }
+    if (!uploadForm.file) {
+      setUploadError('Please choose a file to upload.');
+      return;
+    }
+
+    try {
+      setUploading(true);
+      setUploadError(null);
+      const fd = new FormData();
+      fd.append('file', uploadForm.file);
+      fd.append('typeId', uploadForm.typeId);
+      fd.append('employeeId', uploadForm.employeeId || user?.employeeId);
+
+      await documentApi.upload(fd);
+      setUploadModalOpen(false);
+      setUploadForm({
+        employeeId: user?.employeeId || '',
+        typeId: '',
+        file: null,
+      });
+      await loadData();
+    } catch (err) {
+      console.error('Upload failed:', err);
+      setUploadError(err?.response?.data?.message || 'Failed to upload document. Whitelisted types: PDF, PNG, JPG.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Helper metrics
+  const total = docs.length;
+  const verifiedCount = docs.filter(
+    (d) => d.DocumentVerifications?.[0]?.status === 'approved'
+  ).length;
+  const pendingCount = docs.filter(
+    (d) => !d.DocumentVerifications?.[0] || d.DocumentVerifications?.[0]?.status === 'pending'
+  ).length;
+  const rejectedCount = docs.filter(
+    (d) => d.DocumentVerifications?.[0]?.status === 'rejected'
+  ).length;
+  const resubmitCount = docs.filter(
+    (d) => d.DocumentVerifications?.[0]?.status === 'requires_resubmission'
+  ).length;
+
+  const statusBars = [
+    { label: 'Approved', value: verifiedCount, displayValue: `${verifiedCount} docs`, color: 'var(--chart-1)' },
+    { label: 'Pending', value: pendingCount, displayValue: `${pendingCount} docs`, color: 'var(--warning)' },
+    { label: 'Rejected', value: rejectedCount, displayValue: `${rejectedCount} docs`, color: 'var(--danger)' },
+    { label: 'Resubmit', value: resubmitCount, displayValue: `${resubmitCount} docs`, color: 'var(--accent-orange)' },
+  ];
+
+  const visible = docs.filter((d) => {
+    const status = d.DocumentVerifications?.[0]?.status || 'pending';
+    if (filter === 'ALL') return true;
+    return status.toLowerCase() === filter.toLowerCase();
+  });
 
   return (
-    <div style={{ display:'grid', gap:'var(--sp-5)' }}>
-      <PageHeader title="Documents" subtitle="Statutory document verification queue — Indian compliance requirements." />
+    <div style={{ display: 'grid', gap: 'var(--sp-5)' }}>
+      <PageHeader
+        title="Documents"
+        subtitle="Statutory document verification & compliance repository."
+        actions={
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Button variant="outline" size="sm" icon={RefreshCw} onClick={loadData} disabled={loading}>
+              Refresh
+            </Button>
+            <Button
+              size="sm"
+              icon={Upload}
+              onClick={() => {
+                setUploadError(null);
+                setUploadModalOpen(true);
+              }}
+            >
+              Upload Document
+            </Button>
+          </div>
+        }
+      />
 
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'var(--sp-4)' }}>
+      {error && (
+        <Card $p="var(--sp-4)" style={{ borderColor: 'var(--danger-border)', background: 'var(--danger-bg)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--danger)' }}>
+            <AlertCircle size={18} />
+            <span style={{ fontSize: '0.875rem' }}>{error}</span>
+          </div>
+        </Card>
+      )}
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--sp-4)' }}>
         <Card $p="var(--sp-4)">
-          <div className="label-caps" style={{ marginBottom:12 }}>Verification Rate</div>
-          <div style={{ display:'flex', alignItems:'center', gap:16 }}>
-            <MiniDonut value={verified} total={docs.length} label={`${Math.round((verified/docs.length)*100)}%`} size={72} color="var(--chart-1)" />
-            <div style={{ fontSize:'0.8125rem', display:'grid', gap:5 }}>
-              {STATUS_BARS.map(s => <div key={s.label} style={{ display:'flex', justifyContent:'space-between', gap:16 }}><span style={{ color:'var(--text-muted)' }}>{s.label}</span><span style={{ fontWeight:700 }}>{s.value}</span></div>)}
+          <div className="label-caps" style={{ marginBottom: 12 }}>Verification Compliance</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <MiniDonut
+              value={verifiedCount}
+              total={total || 1}
+              label={total ? `${Math.round((verifiedCount / total) * 100)}%` : '0%'}
+              size={72}
+              color="var(--chart-1)"
+            />
+            <div style={{ fontSize: '0.8125rem', display: 'grid', gap: 5, flex: 1 }}>
+              {statusBars.map((s) => (
+                <div key={s.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}>
+                  <span style={{ color: 'var(--text-muted)' }}>{s.label}</span>
+                  <span style={{ fontWeight: 700 }}>{s.value}</span>
+                </div>
+              ))}
             </div>
           </div>
         </Card>
         <Card $p="var(--sp-4)">
-          <div className="label-caps" style={{ marginBottom:10 }}>By Status</div>
-          <HorizontalBar items={STATUS_BARS} maxValue={docs.length} />
+          <div className="label-caps" style={{ marginBottom: 10 }}>Verification Status Breakdown</div>
+          <HorizontalBar items={statusBars} maxValue={Math.max(total, 1)} />
         </Card>
       </div>
 
       <Card $p="var(--sp-5)">
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
-          <div style={{ display:'flex', gap:6 }}>
-            {['ALL','VERIFIED','PENDING','REJECTED'].map(f => (
-              <button key={f} onClick={() => setFilter(f)}
-                style={{ padding:'4px 11px', borderRadius:'var(--r-full)', fontSize:'0.75rem', fontWeight:600, border:'1.5px solid', cursor:'pointer', transition:'all var(--t-fast)',
-                  borderColor: filter===f?'var(--sage-600)':'var(--border-default)',
-                  background:  filter===f?'var(--sage-100)':'transparent',
-                  color:       filter===f?'var(--sage-800)':'var(--text-muted)',
-                }}>
-                {f==='ALL'?'All':f.charAt(0)+f.slice(1).toLowerCase()}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {[
+              { id: 'ALL', label: 'All' },
+              { id: 'pending', label: 'Pending' },
+              { id: 'approved', label: 'Approved' },
+              { id: 'requires_resubmission', label: 'Resubmit' },
+              { id: 'rejected', label: 'Rejected' },
+            ].map((f) => (
+              <button
+                key={f.id}
+                onClick={() => setFilter(f.id)}
+                style={{
+                  padding: '4px 12px',
+                  borderRadius: 'var(--r-full)',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  border: '1.5px solid',
+                  cursor: 'pointer',
+                  transition: 'all var(--t-fast)',
+                  borderColor: filter === f.id ? 'var(--sage-600)' : 'var(--border-default)',
+                  background: filter === f.id ? 'var(--sage-100)' : 'transparent',
+                  color: filter === f.id ? 'var(--sage-800)' : 'var(--text-muted)',
+                }}
+              >
+                {f.label}
               </button>
             ))}
           </div>
+          <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+            Showing {visible.length} of {total} documents
+          </span>
         </div>
-        <AnimatedList style={{ display:'grid', gap:6 }}>
-          {visible.map(doc => {
-            const Icon = ICON_MAP[doc.status]||FileWarning;
-            const col = doc.status==='VERIFIED'?'var(--chart-1)':doc.status==='PENDING'?'var(--warning)':'var(--danger)';
-            return (
-              <AnimatedItem key={doc.id}>
-                <div style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 12px', borderRadius:'var(--r-md)', border:'1px solid var(--border-subtle)', background:'var(--bg-surface)', flexWrap:'wrap', transition:'all var(--t-fast)' }}
-                  onMouseEnter={e=>{e.currentTarget.style.background='var(--sage-50)';e.currentTarget.style.borderColor='var(--sage-200)'}}
-                  onMouseLeave={e=>{e.currentTarget.style.background='var(--bg-surface)';e.currentTarget.style.borderColor='var(--border-subtle)'}}>
-                  <div style={{ width:32, height:32, borderRadius:'var(--r-md)', background:`${col}15`, display:'grid', placeItems:'center', flexShrink:0 }}>
-                    <Icon size={15} style={{ color:col }} />
-                  </div>
-                  <div style={{ flex:'1 1 180px', minWidth:0 }}>
-                    <div style={{ fontWeight:500, fontSize:'0.875rem', color:'var(--text-primary)' }}>{doc.type}</div>
-                    <div className="meta">{doc.employee} · {doc.date}</div>
-                  </div>
-                  <Badge tone={doc.tone}>{doc.status.charAt(0)+doc.status.slice(1).toLowerCase()}</Badge>
-                  {doc.status==='PENDING' && <Button variant="soft" size="xs" icon={Eye} onClick={() => setReviewing(doc)}>Review</Button>}
-                </div>
-              </AnimatedItem>
-            );
-          })}
-        </AnimatedList>
-      </Card>
 
-      <Modal isOpen={!!reviewing} onClose={() => setReviewing(null)} title={`Review: ${reviewing?.type}`} description={`Submitted by ${reviewing?.employee} · ${reviewing?.date}`}
-        footer={<>
-          <Button variant="dangerSoft" icon={XCircle} onClick={() => updateStatus(reviewing.id,'REJECTED')}>Reject</Button>
-          <Button icon={CheckCircle2} onClick={() => updateStatus(reviewing.id,'VERIFIED')}>Approve</Button>
-        </>}>
-        <div style={{ display:'grid', gap:12 }}>
-          <div style={{ padding:20, borderRadius:'var(--r-md)', background:'var(--sage-50)', border:'2px dashed var(--border-default)', display:'grid', placeItems:'center', minHeight:120 }}>
-            <div style={{ textAlign:'center', color:'var(--text-muted)' }}>
-              <Upload size={24} style={{ margin:'0 auto 8px', display:'block', color:'var(--sage-400)' }} />
-              <p className="caption">{reviewing?.type} document preview</p>
-              <p className="meta" style={{ marginTop:2 }}>Document content shown here in production</p>
+        {loading ? (
+          <div style={{ display: 'grid', gap: 10, padding: '20px 0' }}>
+            <div style={{ height: 48, borderRadius: 'var(--r-md)', background: 'var(--bg-subtle)', animation: 'pulse 1.5s infinite ease-in-out' }} />
+            <div style={{ height: 48, borderRadius: 'var(--r-md)', background: 'var(--bg-subtle)', animation: 'pulse 1.5s infinite ease-in-out' }} />
+            <div style={{ height: 48, borderRadius: 'var(--r-md)', background: 'var(--bg-subtle)', animation: 'pulse 1.5s infinite ease-in-out' }} />
+          </div>
+        ) : visible.length === 0 ? (
+          <div style={{ padding: '36px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
+            <FileWarning size={32} style={{ margin: '0 auto 8px', color: 'var(--warning)', opacity: 0.8 }} />
+            <div style={{ fontWeight: 600, fontSize: '0.9375rem', color: 'var(--text-primary)' }}>No documents found</div>
+            <div className="caption" style={{ marginTop: 4 }}>
+              {filter === 'ALL' ? 'No documents have been uploaded yet.' : `No documents match filter "${filter}".`}
             </div>
           </div>
-          {[['Employee',reviewing?.employee],['Type',reviewing?.type],['Submitted',reviewing?.date]].map(([k,v])=>(
-            <div key={k} style={{ display:'flex', justifyContent:'space-between', padding:'6px 0', borderBottom:'1px solid var(--border-subtle)' }}>
-              <span style={{ color:'var(--text-muted)', fontSize:'0.8125rem' }}>{k}</span>
-              <span style={{ fontWeight:500, fontSize:'0.8125rem', color:'var(--text-primary)' }}>{v}</span>
+        ) : (
+          <AnimatedList style={{ display: 'grid', gap: 8 }}>
+            {visible.map((doc) => {
+              const ver = doc.DocumentVerifications?.[0];
+              const statusKey = ver?.status || 'pending';
+              const Icon = ICON_MAP[statusKey] || FileWarning;
+              const tone = TONE_MAP[statusKey] || 'warning';
+              const empName = doc.Employee
+                ? `${doc.Employee.firstName} ${doc.Employee.lastName}`
+                : `Emp #${doc.employeeId}`;
+              const docTypeName = doc.DocumentType?.typeName || doc.fileName;
+              const dateStr = doc.uploadedAt
+                ? new Date(doc.uploadedAt).toLocaleDateString()
+                : '—';
+
+              return (
+                <AnimatedItem key={doc.documentId}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      padding: '12px 14px',
+                      borderRadius: 'var(--r-md)',
+                      border: '1px solid var(--border-subtle)',
+                      background: 'var(--bg-surface)',
+                      flexWrap: 'wrap',
+                      transition: 'all var(--t-fast)',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 'var(--r-md)',
+                        background: 'var(--sage-50)',
+                        display: 'grid',
+                        placeItems: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Icon size={18} style={{ color: 'var(--sage-700)' }} />
+                    </div>
+
+                    <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary)' }}>
+                        {docTypeName}
+                      </div>
+                      <div className="meta" style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 2 }}>
+                        <span>{empName}</span>
+                        <span>·</span>
+                        <span>{doc.fileName}</span>
+                        <span>·</span>
+                        <span>{dateStr}</span>
+                        {doc.fileSizeBytes && (
+                          <>
+                            <span>·</span>
+                            <span>{Math.round(doc.fileSizeBytes / 1024)} KB</span>
+                          </>
+                        )}
+                      </div>
+                      {ver?.comments && (
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4, fontStyle: 'italic' }}>
+                          Note: "{ver.comments}"
+                        </div>
+                      )}
+                    </div>
+
+                    <Badge tone={tone}>
+                      {statusKey.replace('_', ' ').toUpperCase()}
+                    </Badge>
+
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <Button
+                        variant="soft"
+                        size="xs"
+                        icon={Download}
+                        onClick={() => handleDownload(doc)}
+                      >
+                        Download
+                      </Button>
+                      {isStaff && (
+                        <Button
+                          variant="outline"
+                          size="xs"
+                          icon={Eye}
+                          onClick={() => {
+                            setReviewing(doc);
+                            setReviewNotes(ver?.comments || '');
+                          }}
+                        >
+                          Review
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </AnimatedItem>
+              );
+            })}
+          </AnimatedList>
+        )}
+      </Card>
+
+      {/* Review Modal */}
+      <Modal
+        isOpen={!!reviewing}
+        onClose={() => setReviewing(null)}
+        title={`Review Document: ${reviewing?.DocumentType?.typeName || reviewing?.fileName}`}
+        description={`Submitted by ${reviewing?.Employee?.firstName || 'Employee'} ${
+          reviewing?.Employee?.lastName || ''
+        }`}
+        footer={
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', width: '100%' }}>
+            <Button
+              variant="dangerSoft"
+              icon={XCircle}
+              disabled={reviewSubmitting}
+              onClick={() => handleVerify('rejected')}
+            >
+              Reject
+            </Button>
+            <Button
+              variant="outline"
+              icon={HelpCircle}
+              disabled={reviewSubmitting}
+              onClick={() => handleVerify('requires_resubmission')}
+            >
+              Request Resubmission
+            </Button>
+            <Button
+              icon={CheckCircle2}
+              disabled={reviewSubmitting}
+              onClick={() => handleVerify('approved')}
+            >
+              Approve
+            </Button>
+          </div>
+        }
+      >
+        <div style={{ display: 'grid', gap: 14 }}>
+          <div
+            style={{
+              padding: 16,
+              borderRadius: 'var(--r-md)',
+              background: 'var(--sage-50)',
+              border: '1px solid var(--border-default)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <div>
+              <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{reviewing?.fileName}</div>
+              <div className="meta" style={{ marginTop: 2 }}>
+                {reviewing?.mimeType} · {reviewing?.fileSizeBytes ? `${Math.round(reviewing.fileSizeBytes / 1024)} KB` : ''}
+              </div>
             </div>
-          ))}
+            <Button size="xs" variant="soft" icon={Download} onClick={() => handleDownload(reviewing)}>
+              Download File
+            </Button>
+          </div>
+
+          <div style={{ display: 'grid', gap: 6 }}>
+            <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+              Compliance Notes & Audit Feedback
+            </label>
+            <textarea
+              rows={3}
+              value={reviewNotes}
+              onChange={(e) => setReviewNotes(e.target.value)}
+              placeholder="Provide verification notes or reason for rejection/resubmission..."
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: 'var(--r-md)',
+                border: '1px solid var(--border-default)',
+                fontSize: '0.875rem',
+                fontFamily: 'inherit',
+                background: 'var(--bg-surface)',
+                color: 'var(--text-primary)',
+              }}
+            />
+          </div>
         </div>
+      </Modal>
+
+      {/* Upload Document Modal */}
+      <Modal
+        isOpen={uploadModalOpen}
+        onClose={() => setUploadModalOpen(false)}
+        title="Upload Statutory Document"
+        description="Submit compliance or identification documentation for verification."
+        footer={
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', width: '100%' }}>
+            <Button variant="outline" onClick={() => setUploadModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button icon={Upload} disabled={uploading} onClick={handleUploadSubmit}>
+              {uploading ? 'Uploading...' : 'Submit Document'}
+            </Button>
+          </div>
+        }
+      >
+        <form onSubmit={handleUploadSubmit} style={{ display: 'grid', gap: 14 }}>
+          {uploadError && (
+            <div style={{ padding: '8px 12px', borderRadius: 'var(--r-md)', background: 'var(--danger-bg)', color: 'var(--danger)', fontSize: '0.8125rem' }}>
+              {uploadError}
+            </div>
+          )}
+
+          {isStaff && employees.length > 0 && (
+            <div style={{ display: 'grid', gap: 6 }}>
+              <label style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Target Employee</label>
+              <select
+                value={uploadForm.employeeId}
+                onChange={(e) => setUploadForm({ ...uploadForm, employeeId: e.target.value })}
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: 'var(--r-md)',
+                  border: '1px solid var(--border-default)',
+                  background: 'var(--bg-surface)',
+                  color: 'var(--text-primary)',
+                  fontSize: '0.875rem',
+                }}
+              >
+                <option value="">Select Employee...</option>
+                {employees.map((emp) => (
+                  <option key={emp.employeeId} value={emp.employeeId}>
+                    {emp.firstName} {emp.lastName} ({emp.workEmail || `ID #${emp.employeeId}`})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div style={{ display: 'grid', gap: 6 }}>
+            <label style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Document Type *</label>
+            <select
+              value={uploadForm.typeId}
+              onChange={(e) => setUploadForm({ ...uploadForm, typeId: e.target.value })}
+              required
+              style={{
+                padding: '8px 12px',
+                borderRadius: 'var(--r-md)',
+                border: '1px solid var(--border-default)',
+                background: 'var(--bg-surface)',
+                color: 'var(--text-primary)',
+                fontSize: '0.875rem',
+              }}
+            >
+              <option value="">Select Document Type...</option>
+              {docTypes.map((dt) => (
+                <option key={dt.typeId} value={dt.typeId}>
+                  {dt.typeName} {dt.isMandatory ? '(Mandatory)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ display: 'grid', gap: 6 }}>
+            <label style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Select File (PDF, PNG, JPG, WebP - max 5MB) *</label>
+            <input
+              type="file"
+              accept=".pdf,.png,.jpg,.jpeg,.webp"
+              onChange={(e) => setUploadForm({ ...uploadForm, file: e.target.files[0] })}
+              style={{
+                padding: '8px',
+                borderRadius: 'var(--r-md)',
+                border: '1px dashed var(--border-default)',
+                background: 'var(--bg-surface)',
+                fontSize: '0.875rem',
+              }}
+            />
+          </div>
+        </form>
       </Modal>
     </div>
   );

@@ -19,7 +19,7 @@ export async function listAuditLogs(req, res, next) {
           attributes: ['userId', 'username', 'email'],
         },
       ],
-      order: [['createdAt', 'DESC']],
+      order: [['created_at', 'DESC']],
       limit: Number(limit),
       offset,
     });

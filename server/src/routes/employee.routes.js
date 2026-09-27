@@ -8,7 +8,7 @@ import {
   getPositions,
 } from '../controllers/employee.controller.js';
 import { requireAuth } from '../middleware/auth.js';
-import { requireRole } from '../middleware/rbac.js';
+import { requirePermission } from '../middleware/rbac.js';
 
 const router = Router();
 
@@ -17,7 +17,8 @@ router.get('/positions', requireAuth, getPositions);
 
 router.get('/', requireAuth, listEmployees);
 router.get('/:id', requireAuth, getEmployeeById);
-router.post('/', requireAuth, requireRole('HR_ADMIN', 'HR_SPECIALIST', 'RECRUITER'), createEmployee);
-router.patch('/:id', requireAuth, requireRole('HR_ADMIN', 'HR_SPECIALIST', 'DEPARTMENT_MANAGER'), updateEmployee);
+router.post('/', requireAuth, requirePermission('employee:write'), createEmployee);
+router.patch('/:id', requireAuth, requirePermission('employee:write'), updateEmployee);
 
 export default router;
+

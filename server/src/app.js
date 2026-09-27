@@ -15,6 +15,8 @@ app.use('/api/v1/auth', rateLimit({ windowMs: 15 * 60_000, max: 20 }));
 app.use('/api/v1', apiRouter);
 app.use(errorHandler); // → { code, message } JSON; 500s audited
 
+import { fileURLToPath } from 'url';
+
 const PORT = process.env.PORT ?? 5000;
 
 function startServer(port) {
@@ -31,9 +33,19 @@ function startServer(port) {
   return server;
 }
 
-if (process.env.NODE_ENV !== 'test') {
+const isDirectRun = process.argv[1] && (
+  fileURLToPath(import.meta.url) === process.argv[1] ||
+  process.argv[1].endsWith('app.js')
+);
+
+import { startSlaScheduler } from './services/sla.service.js';
+
+if (isDirectRun && process.env.NODE_ENV !== 'test') {
   sequelize.authenticate()
-    .then(() => startServer(PORT))
+    .then(() => {
+      startServer(PORT);
+      startSlaScheduler();
+    })
     .catch(err => {
       console.error('DB connection failed:', err.message);
       // In dev without running DB, still start server for testing if needed
@@ -44,5 +56,6 @@ if (process.env.NODE_ENV !== 'test') {
       }
     });
 }
+
 
 export default app;

@@ -66,7 +66,7 @@ function HelpView() {
 function DashboardRouter() {
   const { user } = useAuthStore();
   const roles = user?.roles || [];
-  if (roles.some(r => ['HR_ADMIN', 'SYSTEM_ADMIN', 'HR_SPECIALIST'].includes(r))) return <HRDashboard />;
+  if (roles.some(r => ['HR_ADMIN', 'SYSTEM_ADMIN', 'HR_SPECIALIST', 'COMPLIANCE_OFFICER'].includes(r))) return <HRDashboard />;
   if (roles.includes('MANAGER') || roles.includes('DEPARTMENT_MANAGER')) return <ManagerDashboard />;
   if (roles.includes('IT_ADMIN')) return <ITDashboard />;
   return <EmployeeDashboard />;

@@ -2,9 +2,10 @@ import { Notification } from '../models/index.js';
 
 export async function listNotifications(req, res, next) {
   try {
+    const userId = req.user?.userId || req.user?.id;
     const notifications = await Notification.findAll({
-      where: { userId: req.user.userId },
-      order: [['createdAt', 'DESC']],
+      where: { userId },
+      order: [['created_at', 'DESC']],
       limit: 50,
     });
     res.json({ data: notifications });

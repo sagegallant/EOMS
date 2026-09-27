@@ -245,3 +245,14 @@ export async function getTemplateById(req, res, next) {
     next(e);
   }
 }
+
+export async function checkSlaEndpoint(req, res, next) {
+  try {
+    const { checkOverduePlans } = await import('../services/sla.service.js');
+    const result = await checkOverduePlans(req.user?.userId);
+    res.json({ message: 'SLA evaluation executed successfully.', data: result });
+  } catch (e) {
+    next(e);
+  }
+}
+

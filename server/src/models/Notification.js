@@ -9,4 +9,5 @@ export const Notification = sequelize.define('Notification', {
   channel:        { type: DataTypes.ENUM('in_app', 'email', 'sms'), allowNull: false, defaultValue: 'in_app' },
   isRead:         { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false, field: 'is_read' },
   readAt:         { type: DataTypes.DATE, allowNull: true, field: 'read_at' },
-}, { tableName: 'notifications', updatedAt: false });
+  createdAt:      { type: DataTypes.DATE, field: 'created_at' },
+}, { tableName: 'notifications', updatedAt: false, createdAt: 'created_at' });

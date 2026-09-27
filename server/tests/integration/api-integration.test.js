@@ -2,6 +2,7 @@ import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import app from '../../src/app.js';
+import { sequelize } from '../../src/models/index.js';
 
 describe('Integration Tests: EOMS REST API Endpoints', () => {
   let server;
@@ -21,7 +22,9 @@ describe('Integration Tests: EOMS REST API Endpoints', () => {
 
   after(async () => {
     await new Promise(resolve => server.close(resolve));
+    await sequelize.close();
   });
+
 
   test('GET /health returns 200 with system metadata', async () => {
     const res = await fetch(`${baseUrl}/health`);

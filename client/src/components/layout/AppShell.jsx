@@ -120,7 +120,21 @@ export default function AppShell() {
               onMouseLeave={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.color='var(--text-muted)'}}>
               {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
             </button>
-            <button onClick={() => setDrawerOpen(true)} className="mobile-only" style={{ width:32, height:32, borderRadius:'var(--r-sm)', display:'grid', placeItems:'center', color:'var(--text-muted)' }}>
+            <button
+              onClick={() => setDrawerOpen(true)}
+              className="mobile-only"
+              title="Open navigation menu"
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 'var(--r-sm)',
+                placeItems: 'center',
+                color: 'var(--text-muted)',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
               <Menu size={16} />
             </button>
 
@@ -175,12 +189,12 @@ export default function AppShell() {
       </AnimatePresence>
 
       <style>{`
-        .desktop-only{display:grid;}
-        .mobile-only{display:none;}
-        @media(max-width:768px){
-          .desktop-sidebar{display:none!important;}
-          .desktop-only{display:none!important;}
-          .mobile-only{display:grid!important;}
+        .desktop-only { display: grid !important; }
+        .mobile-only { display: none !important; }
+        @media (max-width: 768px) {
+          .desktop-sidebar { display: none !important; }
+          .desktop-only { display: none !important; }
+          .mobile-only { display: grid !important; }
         }
       `}</style>
     </div>

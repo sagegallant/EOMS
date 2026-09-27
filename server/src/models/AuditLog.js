@@ -10,4 +10,5 @@ export const AuditLog = sequelize.define('AuditLog', {
   ipAddress:   { type: DataTypes.STRING(45), allowNull: true, field: 'ip_address' },
   userAgent:   { type: DataTypes.STRING(255), allowNull: true, field: 'user_agent' },
   details:     { type: DataTypes.JSON, allowNull: true },
+  createdAt:   { type: DataTypes.DATE, field: 'created_at' },
 }, { tableName: 'audit_logs', updatedAt: false, createdAt: 'created_at' });

@@ -1,4 +1,5 @@
 import {
+  sequelize,
   Asset,
   AssetModel,
   AssetCategory,
@@ -8,6 +9,11 @@ import {
   Notification,
 } from '../models/index.js';
 import { logAudit } from '../services/audit.service.js';
+
+function isITOrAdmin(user) {
+  const roles = user?.roles || [];
+  return roles.some((r) => ['IT_ADMIN', 'SYSTEM_ADMIN', 'HR_ADMIN'].includes(r));
+}
 
 export async function listAssets(req, res, next) {
   try {
@@ -114,7 +120,18 @@ export async function listAllocations(req, res, next) {
   try {
     const { employeeId, acknowledgementStatus, activeOnly } = req.query;
     const where = {};
-    if (employeeId) where.employeeId = employeeId;
+
+    // Object-level authorization
+    if (!isITOrAdmin(req.user)) {
+      if (req.user?.employeeId) {
+        where.employeeId = req.user.employeeId;
+      } else {
+        return res.json({ data: [] });
+      }
+    } else if (employeeId) {
+      where.employeeId = employeeId;
+    }
+
     if (acknowledgementStatus) where.acknowledgementStatus = acknowledgementStatus;
     if (activeOnly === 'true') where.returnedAt = null;
 
@@ -145,57 +162,96 @@ export async function allocateAsset(req, res, next) {
       return res.status(400).json({ code: 'VALIDATION_ERROR', message: 'assetId and employeeId are required.' });
     }
 
-    const asset = await Asset.findByPk(assetId, {
-      include: [{ model: AssetModel }],
-    });
-    if (!asset) {
-      return res.status(404).json({ code: 'NOT_FOUND', message: 'Asset not found.' });
-    }
-
-    if (asset.status === 'allocated') {
-      return res.status(400).json({ code: 'CONFLICT', message: 'Asset is already allocated to another employee.' });
-    }
-
-    const employee = await Employee.findByPk(employeeId);
-    if (!employee) {
-      return res.status(404).json({ code: 'NOT_FOUND', message: 'Employee not found.' });
-    }
-
-    const allocation = await AssetAllocation.create({
-      assetId,
-      employeeId,
-      allocatedBy: req.user?.userId,
-      allocatedAt: new Date(),
-      acknowledgementStatus: 'pending',
-      notes: notes || 'Provisioned by IT Admin for employee onboarding setup.',
-    });
-
-    await asset.update({ status: 'allocated' });
-
-    // Notify employee
-    if (employee.userId) {
-      const modelName = asset.AssetModel?.modelName || asset.assetTag;
-      await Notification.create({
-        userId: employee.userId,
-        title: `Hardware Allocated: ${modelName}`,
-        message: `A new ${modelName} (${asset.assetTag}) has been provisioned for you. Please inspect and acknowledge receipt.`,
-        channel: 'in_app',
-        isRead: false,
+    const result = await sequelize.transaction(async (t) => {
+      // Concurrency protection: Row-level lock on asset row
+      const asset = await Asset.findByPk(assetId, {
+        lock: t.LOCK.UPDATE,
+        transaction: t,
+        include: [{ model: AssetModel }],
       });
-    }
+
+      if (!asset) {
+        const err = new Error('Asset not found.');
+        err.statusCode = 404;
+        err.code = 'NOT_FOUND';
+        throw err;
+      }
+
+      if (asset.status !== 'in_stock') {
+        const err = new Error('Asset is not available for allocation (current status: ' + asset.status + ').');
+        err.statusCode = 409;
+        err.code = 'CONFLICT';
+        throw err;
+      }
+
+      const employee = await Employee.findByPk(employeeId, { transaction: t });
+      if (!employee) {
+        const err = new Error('Employee not found.');
+        err.statusCode = 404;
+        err.code = 'NOT_FOUND';
+        throw err;
+      }
+
+      // Check if employee already has an active allocation for this asset
+      const existing = await AssetAllocation.findOne({
+        where: { assetId, employeeId, returnedAt: null },
+        transaction: t,
+      });
+
+      if (existing) {
+        const err = new Error('This asset is already actively allocated to this employee.');
+        err.statusCode = 409;
+        err.code = 'CONFLICT';
+        throw err;
+      }
+
+      const allocation = await AssetAllocation.create(
+        {
+          assetId,
+          employeeId,
+          allocatedBy: req.user?.userId || 1,
+          allocatedAt: new Date(),
+          acknowledgementStatus: 'pending',
+          notes: notes || 'Provisioned by IT Admin for employee onboarding setup.',
+        },
+        { transaction: t }
+      );
+
+      await asset.update({ status: 'allocated' }, { transaction: t });
+
+      // Notify employee
+      if (employee.userId) {
+        const modelName = asset.AssetModel?.modelName || asset.assetTag;
+        await Notification.create(
+          {
+            userId: employee.userId,
+            title: `Hardware Allocated: ${modelName}`,
+            message: `A new ${modelName} (${asset.assetTag}) has been provisioned for you. Please inspect and acknowledge receipt.`,
+            channel: 'in_app',
+            isRead: false,
+          },
+          { transaction: t }
+        );
+      }
+
+      return { allocation, asset };
+    });
 
     await logAudit({
       userId: req.user?.userId,
       action: 'ALLOCATE_ASSET',
       targetTable: 'asset_allocations',
-      targetId: allocation.allocationId,
+      targetId: result.allocation.allocationId,
       ip: req.ip,
       userAgent: req.headers['user-agent'],
-      details: { assetId, employeeId, assetTag: asset.assetTag },
+      details: { assetId, employeeId, assetTag: result.asset.assetTag },
     });
 
-    res.status(201).json({ message: 'Asset allocated successfully.', data: allocation });
+    res.status(201).json({ message: 'Asset allocated successfully.', data: result.allocation });
   } catch (e) {
+    if (e.statusCode) {
+      return res.status(e.statusCode).json({ code: e.code || 'ERROR', message: e.message });
+    }
     next(e);
   }
 }
@@ -218,6 +274,24 @@ export async function acknowledgeAllocation(req, res, next) {
 
     if (!allocation) {
       return res.status(404).json({ code: 'NOT_FOUND', message: 'Asset allocation not found.' });
+    }
+
+    // Object-level authorization check: Only the allocated employee or IT admin can acknowledge
+    const isIT = isITOrAdmin(req.user);
+    const isOwner = req.user?.employeeId && Number(req.user.employeeId) === Number(allocation.employeeId);
+
+    if (!isIT && !isOwner) {
+      return res.status(403).json({
+        code: 'FORBIDDEN',
+        message: 'You are not authorized to acknowledge this asset allocation.',
+      });
+    }
+
+    if (allocation.acknowledgementStatus === 'acknowledged') {
+      return res.status(400).json({
+        code: 'ALREADY_ACKNOWLEDGED',
+        message: 'This asset allocation has already been acknowledged.',
+      });
     }
 
     await allocation.update({
@@ -254,14 +328,19 @@ export async function returnAsset(req, res, next) {
       return res.status(404).json({ code: 'NOT_FOUND', message: 'Asset allocation not found.' });
     }
 
-    await allocation.update({
-      returnedAt: new Date(),
-      notes: notes ? `${allocation.notes ? allocation.notes + ' | ' : ''}Returned: ${notes}` : allocation.notes,
-    });
+    await sequelize.transaction(async (t) => {
+      await allocation.update(
+        {
+          returnedAt: new Date(),
+          notes: notes ? `${allocation.notes ? allocation.notes + ' | ' : ''}Returned: ${notes}` : allocation.notes,
+        },
+        { transaction: t }
+      );
 
-    if (allocation.Asset) {
-      await allocation.Asset.update({ status: 'in_stock' });
-    }
+      if (allocation.Asset) {
+        await allocation.Asset.update({ status: 'in_stock' }, { transaction: t });
+      }
+    });
 
     await logAudit({
       userId: req.user?.userId,
@@ -278,3 +357,4 @@ export async function returnAsset(req, res, next) {
     next(e);
   }
 }
+

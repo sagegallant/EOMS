@@ -1,123 +1,234 @@
-import { useState } from 'react';
-import { Card, Button, Avatar, PageHeader, Collapsible, Badge } from '../../components/common/ui';
-import { RadialProgress, Sparkline, ActivityTimeline } from '../../components/common/charts';
-import { Mail, MapPin, Building2, Calendar, FileText, Laptop, ShieldCheck } from 'lucide-react';
-import { motion } from 'framer-motion';
-
-const SPARK = [
-  { d:'M', v:2 }, { d:'T', v:4 }, { d:'W', v:1 }, { d:'T', v:3 }, { d:'F', v:5 }, { d:'S', v:0 }, { d:'S', v:2 },
-];
-
-const ACTIVITY = [
-  { title:'Completed: POSH Act 2013 Module',      type:'success', time:'2h ago',    meta:'Training'  },
-  { title:'Submitted: PAN Card document',         type:'info',    time:'Yesterday', meta:'Documents' },
-  { title:'Acknowledged: MacBook Pro 16"',        type:'success', time:'2d ago',    meta:'IT Assets' },
-  { title:'Enrolled in Engineering 90-Day Plan',  type:'info',    time:'3d ago',    meta:'Onboarding'},
-];
-
-const MODULES = [
-  { label:'POSH Compliance',           pct:68, color:'var(--sage-700)' },
-  { label:'DPDP Data Protection',      pct:40, color:'var(--sage-500)' },
-  { label:'Engineering Best Practices',pct:90, color:'var(--sage-300)' },
-];
+import { useState, useEffect, useCallback } from 'react';
+import { Card, Button, Avatar, PageHeader, Collapsible, Badge, AnimatedList, AnimatedItem } from '../../components/common/ui';
+import { RadialProgress, ActivityTimeline } from '../../components/common/charts';
+import { Mail, MapPin, Building2, Calendar, FileText, Laptop, ShieldCheck, RefreshCw, AlertCircle } from 'lucide-react';
+import { useAuthStore } from '../../store/authStore';
+import { employeeApi } from '../../api/employees';
+import { documentApi } from '../../api/documents';
+import { assetApi } from '../../api/assets';
+import { onboardingApi } from '../../api/onboarding';
+import { trainingApi } from '../../api/training';
 
 export default function ProfileView() {
-  return (
-    <div style={{ display:'grid', gap:'var(--sp-5)', maxWidth:780 }}>
-      <PageHeader title="Profile" />
+  const { user } = useAuthStore();
+  const [emp, setEmp] = useState(null);
+  const [plan, setPlan] = useState(null);
+  const [docs, setDocs] = useState([]);
+  const [allocations, setAllocations] = useState([]);
+  const [trainingRecords, setTrainingRecords] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-      {/* Hero card — gradient like Crextio employee card */}
-      <div style={{ borderRadius:'var(--r-xl)', overflow:'hidden', border:'1px solid var(--border-subtle)', background:'var(--bg-surface)' }}>
-        <div style={{ background:'linear-gradient(135deg, var(--sage-800) 0%, var(--sage-500) 100%)', padding:'var(--sp-5)' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:16, flexWrap:'wrap' }}>
-            <Avatar name="Aarav Sharma" size={64} />
-            <div style={{ flex:1 }}>
-              <div style={{ fontSize:'1.25rem', fontWeight:700, color:'#fff' }}>Aarav Sharma</div>
-              <div style={{ color:'rgba(255,255,255,0.75)', marginTop:2 }}>Senior Software Engineer (SDE-II)</div>
-              <div style={{ display:'flex', flexWrap:'wrap', gap:'8px 16px', marginTop:8 }}>
-                {[[Building2,'Platform Engineering'],[MapPin,'Bengaluru (Hybrid)'],[Mail,'aarav.sharma@eoms.in'],[Calendar,'Joined Jan 12, 2026']].map(([Icon,v])=>(
-                  <span key={v} style={{ display:'flex', alignItems:'center', gap:4, fontSize:'0.8rem', color:'rgba(255,255,255,0.6)' }}><Icon size={12}/>{v}</span>
-                ))}
+  const loadData = useCallback(async () => {
+    if (!user?.employeeId) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const [empRes, planRes, docsRes, allocsRes, trainRes] = await Promise.all([
+        employeeApi.getById(user.employeeId).catch(() => ({ data: null })),
+        onboardingApi.getPlanByEmployeeId(user.employeeId).catch(() => ({ data: null })),
+        documentApi.list({ employeeId: user.employeeId }).catch(() => ({ data: [] })),
+        assetApi.listAllocations({ employeeId: user.employeeId }).catch(() => ({ data: [] })),
+        trainingApi.getEmployeeTraining(user.employeeId).catch(() => ({ data: [] })),
+      ]);
+
+      setEmp(empRes?.data || null);
+      setPlan(planRes?.data || null);
+      setDocs(docsRes?.data || []);
+      setAllocations(allocsRes?.data || []);
+      setTrainingRecords(trainRes?.data || []);
+    } catch (err) {
+      console.error('Failed to load profile data:', err);
+      setError(err?.response?.data?.message || 'Failed to load profile from backend.');
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.employeeId]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const fullName = emp
+    ? `${emp.firstName} ${emp.lastName}`
+    : user?.fullName || user?.username || 'Employee';
+  const roleTitle = emp?.Position?.jobTitle || (user?.roles || []).join(', ') || 'Team Member';
+  const deptName = emp?.Position?.Department?.deptName || 'EOMS Global';
+  const location = emp?.workLocation || 'Bengaluru (Hybrid)';
+  const email = emp?.workEmail || user?.email || 'N/A';
+  const hireDateStr = emp?.hireDate
+    ? new Date(emp.hireDate).toLocaleDateString()
+    : 'Active';
+
+  const progress = plan ? Math.round(Number(plan.progressPercent) || 0) : 0;
+  const verifiedDocs = docs.filter((d) => d.DocumentVerifications?.[0]?.status === 'approved').length;
+
+  return (
+    <div style={{ display: 'grid', gap: 'var(--sp-5)', maxWidth: 780 }}>
+      <PageHeader
+        title="Profile & Identity"
+        subtitle="Employee service record, security posture, and compliance status."
+        actions={
+          <Button variant="outline" size="sm" icon={RefreshCw} onClick={loadData} disabled={loading}>
+            Refresh
+          </Button>
+        }
+      />
+
+      {error && (
+        <Card $p="var(--sp-4)" style={{ borderColor: 'var(--danger-border)', background: 'var(--danger-bg)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--danger)' }}>
+            <AlertCircle size={18} />
+            <span style={{ fontSize: '0.875rem' }}>{error}</span>
+          </div>
+        </Card>
+      )}
+
+      {/* Hero card */}
+      <div style={{ borderRadius: 'var(--r-xl)', overflow: 'hidden', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}>
+        <div style={{ background: 'linear-gradient(135deg, var(--sage-800) 0%, var(--sage-600) 100%)', padding: 'var(--sp-5)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+            <Avatar name={fullName} size={64} />
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#fff' }}>{fullName}</div>
+              <div style={{ color: 'rgba(255,255,255,0.8)', marginTop: 2 }}>{roleTitle}</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px', marginTop: 8 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)' }}>
+                  <Building2 size={12} /> {deptName}
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)' }}>
+                  <MapPin size={12} /> {location}
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)' }}>
+                  <Mail size={12} /> {email}
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)' }}>
+                  <Calendar size={12} /> Joined {hireDateStr}
+                </span>
               </div>
             </div>
-            <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
-              <RadialProgress value={72} size={90} strokeWidth={8} color="#86EFAC" trackColor="rgba(255,255,255,0.2)" label="72%" sublabel="journey" />
-            </div>
+            {plan && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                <RadialProgress
+                  value={progress}
+                  size={84}
+                  strokeWidth={8}
+                  color="#86EFAC"
+                  trackColor="rgba(255,255,255,0.2)"
+                  label={`${progress}%`}
+                  sublabel="onboarded"
+                />
+              </div>
+            )}
           </div>
         </div>
-        <div style={{ padding:'var(--sp-4)', borderTop:'1px solid var(--border-subtle)', display:'flex', alignItems:'center', gap:16, flexWrap:'wrap' }}>
-          <div>
-            <div className="label-caps" style={{ marginBottom:4 }}>Weekly Activity</div>
-            <Sparkline data={SPARK} dataKey="v" color="var(--sage-600)" height={36} />
-          </div>
-          {[['21','Days Active'],['3','Docs Verified'],['2/3','Meetings'],['72%','Programme']].map(([v,l])=>(
-            <div key={l} style={{ textAlign:'center' }}>
-              <div style={{ fontSize:'1.1rem', fontWeight:700, color:'var(--text-primary)', fontFeatureSettings:'"tnum" 1' }}>{v}</div>
-              <div className="meta">{l}</div>
+
+        <div style={{ padding: 'var(--sp-4)', borderTop: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-around', flexWrap: 'wrap', gap: 12 }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+              {plan?.status ? plan.status.toUpperCase() : 'N/A'}
             </div>
-          ))}
+            <div className="meta">Plan Status</div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+              {verifiedDocs} / {docs.length}
+            </div>
+            <div className="meta">Verified Docs</div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+              {allocations.length}
+            </div>
+            <div className="meta">Assigned Assets</div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+              {trainingRecords.filter((r) => r.status === 'completed').length} / {trainingRecords.length}
+            </div>
+            <div className="meta">Completed Modules</div>
+          </div>
         </div>
       </div>
 
-      {/* Training progress */}
+      {/* Accordion profile sections */}
       <Card $p="var(--sp-5)">
-        <h2 className="section-title" style={{ marginBottom:14 }}>Training Progress</h2>
-        <div style={{ display:'grid', gap:14 }}>
-          {MODULES.map(m => (
-            <div key={m.label}>
-              <div style={{ display:'flex', justifyContent:'space-between', fontSize:'0.8125rem', marginBottom:5 }}>
-                <span style={{ color:'var(--text-secondary)' }}>{m.label}</span>
-                <span style={{ fontWeight:700, color:'var(--sage-800)', fontFeatureSettings:'"tnum" 1' }}>{m.pct}%</span>
-              </div>
-              <div style={{ height:6, borderRadius:'var(--r-full)', background:'var(--sage-100)', overflow:'hidden' }}>
-                <motion.div initial={{ width:0 }} animate={{ width:`${m.pct}%` }} transition={{ duration:0.8, ease:[0.16,1,0.3,1] }}
-                  style={{ height:'100%', borderRadius:'inherit', background:m.color }} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      {/* Accordion profile sections — Crextio style */}
-      <Card $p="var(--sp-5)">
-        <h2 className="section-title" style={{ marginBottom:4 }}>Account Details</h2>
-        <Collapsible title="Documents" rightContent={<Badge tone="sage">3 verified</Badge>}>
-          <div style={{ display:'grid', gap:8, paddingTop:8 }}>
-            {[['PAN Card','AARAV1234A','Verified'],['Aadhaar','xxxx-xxxx-1234','Verified'],['EPFO UAN','100234567890','Submitted']].map(([k,v,s])=>(
-              <div key={k} style={{ display:'flex', justifyContent:'space-between', padding:'8px 10px', borderRadius:'var(--r-md)', background:'var(--sage-50)', fontSize:'0.8125rem' }}>
-                <div style={{ display:'flex', gap:8, alignItems:'center' }}><FileText size={13} style={{ color:'var(--sage-600)' }}/><span style={{ fontWeight:500 }}>{k}</span></div>
-                <div style={{ display:'flex', gap:10, alignItems:'center' }}>
-                  <span style={{ color:'var(--text-muted)' }}>{v}</span>
-                  <Badge tone="sage" showDot={false}>{s}</Badge>
+        <h2 className="section-title" style={{ marginBottom: 8 }}>Statutory Documents</h2>
+        {docs.length === 0 ? (
+          <div style={{ color: 'var(--text-muted)', fontSize: '0.8125rem', padding: '12px 0' }}>
+            No documents uploaded yet.
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gap: 8, paddingTop: 8 }}>
+            {docs.map((d) => {
+              const status = d.DocumentVerifications?.[0]?.status || 'pending';
+              const tone = status === 'approved' ? 'sage' : status === 'rejected' ? 'danger' : 'warning';
+              return (
+                <div
+                  key={d.documentId}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '8px 12px',
+                    borderRadius: 'var(--r-md)',
+                    background: 'var(--sage-50)',
+                    fontSize: '0.8125rem',
+                  }}
+                >
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <FileText size={14} style={{ color: 'var(--sage-700)' }} />
+                    <span style={{ fontWeight: 600 }}>{d.DocumentType?.typeName || d.fileName}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>{d.fileName}</span>
+                    <Badge tone={tone}>{status.toUpperCase()}</Badge>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
-        </Collapsible>
-        <Collapsible title="Assets">
-          <div style={{ padding:'8px 10px', borderRadius:'var(--r-md)', background:'var(--sage-50)', display:'flex', gap:12, alignItems:'center', marginTop:8 }}>
-            <Laptop size={16} style={{ color:'var(--sage-600)' }} />
-            <div>
-              <div style={{ fontWeight:500, fontSize:'0.875rem' }}>MacBook Pro 16" M3 Max (36GB)</div>
-              <div className="meta">BLR-MBP-2026-108 · Bengaluru Bellandur Hub · Acknowledged</div>
-            </div>
-          </div>
-        </Collapsible>
-        <Collapsible title="Compliance">
-          <div style={{ display:'grid', gap:8, paddingTop:8 }}>
-            {[['POSH Acknowledgement','Signed Mar 13, 2026'],['IP & Confidentiality','Signed Jan 12, 2026']].map(([k,v])=>(
-              <div key={k} style={{ display:'flex', justifyContent:'space-between', padding:'8px 10px', borderRadius:'var(--r-md)', background:'var(--sage-50)', fontSize:'0.8125rem' }}>
-                <div style={{ display:'flex', gap:8, alignItems:'center' }}><ShieldCheck size={13} style={{ color:'var(--sage-600)' }}/><span style={{ fontWeight:500 }}>{k}</span></div>
-                <span style={{ color:'var(--text-muted)' }}>{v}</span>
-              </div>
-            ))}
-          </div>
-        </Collapsible>
+        )}
       </Card>
 
       <Card $p="var(--sp-5)">
-        <h2 className="section-title" style={{ marginBottom:14 }}>Recent Activity</h2>
-        <ActivityTimeline events={ACTIVITY} />
+        <h2 className="section-title" style={{ marginBottom: 8 }}>Allocated Hardware Assets</h2>
+        {allocations.length === 0 ? (
+          <div style={{ color: 'var(--text-muted)', fontSize: '0.8125rem', padding: '12px 0' }}>
+            No hardware assets allocated.
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gap: 8, paddingTop: 8 }}>
+            {allocations.map((al) => (
+              <div
+                key={al.allocationId}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '8px 12px',
+                  borderRadius: 'var(--r-md)',
+                  background: 'var(--sage-50)',
+                  fontSize: '0.8125rem',
+                }}
+              >
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <Laptop size={14} style={{ color: 'var(--sage-700)' }} />
+                  <span style={{ fontWeight: 600 }}>{al.Asset?.AssetModel?.modelName || 'Laptop'}</span>
+                  <span className="caption">({al.Asset?.assetTag})</span>
+                </div>
+                <Badge tone={al.acknowledgementStatus === 'acknowledged' ? 'sage' : 'warning'}>
+                  {al.acknowledgementStatus.toUpperCase()}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        )}
       </Card>
     </div>
   );

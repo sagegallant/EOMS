@@ -4,11 +4,12 @@ import {
   getDepartmentStats,
 } from '../controllers/report.controller.js';
 import { requireAuth } from '../middleware/auth.js';
-import { requireRole } from '../middleware/rbac.js';
+import { requirePermission } from '../middleware/rbac.js';
 
 const router = Router();
 
-router.get('/summary', requireAuth, requireRole('HR_ADMIN', 'HR_SPECIALIST', 'COMPLIANCE_OFFICER', 'DEPARTMENT_MANAGER', 'IT_ADMIN'), getDashboardSummary);
-router.get('/departments', requireAuth, requireRole('HR_ADMIN', 'HR_SPECIALIST', 'COMPLIANCE_OFFICER', 'DEPARTMENT_MANAGER'), getDepartmentStats);
+router.get('/summary', requireAuth, requirePermission('report:view'), getDashboardSummary);
+router.get('/departments', requireAuth, requirePermission('report:view'), getDepartmentStats);
 
 export default router;
+

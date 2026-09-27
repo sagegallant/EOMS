@@ -130,7 +130,7 @@ DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_NAME=eoms
 DB_USER=root
-DB_PASS=your_mysql_password
+DB_PASSWORD=your_mysql_password
 JWT_SECRET=eoms_super_secret_jwt_key_change_in_production_2026
 CLIENT_URL=http://localhost:5173
 ```
@@ -161,89 +161,107 @@ npm run dev
 
 ---
 
+## 📊 Implementation Status & Engineering Scope
+
+| Domain / Feature | Status | Details |
+| :--- | :--- | :--- |
+| **Authentication & Session** | **IMPLEMENTED** | Real bcrypt hashing, JWT issuance & verification, Bearer interceptors, auto 401 handling, session termination. |
+| **MFA / TOTP Security** | **IMPLEMENTED** | RFC 6238 TOTP using `otplib` & `qrcode`, single-use bcrypt-hashed backup codes, development bypass removed. |
+| **Employee Directory** | **IMPLEMENTED** | Full REST integration (`GET`, `POST`, `PATCH`), atomic user+plan+checklist provisioning, server-side search. |
+| **Onboarding & Checklists** | **IMPLEMENTED** | Milestone workflows, atomic task progress updates, server-side progress calculation and plan status recalculation. |
+| **IT Asset Lifecycle** | **IMPLEMENTED** | Pessimistic locking (`LOCK.UPDATE`) to eliminate race conditions, object-level authorization, employee digital acknowledgement. |
+| **Statutory Documents** | **IMPLEMENTED** | Multipart upload via Multer, MIME/ext validation, path traversal guard, secure authorized download route. |
+| **Training & LMS Quiz** | **IMPLEMENTED** | Server-side quiz evaluation (POSH Act 2013), tamper-proof score calculation, 80% passing threshold, attempt history. |
+| **SLA & Overdue Automation** | **IMPLEMENTED** | Automated node scheduler checking overdue onboarding cohorts, dispatching notifications, and logging audit events. |
+| **In-App Notifications** | **IMPLEMENTED** | Real database-backed notification stream, unread counts, mark-as-read, and automatic event dispatching. |
+| **Audit Trail** | **IMPLEMENTED** | Append-only security logging capturing actor, action, target entity, client IP address, and browser user-agent. |
+| **Aggregated Reporting** | **IMPLEMENTED** | Real SQL aggregate calculations for headcount, completion rates, asset utilization, and compliance audits. |
+| **Object-Level Authorization** | **IMPLEMENTED** | Enforced across document downloads, asset acknowledgements, task progress updates, and user profiles. |
+| **Database Transactions** | **IMPLEMENTED** | ACID transactions wrapping employee onboarding, asset allocation, document review, and task progression. |
+| **Cloud Object Storage (S3/MinIO)** | **FUTURE SCOPE** | Document storage currently uses secure local filesystem abstraction; ready for S3/MinIO driver swap. |
+| **Real-time WebSockets** | **FUTURE SCOPE** | Notifications and progress currently leverage active API revalidation and polling intervals. |
+
+---
+
+## 🔐 Security & Hardening Highlights
+
+- **Anti-Concurrency Asset Locking**: Prevents double-allocation race conditions using `SELECT ... FOR UPDATE` row locks inside atomic Sequelize transactions.
+- **Object-Level Access Control (BOLA/IDOR Prevention)**: Enforces ownership checks on sensitive operations (e.g., users cannot acknowledge another employee's hardware or view confidential PAN/Aadhaar cards).
+- **Secure File Storage Layer**: Validates magic numbers and MIME types, sanitizes file paths to prevent directory traversal (`..`), and isolates statutory filings behind authorized streaming endpoints.
+- **Statutory LMS Engine**: Guarantees answer keys are never delivered to the client and scores attempts authoritatively on the Express server.
+- **Granular RBAC**: Sensitive routes enforce fine-grained permissions (`employee:write`, `asset:allocate`, `document:verify`, `audit:view`) rather than hardcoded role strings.
+
+---
+
 ## 🧪 Automated Multi-Phase Testing Suite
 
-EOMS features a comprehensive multi-phase test suite executed via Node's native test runner:
+EOMS features a comprehensive multi-phase test suite executed via Node's native test runner (48 automated tests):
 
 ```bash
 cd server
 
-# Run the complete test suite (Unit, Integration & E2E - 24 passing tests)
+# Run the complete test suite (Unit, Integration, Comprehensive & E2E - 48 passing tests)
 npm test
 
-# Run Unit tests only (Bcrypt hashing, JWT claims, RBAC guards, Sequelize schemas)
+# Run Unit tests only (Bcrypt hashing, JWT claims, RBAC guards, Sequelize schemas - 12 tests)
 npm run test:unit
 
-# Run Live REST API Integration tests (Endpoints, headers, role guards)
+# Run Live REST API Integration tests & Comprehensive Workflows (31 tests)
 npm run test:integration
 
-# Run 4-Persona E2E Lifecycle Simulation (HR -> IT -> New Hire -> Compliance)
+# Run 4-Persona E2E Lifecycle Simulation (5 multi-step phases)
 npm run test:e2e
 ```
 
 ### Test Suite Execution Output
 ```
-▶ E2E Lifecycle Test: 4-Persona Corporate Onboarding & Statutory Compliance Simulation
-  ✔ Phase 1: Multi-Persona Authentication Gateways
-  ✔ Phase 2: HR Admin provisions new employee & initializes onboarding plan
-  ✔ Phase 3: IT Admin allocates workstation hardware to the new employee
-  ✔ Phase 4: Employee completes task progress, statutory training, and uploads PAN card
-  ✔ Phase 5: Compliance Officer audits and approves the statutory document with audit trail
-✔ E2E Lifecycle Test: 4-Persona Corporate Onboarding & Statutory Compliance Simulation
-▶ Integration Tests: EOMS REST API Endpoints
-  ✔ GET /health returns 200 with system metadata
-  ✔ POST /auth/login fails on invalid credentials with 401
-  ✔ POST /auth/login succeeds for Indian HR Admin persona (Priya Patel)
-  ✔ GET /employees requires authentication and returns data for authenticated admin
-  ✔ GET /onboarding/templates returns active enterprise onboarding cohorts
-  ✔ GET /reports/summary aggregates cross-functional organization metrics
-  ✔ GET /tasks returns phased onboarding checklist tasks
-✔ Integration Tests: EOMS REST API Endpoints
-▶ Unit Tests: Authentication & Cryptographic Security
-  ✔ Bcrypt Password Hashing & Verification
-  ✔ JWT Generation, Signature Verification & Claims Payload
-  ✔ JWT Expiration and Invalid Secret Handling
-  ✔ MFA Challenge Token Structure
-✔ Unit Tests: Authentication & Cryptographic Security
-▶ Unit Tests: Sequelize Models & Schema Integrity
-  ✔ Employee model attributes and table configuration
-  ✔ OnboardingPlan model schema & status enums
-  ✔ Task model attributes and priorities
-  ✔ Document and Asset schema definitions
-✔ Unit Tests: Sequelize Models & Schema Integrity
-▶ Unit Tests: Role-Based Access Control (RBAC) Guards
-  ✔ requireRole blocks unauthenticated requests with 401
-  ✔ requireRole grants immediate bypass to SYSTEM_ADMIN superuser
-  ✔ requireRole allows user with matching role
-  ✔ requireRole forbids user without matching role with 403
-✔ Unit Tests: Role-Based Access Control (RBAC) Guards
-ℹ tests 24 | suites 5 | pass 24 | fail 0
+✔ Unit Tests: Authentication & Cryptographic Security (4 tests)
+✔ Unit Tests: Sequelize Models & Schema Integrity (4 tests)
+✔ Unit Tests: Role-Based Access Control (RBAC) Guards (4 tests)
+✔ Integration Tests: EOMS REST API Endpoints (7 tests)
+✔ Comprehensive Enterprise Workflows & Security Verification (24 tests)
+  - Authentication & Session Security (4 tests)
+  - RBAC & Granular Permission Enforcement (3 tests)
+  - Employee Management & Onboarding Plan Initialization (3 tests)
+  - Real Onboarding Progress & Task Tracking (2 tests)
+  - Asset Allocation, Concurrency & Object-Level Authorization (4 tests)
+  - Document Workflow, Verification & Access Control (3 tests)
+  - Server-Side Training Quiz Engine (3 tests)
+  - Aggregated Reporting & Audit Trail (2 tests)
+✔ E2E Lifecycle Test: 4-Persona Corporate Onboarding & Statutory Compliance Simulation (5 phases)
+
+ℹ tests 48 | suites 14 | pass 48 | fail 0
 ```
 
 ---
 
 ## 📡 REST API Reference
 
-| Method | Endpoint | Access Role | Description |
+| Method | Endpoint | Required Permission | Description |
 | :--- | :--- | :--- | :--- |
 | `POST` | `/api/v1/auth/login` | Public | Authenticates credentials, returns signed JWT & role claims |
 | `GET` | `/api/v1/auth/me` | Authenticated | Retrieves current authenticated session user & active roles |
-| `GET` | `/api/v1/employees` | Authenticated | Lists all employees with position, department, and onboarding progress |
-| `POST` | `/api/v1/employees` | `HR_ADMIN`, `HR_SPECIALIST` | Registers new employee and automatically initializes onboarding plan |
+| `POST` | `/api/v1/auth/mfa/setup` | Authenticated | Generates TOTP secret, QR code, and single-use backup recovery codes |
+| `POST` | `/api/v1/auth/mfa/enable` | Authenticated | Validates TOTP token and activates two-factor authentication |
+| `POST` | `/api/v1/auth/mfa/verify` | Public (Challenge) | Verifies TOTP code or backup code during two-factor challenge |
+| `GET` | `/api/v1/employees` | `employee:read` | Lists all employees with position, department, and onboarding progress |
+| `POST` | `/api/v1/employees` | `employee:write` | Registers new employee and atomically initializes onboarding plan & tasks |
 | `GET` | `/api/v1/onboarding` | Authenticated | Lists active onboarding cohorts, progress, and target completion dates |
 | `GET` | `/api/v1/tasks` | Authenticated | Retrieves phased checklist tasks and per-employee progress |
-| `PATCH`| `/api/v1/tasks/:id/progress` | Authenticated | Updates task progress and auto-recalculates plan progress percent |
+| `PATCH`| `/api/v1/tasks/:id/progress` | Authenticated (Owner/HR) | Updates task progress and auto-recalculates plan progress percent |
 | `GET` | `/api/v1/documents` | Authenticated | Lists statutory compliance submissions and verification states |
-| `POST` | `/api/v1/documents/upload` | Authenticated | Uploads regulatory filing and queues for compliance audit |
-| `PATCH`| `/api/v1/documents/:id/verify` | `COMPLIANCE_OFFICER`, `HR_ADMIN` | Approves or rejects statutory document with reviewer audit notes |
+| `POST` | `/api/v1/documents/upload` | `document:upload` | Multipart file upload with MIME validation and secure path generation |
+| `GET` | `/api/v1/documents/:id/download` | Authenticated (Owner/Auditor)| Securely streams document after validating object-level authorization |
+| `PATCH`| `/api/v1/documents/:id/verify` | `document:verify` | Approves or rejects statutory document with reviewer audit notes |
 | `GET` | `/api/v1/assets` | Authenticated | IT hardware inventory and allocation status catalog |
-| `POST` | `/api/v1/assets/allocate` | `IT_ADMIN` | Allocates equipment to new hire and dispatches in-app notification |
-| `PATCH`| `/api/v1/assets/allocations/:id/acknowledge`| Authenticated | Employee acknowledges physical receipt of provisioned equipment |
-| `GET` | `/api/v1/training/courses` | Authenticated | Catalog of regulatory courses (POSH Act 2013, InfoSec) |
-| `POST` | `/api/v1/training/progress`| Authenticated | Records module scores and marks regulatory training completed |
-| `GET` | `/api/v1/reports/summary` | HR, IT, Compliance, Managers | Real-time aggregate KPIs across headcount, compliance, and assets |
-| `GET` | `/api/v1/audit` | `SYSTEM_ADMIN`, `COMPLIANCE_OFFICER` | Searchable immutable audit trail of all platform activities |
-| `GET` | `/api/v1/settings` | Authenticated | Enterprise configuration and compliance deadline settings |
+| `POST` | `/api/v1/assets/allocate` | `asset:allocate` | Concurrency-safe equipment allocation using database row locking |
+| `PATCH`| `/api/v1/assets/allocations/:id/acknowledge`| Authenticated (Owner) | Assigned employee acknowledges physical receipt of provisioned equipment |
+| `GET` | `/api/v1/training/courses` | `training:read` | Catalog of regulatory courses (POSH Act 2013, InfoSec) |
+| `GET` | `/api/v1/training/courses/:id/quiz` | `training:read` | Retrieves quiz questions stripped of answers for secure client testing |
+| `POST` | `/api/v1/training/courses/:id/quiz/submit` | Authenticated (Owner)| Authoritative server-side evaluation, records attempt and pass status |
+| `GET` | `/api/v1/reports/summary` | `report:view` | Real-time aggregate KPIs across headcount, compliance, and assets |
+| `GET` | `/api/v1/audit` | `audit:view` | Append-only immutable audit trail capturing actor, IP, and user-agent |
+| `GET` | `/api/v1/settings` | `setting:manage` | Enterprise configuration and compliance deadline settings |
 
 ---
 
@@ -259,6 +277,23 @@ docker-compose up --build -d
 Or execute the automated deployment script:
 - **Linux/macOS**: `./deployment/deploy.sh`
 - **Windows**: `powershell -ExecutionPolicy Bypass -File deployment/deploy.ps1`
+
+---
+
+## 🌐 Static Preview & GitHub Pages Hosting
+
+EOMS includes a dedicated static build pipeline with comprehensive static data, allowing the full React application to be hosted directly on **GitHub Pages** (or any static web host/CDN):
+
+```bash
+cd client
+# Build the production bundle with static corporate dataset
+npm run build:static
+```
+
+### Capabilities in Static Demo Mode:
+- **Interactive Multi-Persona Authentication**: Log in as any of the 19 Indian corporate personas (e.g. `priya.patel`, `aarav.sharma`, `rohan.verma`, `neha.nair`) with `Password@123`.
+- **Full Workflow Exploration**: Employee Directory, Phased Onboarding, Checklist Progress, Hardware Asset Handover, POSH Act 2013 Quiz, Document Verifications, and Executive Reports.
+- **Automated GitHub Actions Deployment**: Includes [deploy-pages.yml](.github/workflows/deploy-pages.yml) to automatically compile and publish the SPA to GitHub Pages upon pushing to `main`.
 
 ---
 

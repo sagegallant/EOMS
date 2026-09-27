@@ -5,6 +5,20 @@ export const errorHandler = async (err, req, res, next) => {
   const code = err.code || (status === 500 ? 'INTERNAL_SERVER_ERROR' : 'ERROR');
   const message = err.message || 'An unexpected error occurred.';
 
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({
+      code: 'FILE_TOO_LARGE',
+      message: 'Uploaded file exceeds the maximum allowed limit of 5MB.',
+    });
+  }
+
+  if (err.code === 'INVALID_FILE_TYPE') {
+    return res.status(400).json({
+      code: 'INVALID_FILE_TYPE',
+      message: err.message || 'Only PDF, PNG, JPG, and WebP files are permitted.',
+    });
+  }
+
   if (status === 500) {
     console.error('[Error Handler]', err);
     try {
@@ -21,6 +35,7 @@ export const errorHandler = async (err, req, res, next) => {
       console.error('Failed to log error audit:', auditErr.message);
     }
   }
+
 
   res.status(status).json({
     code,

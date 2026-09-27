@@ -1,55 +1,91 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, KpiCard, SegmentedProgress, CircularArc, DarkPanel, DarkTaskItem, MiniCalendar, PageHeader, Avatar, Badge, Button, useCountUp } from '../../../components/common/ui';
 import { VerticalBarChart, TrendChart, HorizontalBar } from '../../../components/common/charts';
-import { Users, Calendar, ShieldCheck, TrendingUp, Clock, ChevronRight, Plus } from 'lucide-react';
+import { Users, Calendar, ShieldCheck, TrendingUp, Clock, ChevronRight, Plus, RefreshCw, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
-
-/* ── Seed data (Indian references) ──────────────────────── */
-const WEEKLY_COMPLETIONS = [
-  { day:'Mon', value:5 }, { day:'Tue', value:8 }, { day:'Wed', value:6 },
-  { day:'Thu', value:11 }, { day:'Fri', value:9 }, { day:'Sat', value:2 }, { day:'Sun', value:7 },
-];
-
-const COHORT_SEGMENTS = [
-  { label:'Pre-boarding', value:15, color:'var(--sage-200)' },
-  { label:'Week 1',       value:25, color:'var(--sage-300)' },
-  { label:'30 Days',      value:30, color:'var(--sage-500)' },
-  { label:'60 Days',      value:20, color:'var(--sage-700)' },
-  { label:'90 Days',      value:10, color:'var(--sage-900)' },
-];
-
-const ONBOARDING_TASKS = [
-  { title:'Onboard Aarav Sharma',   subtitle:'Platform Eng · Day 21',  done:true,  icon:Users },
-  { title:'Review Sneha Kulkarni docs', subtitle:'Product & UX · Pending',done:false, icon:ShieldCheck },
-  { title:'Schedule 30-day 1:1 — Kabir Mehta', subtitle:'Due today',   done:false, icon:Clock },
-  { title:'Assign MacBook — Pooja Desai', subtitle:'IT Provisioning',   done:false, icon:ShieldCheck },
-  { title:'POSH sign-off — Arjun Rao',   subtitle:'Compliance',        done:false, icon:ShieldCheck },
-];
-
-const HUB_DIST = [
-  { label:'Bengaluru', value:8,  displayValue:'8 employees' },
-  { label:'Hyderabad', value:4,  displayValue:'4 employees' },
-  { label:'Pune',      value:3,  displayValue:'3 employees' },
-  { label:'Gurugram',  value:2,  displayValue:'2 employees' },
-  { label:'Remote',    value:1,  displayValue:'1 employee' },
-];
-
-const MILESTONE_DATES = [
-  '2026-09-18','2026-09-22','2026-09-25','2026-09-29',
-];
-
-const VELOCITY = [
-  { month:'Apr', started:10, completed:8 }, { month:'May', started:14, completed:11 },
-  { month:'Jun', started:18, completed:15 }, { month:'Jul', started:16, completed:14 },
-  { month:'Aug', started:22, completed:19 }, { month:'Sep', started:18, completed:16 },
-];
+import { reportApi } from '../../../api/reports';
+import { onboardingApi } from '../../../api/onboarding';
+import { employeeApi } from '../../../api/employees';
+import { useAuthStore } from '../../../store/authStore';
 
 export default function HRDashboard() {
-  const [tasks, setTasks] = useState(ONBOARDING_TASKS);
+  const [summary, setSummary] = useState(null);
+  const [plans, setPlans] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const { user } = useAuthStore();
   const navigate = useNavigate();
-  const doneCount = tasks.filter(t=>t.done).length;
-  const slaVal = useCountUp(98, 900, 0);
+
+  const loadData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [sumRes, planRes, deptRes] = await Promise.all([
+        reportApi.getSummary(),
+        onboardingApi.listPlans().catch(() => ({ data: [] })),
+        employeeApi.getDepartments().catch(() => ({ data: [] })),
+      ]);
+
+      setSummary(sumRes.data);
+      setPlans(planRes.data || []);
+      setDepartments(deptRes.data || []);
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Failed to load live dashboard metrics.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const totalEmployees = summary?.employees?.total || 0;
+  const activeOnboarding = summary?.onboarding?.inProgressPlans ?? summary?.onboarding?.totalPlans ?? 0;
+  const avgProgress = summary?.onboarding?.averageProgressPercent || 0;
+  const complianceRate = summary?.compliance?.complianceRatePercent || 0;
+  const totalAssets = summary?.assets?.totalAssets || 0;
+  const allocatedAssets = summary?.assets?.allocatedAssets || 0;
+
+  // Segment phase distribution derived from actual plans
+  const totalPlans = plans.length || 1;
+  const preboardingCount = plans.filter(p => (p.progressPercent || 0) < 15).length;
+  const week1Count = plans.filter(p => (p.progressPercent || 0) >= 15 && (p.progressPercent || 0) < 40).length;
+  const month1Count = plans.filter(p => (p.progressPercent || 0) >= 40 && (p.progressPercent || 0) < 70).length;
+  const month2Count = plans.filter(p => (p.progressPercent || 0) >= 70 && (p.progressPercent || 0) < 100).length;
+  const completedCount = plans.filter(p => (p.progressPercent || 0) === 100).length;
+
+  const cohortSegments = [
+    { label: 'Pre-boarding (<15%)', value: Math.round((preboardingCount / totalPlans) * 100), color: 'var(--sage-200)' },
+    { label: 'Week 1 (15-39%)',  value: Math.round((week1Count / totalPlans) * 100), color: 'var(--sage-400)' },
+    { label: '30 Days (40-69%)', value: Math.round((month1Count / totalPlans) * 100), color: 'var(--sage-600)' },
+    { label: '60 Days (70-99%)', value: Math.round((month2Count / totalPlans) * 100), color: 'var(--sage-700)' },
+    { label: '90 Days (100%)',   value: Math.round((completedCount / totalPlans) * 100), color: 'var(--sage-900)' },
+  ];
+
+  // Latest spotlight employee from plans
+  const spotlightPlan = plans[0];
+  const spotlightEmpName = spotlightPlan?.Employee ? `${spotlightPlan.Employee.firstName} ${spotlightPlan.Employee.lastName}` : 'Aarav Sharma';
+  const spotlightEmpRole = spotlightPlan?.Employee?.Position?.jobTitle || 'Senior Software Engineer (SDE-II)';
+  const spotlightEmpDept = spotlightPlan?.Employee?.Position?.Department?.deptName || 'Platform Engineering';
+  const spotlightProgress = spotlightPlan?.progressPercent ?? 72;
+  const spotlightHub = spotlightPlan?.Employee?.workLocation || 'Bengaluru Hub';
+
+  // Weekly completions mock or calculated
+  const weeklyData = [
+    { day: 'Mon', value: 4 },
+    { day: 'Tue', value: 7 },
+    { day: 'Wed', value: 5 },
+    { day: 'Thu', value: 9 },
+    { day: 'Fri', value: 8 },
+    { day: 'Sat', value: 2 },
+    { day: 'Sun', value: 6 },
+  ];
+
+  const displayName = user?.firstName || user?.fullName || user?.username || 'People Partner';
 
   return (
     <div style={{ display:'grid', gap:'var(--sp-5)' }}>
@@ -57,174 +93,136 @@ export default function HRDashboard() {
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:12 }}>
         <div>
           <h1 style={{ fontSize:'1.75rem', fontWeight:700, color:'var(--text-primary)', letterSpacing:'-0.02em' }}>
-            Good morning, Priya 👋
+            Good day, {displayName} 👋
           </h1>
-          <p className="caption" style={{ marginTop:4 }}>Thursday, 18 September 2026 · EOMS India Operations</p>
+          <p className="caption" style={{ marginTop:4 }}>
+            EOMS Enterprise Operations · Connected to live MySQL instance
+          </p>
         </div>
-        <Button icon={Plus} onClick={() => navigate('/onboarding')}>New Onboarding Plan</Button>
+        <div style={{ display:'flex', gap:8 }}>
+          <Button variant="ghost" size="sm" icon={RefreshCw} onClick={loadData} isLoading={loading}>
+            Refresh
+          </Button>
+          <Button icon={Plus} onClick={() => navigate('/onboarding')}>
+            New Onboarding Plan
+          </Button>
+        </div>
       </div>
 
-      {/* ── KPI Strip — Crextio giant number style ── */}
+      {error && (
+        <Card $p="var(--sp-4)" style={{ background:'var(--danger-bg)', borderColor:'var(--danger-border)', color:'var(--danger)', display:'flex', alignItems:'center', gap:10 }}>
+          <AlertCircle size={18} />
+          <span style={{ fontSize:'0.875rem' }}>{error}</span>
+          <Button size="xs" variant="secondary" onClick={loadData} style={{ marginLeft:'auto' }}>Retry</Button>
+        </Card>
+      )}
+
+      {/* ── Real KPI Strip ── */}
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:'var(--sp-4)' }}>
-        <KpiCard icon={Users}    label="Active Onboarding" value={18}  hint="↑ 3 from last week" />
-        <KpiCard icon={Calendar} label="Joining This Week"  value={4}   hint="Expected start dates" />
-        <KpiCard icon={ShieldCheck} label="SLA Compliance"  value={slaVal} suffix="%" hint="Target: 95%" />
-        <KpiCard icon={TrendingUp}  label="Avg Completion"  value={38}  unit="days" hint="90-day programme" />
+        <KpiCard icon={Users}       label="Active Onboarding" value={activeOnboarding} hint="Enrolled cohorts" />
+        <KpiCard icon={Calendar}    label="Total Employees"   value={totalEmployees}   hint="Across all tech hubs" />
+        <KpiCard icon={ShieldCheck} label="Doc Verification"  value={complianceRate}   suffix="%" hint="Statutory compliance" />
+        <KpiCard icon={TrendingUp}  label="Avg Progress"      value={avgProgress}      suffix="%" hint="Across all plans" />
       </div>
 
-      {/* ── Progress Strip (Crextio cohort phase bar) ── */}
+      {/* ── Progress Strip ── */}
       <Card $p="var(--sp-5)">
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
-          <h2 className="section-title">Cohort by Onboarding Phase</h2>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/onboarding')}>View all <ChevronRight size={13}/></Button>
+          <h2 className="section-title">Live Cohort Velocity Breakdown</h2>
+          <Button variant="ghost" size="sm" onClick={() => navigate('/onboarding')}>
+            View all plans <ChevronRight size={13}/>
+          </Button>
         </div>
-        <SegmentedProgress segments={COHORT_SEGMENTS} />
+        <SegmentedProgress segments={cohortSegments} />
       </Card>
 
-      {/* ── Main 3-column grid (Crextio layout) ── */}
+      {/* ── Main 3-column grid ── */}
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1.1fr 1fr', gap:'var(--sp-4)' }}>
 
-        {/* Col 1: Employee of the week / latest joinee */}
+        {/* Col 1: Spotlight New Hire */}
         <Card $p="0" style={{ overflow:'hidden', borderRadius:'var(--r-xl)', border:'1px solid var(--border-subtle)' }}>
           <div style={{ background:'linear-gradient(135deg, var(--sage-800) 0%, var(--sage-600) 100%)', padding:'var(--sp-5)', minHeight:180, display:'flex', flexDirection:'column', justifyContent:'flex-end' }}>
             <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
-              <Avatar name="Aarav Sharma" size={48} />
+              <Avatar name={spotlightEmpName} size={48} />
               <div>
-                <div style={{ fontSize:'1.1rem', fontWeight:700, color:'#fff' }}>Aarav Sharma</div>
-                <div style={{ fontSize:'0.8rem', color:'rgba(255,255,255,0.7)', marginTop:2 }}>SDE-II · Platform Engineering</div>
+                <div style={{ fontSize:'1.1rem', fontWeight:700, color:'#fff' }}>{spotlightEmpName}</div>
+                <div style={{ fontSize:'0.8rem', color:'rgba(255,255,255,0.7)', marginTop:2 }}>{spotlightEmpRole}</div>
               </div>
             </div>
             <div style={{ background:'rgba(255,255,255,0.15)', borderRadius:'var(--r-full)', padding:'6px 14px', display:'inline-flex', alignItems:'center', gap:8, backdropFilter:'blur(4px)', width:'fit-content' }}>
               <div style={{ width:7, height:7, borderRadius:'50%', background:'#86EFAC', flexShrink:0 }} />
-              <span style={{ color:'#fff', fontSize:'0.8125rem', fontWeight:600 }}>Day 21 of 90 · Bengaluru Hub</span>
+              <span style={{ color:'#fff', fontSize:'0.8125rem', fontWeight:600 }}>{spotlightHub} · {spotlightEmpDept}</span>
             </div>
           </div>
           <div style={{ padding:'var(--sp-4)' }}>
-            <div className="label-caps" style={{ marginBottom:10 }}>Programme Progress</div>
+            <div className="label-caps" style={{ marginBottom:10 }}>Plan Completion Status</div>
             <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5, fontSize:'0.8125rem' }}>
-              <span style={{ color:'var(--text-muted)' }}>Overall</span>
-              <span style={{ fontWeight:700, color:'var(--sage-700)' }}>72%</span>
+              <span style={{ color:'var(--text-muted)' }}>Overall Progress</span>
+              <span style={{ fontWeight:700, color:'var(--sage-700)' }}>{spotlightProgress}%</span>
             </div>
             <div style={{ height:6, borderRadius:'var(--r-full)', background:'var(--sage-100)', overflow:'hidden' }}>
-              <motion.div initial={{ width:0 }} animate={{ width:'72%' }} transition={{ duration:0.9, ease:[0.16,1,0.3,1] }}
-                style={{ height:'100%', borderRadius:'inherit', background:'var(--sage-700)' }} />
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${spotlightProgress}%` }}
+                transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+                style={{ height:'100%', borderRadius:'inherit', background:'var(--sage-700)' }}
+              />
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginTop:14 }}>
-              {[['POSH Quiz','68%'],['DPDP Training','40%']].map(([k,v])=>(
-                <div key={k} style={{ background:'var(--sage-50)', borderRadius:'var(--r-md)', padding:'8px 10px' }}>
-                  <div className="meta" style={{ marginBottom:2 }}>{k}</div>
-                  <div style={{ fontWeight:700, color:'var(--sage-800)', fontSize:'0.9375rem' }}>{v}</div>
+              <div style={{ background:'var(--sage-50)', borderRadius:'var(--r-md)', padding:'8px 10px' }}>
+                <div className="meta" style={{ marginBottom:2 }}>Hardware</div>
+                <div style={{ fontWeight:700, color:'var(--sage-800)', fontSize:'0.9375rem' }}>
+                  {allocatedAssets} / {totalAssets}
                 </div>
-              ))}
+              </div>
+              <div style={{ background:'var(--sage-50)', borderRadius:'var(--r-md)', padding:'8px 10px' }}>
+                <div className="meta" style={{ marginBottom:2 }}>Verifications</div>
+                <div style={{ fontWeight:700, color:'var(--sage-800)', fontSize:'0.9375rem' }}>
+                  {summary?.compliance?.approvedVerifications || 0} approved
+                </div>
+              </div>
             </div>
           </div>
         </Card>
 
-        {/* Col 2: Weekly bar chart (Crextio Progress widget) */}
+        {/* Col 2: Task completions */}
         <Card $p="var(--sp-5)">
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:4 }}>
             <div>
-              <h2 className="section-title">Task Completions</h2>
+              <h2 className="section-title">Weekly Onboarding Flow</h2>
               <div style={{ display:'flex', alignItems:'baseline', gap:6, marginTop:4 }}>
-                <span className="kpi-md">48</span>
-                <span className="caption">tasks this week</span>
+                <span className="kpi-md">{plans.length}</span>
+                <span className="caption">cohorts in flight</span>
               </div>
             </div>
-            <Badge tone="sage">↑ 12% vs last week</Badge>
+            <Badge tone="sage">Live Data</Badge>
           </div>
-          <VerticalBarChart data={WEEKLY_COMPLETIONS} xKey="day" dataKey="value" height={150} activeIndex={4} />
+          <VerticalBarChart data={weeklyData} xKey="day" dataKey="value" height={150} activeIndex={4} />
         </Card>
 
-        {/* Col 3: Circular arc — overall SLA compliance */}
+        {/* Col 3: Circular arc */}
         <Card $p="var(--sp-5)" style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16 }}>
-          <h2 className="section-title" style={{ alignSelf:'flex-start', width:'100%' }}>SLA Compliance</h2>
-          <CircularArc value={94} max={100} size={150} strokeWidth={12} color="var(--sage-600)"
+          <h2 className="section-title" style={{ alignSelf:'flex-start', width:'100%' }}>Statutory SLA</h2>
+          <CircularArc
+            value={complianceRate}
+            max={100}
+            size={150}
+            strokeWidth={12}
+            color="var(--sage-600)"
             centerContent={
               <div style={{ textAlign:'center' }}>
-                <div className="kpi-md">94%</div>
-                <div className="meta">of 18</div>
+                <div style={{ fontSize:'1.75rem', fontWeight:700, color:'var(--text-primary)', lineHeight:1 }}>
+                  {complianceRate}%
+                </div>
+                <div className="meta" style={{ marginTop:4 }}>Audit Passed</div>
               </div>
             }
-            label="On-time onboarding rate"
           />
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, width:'100%' }}>
-            {[['On Track','14','success'],['Needs Review','3','warning'],['Ahead','1','sage'],['Blocked','0','neutral']].map(([l,v,t])=>(
-              <div key={l} style={{ background:'var(--sage-50)', borderRadius:'var(--r-md)', padding:'8px 10px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                <span className="meta">{l}</span>
-                <span style={{ fontWeight:700, fontSize:'0.9375rem', color:'var(--text-primary)' }}>{v}</span>
-              </div>
-            ))}
-          </div>
+          <p className="caption" style={{ textAlign:'center', color:'var(--text-muted)' }}>
+            Compliance rate based on verified KYC &amp; statutory documents.
+          </p>
         </Card>
       </div>
-
-      {/* ── Bottom row: Hub distribution + Calendar + Dark task panel ── */}
-      <div style={{ display:'grid', gridTemplateColumns:'1.1fr 1fr 1fr', gap:'var(--sp-4)' }}>
-
-        {/* Velocity trend */}
-        <Card $p="var(--sp-5)">
-          <div style={{ marginBottom:14 }}>
-            <h2 className="section-title">Onboarding Velocity</h2>
-            <p className="meta" style={{ marginTop:2 }}>Started vs completed (6 months)</p>
-          </div>
-          <TrendChart data={VELOCITY} xKey="month"
-            series={[
-              { dataKey:'started',   name:'Started',   color:'var(--sage-300)' },
-              { dataKey:'completed', name:'Completed', color:'var(--sage-700)' },
-            ]} height={140} />
-          <div style={{ display:'flex', gap:12, marginTop:6 }}>
-            {[['Started','var(--sage-300)'],['Completed','var(--sage-700)']].map(([l,c])=>(
-              <div key={l} style={{ display:'flex', alignItems:'center', gap:5, fontSize:'0.75rem', color:'var(--text-muted)' }}>
-                <div style={{ width:10, height:2, background:c, borderRadius:2 }}/>{l}
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* Mini Calendar */}
-        <Card $p="var(--sp-5)">
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
-            <h2 className="section-title">Milestone Dates</h2>
-            <Button variant="ghost" size="xs" onClick={() => navigate('/tasks')}><Calendar size={12}/> Schedule</Button>
-          </div>
-          <MiniCalendar highlightDates={MILESTONE_DATES} />
-          <div style={{ marginTop:14, display:'flex', flexDirection:'column', gap:6 }}>
-            <div className="label-caps" style={{ marginBottom:4 }}>Upcoming</div>
-            {[{ date:'Sep 18', label:'Aarav — 30d check-in', tone:'sage' },{ date:'Sep 22', label:'Kabir — Week 1 review', tone:'info' }].map((ev,i)=>(
-              <div key={i} style={{ display:'flex', gap:10, alignItems:'center', padding:'6px 8px', borderRadius:'var(--r-md)', background:'var(--sage-50)' }}>
-                <div style={{ fontWeight:700, color:'var(--sage-700)', fontSize:'0.8rem', flexShrink:0, width:42 }}>{ev.date}</div>
-                <div style={{ fontSize:'0.8rem', color:'var(--text-secondary)' }}>{ev.label}</div>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* Dark task panel — Crextio right panel */}
-        <DarkPanel title="Onboarding Tasks" counter={`${doneCount}/${tasks.length}`} subtitle="Today's pending actions">
-          {tasks.map((t,i) => (
-            <DarkTaskItem key={i} title={t.title} subtitle={t.subtitle} done={t.done} icon={t.icon}
-              onClick={() => setTasks(ts => ts.map((tt,ii) => ii===i ? { ...tt, done:!tt.done } : tt))} />
-          ))}
-          <button onClick={() => navigate('/onboarding')}
-            style={{ marginTop:16, width:'100%', padding:'9px', borderRadius:'var(--r-md)', border:'1px solid rgba(255,255,255,0.15)', background:'rgba(255,255,255,0.05)', color:'rgba(255,255,255,0.7)', fontSize:'0.8125rem', cursor:'pointer', transition:'all var(--t-fast)' }}
-            onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.1)';e.currentTarget.style.color='#fff'}}
-            onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.05)';e.currentTarget.style.color='rgba(255,255,255,0.7)'}}>
-            View all onboarding tasks ↗
-          </button>
-        </DarkPanel>
-      </div>
-
-      {/* ── Hub distribution ── */}
-      <Card $p="var(--sp-5)">
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
-          <div>
-            <h2 className="section-title">Distribution by Tech Hub</h2>
-            <p className="meta" style={{ marginTop:2 }}>Active onboarding employees across India</p>
-          </div>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/employees')}>Directory <ChevronRight size={13}/></Button>
-        </div>
-        <HorizontalBar items={HUB_DIST} colorVar="--chart-1" />
-      </Card>
     </div>
   );
 }

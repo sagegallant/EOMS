@@ -4,6 +4,7 @@ import http from 'node:http';
 import { Op } from 'sequelize';
 import app from '../../src/app.js';
 import {
+  sequelize,
   Employee,
   OnboardingPlan,
   Checklist,
@@ -45,8 +46,36 @@ describe('E2E Lifecycle Test: 4-Persona Corporate Onboarding & Statutory Complia
   });
 
   after(async () => {
+    try {
+      if (allocatedAssetId) {
+        await sequelize.query(`DELETE FROM asset_allocations WHERE asset_id = ${allocatedAssetId}`);
+        await sequelize.query(`DELETE FROM assets WHERE asset_id = ${allocatedAssetId}`);
+      }
+      if (createdEmployeeId) {
+        const [empRows] = await sequelize.query(`SELECT user_id FROM employees WHERE employee_id = ${createdEmployeeId}`);
+        const userId = empRows?.[0]?.user_id;
+        await sequelize.query(`DELETE FROM task_progress WHERE employee_id = ${createdEmployeeId}`);
+        await sequelize.query(`DELETE FROM tasks WHERE checklist_id IN (SELECT checklist_id FROM checklists WHERE plan_id IN (SELECT plan_id FROM onboarding_plans WHERE employee_id = ${createdEmployeeId}))`);
+        await sequelize.query(`DELETE FROM checklists WHERE plan_id IN (SELECT plan_id FROM onboarding_plans WHERE employee_id = ${createdEmployeeId})`);
+        await sequelize.query(`DELETE FROM onboarding_plans WHERE employee_id = ${createdEmployeeId}`);
+        await sequelize.query(`DELETE FROM emergency_contacts WHERE employee_id = ${createdEmployeeId}`);
+        await sequelize.query(`DELETE FROM employees WHERE employee_id = ${createdEmployeeId}`);
+        if (userId) {
+          await sequelize.query(`DELETE FROM user_roles WHERE user_id = ${userId}`);
+          await sequelize.query(`DELETE FROM system_users WHERE user_id = ${userId}`);
+        }
+      }
+      if (submittedDocId) {
+        await sequelize.query(`DELETE FROM document_verifications WHERE document_id = ${submittedDocId}`);
+        await sequelize.query(`DELETE FROM documents WHERE document_id = ${submittedDocId}`);
+      }
+    } catch {
+      // ignore
+    }
     await new Promise(resolve => server.close(resolve));
+    await sequelize.close();
   });
+
 
   async function loginAs(identifier, password = 'Password@123') {
     const res = await fetch(`${baseUrl}/auth/login`, {

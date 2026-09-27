@@ -6,11 +6,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, ArrowRight } from 'lucide-react';
 
 const DEMOS = [
-  { label:'HR Admin',    id:'priya.patel',     role:'HR_ADMIN' },
-  { label:'Employee',    id:'aarav.sharma',    role:'EMPLOYEE' },
-  { label:'Manager',     id:'vikram.malhotra', role:'MANAGER' },
-  { label:'IT Admin',    id:'rohan.verma',     role:'IT_ADMIN' },
-  { label:'System Admin',id:'admin',           role:'ADMIN' },
+  { label:'HR Admin',     id:'priya.patel',     role:'HR_ADMIN' },
+  { label:'Employee',     id:'aarav.sharma',    role:'EMPLOYEE' },
+  { label:'Manager',      id:'vikram.malhotra', role:'DEPARTMENT_MANAGER' },
+  { label:'IT Admin',     id:'rohan.verma',     role:'IT_ADMIN' },
+  { label:'Compliance',   id:'neha.nair',       role:'COMPLIANCE_OFFICER' },
+  { label:'System Admin', id:'admin',           role:'SYSTEM_ADMIN' },
 ];
 
 export default function LoginPage() {
@@ -18,20 +19,34 @@ export default function LoginPage() {
   const [showPwd, setShowPwd] = useState(false);
   const [err, setErr] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuthStore();
+  const [mfaChallenge, setMfaChallenge] = useState(null);
+  const [mfaCode, setMfaCode] = useState('');
+  const { login, verifyMfa } = useAuthStore();
   const navigate = useNavigate();
 
   const fill = demo => setForm({ username: demo.id, password:'Password@123' });
 
   const submit = async e => {
     e.preventDefault();
-    setErr(''); setLoading(true);
+    setErr('');
+    setLoading(true);
     try {
-      await login(form.username, form.password);
-      navigate('/dashboard');
+      if (mfaChallenge) {
+        await verifyMfa(mfaChallenge, mfaCode);
+        navigate('/dashboard');
+      } else {
+        const result = await login(form.username, form.password);
+        if (result?.mfaRequired) {
+          setMfaChallenge(result.challenge);
+        } else {
+          navigate('/dashboard');
+        }
+      }
     } catch (e) {
       setErr(e.message || 'Invalid credentials');
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -97,23 +112,50 @@ export default function LoginPage() {
           </div>
 
           <form onSubmit={submit} style={{ display:'grid', gap:16 }}>
-            <div>
-              <Label>Username</Label>
-              <Input type="text" placeholder="username" value={form.username} autoComplete="username" required
-                onChange={e => setForm(f => ({ ...f, username:e.target.value }))} />
-            </div>
-            <div>
-              <Label>Password</Label>
-              <div style={{ position:'relative' }}>
-                <Input type={showPwd?'text':'password'} placeholder="Password@123" value={form.password} autoComplete="current-password" required
-                  onChange={e => setForm(f => ({ ...f, password:e.target.value }))}
-                  style={{ paddingRight:42 }} />
-                <button type="button" onClick={() => setShowPwd(s=>!s)}
-                  style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', color:'var(--text-muted)', background:'none', border:'none', cursor:'pointer', display:'grid', placeItems:'center' }}>
-                  {showPwd ? <EyeOff size={16}/> : <Eye size={16}/>}
+            {mfaChallenge ? (
+              <div>
+                <Label>Two-Factor Authentication (TOTP)</Label>
+                <Input
+                  type="text"
+                  placeholder="000000"
+                  maxLength={6}
+                  value={mfaCode}
+                  autoFocus
+                  required
+                  onChange={e => setMfaCode(e.target.value.trim())}
+                  style={{ letterSpacing: '0.25em', fontSize: '1.25rem', textAlign: 'center', fontWeight: 700 }}
+                />
+                <p className="caption" style={{ marginTop: 8, color: 'var(--text-muted)' }}>
+                  Enter the 6-digit security code from your authenticator application.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => { setMfaChallenge(null); setMfaCode(''); }}
+                  style={{ background: 'none', border: 'none', color: 'var(--sage-700)', fontSize: '0.8125rem', cursor: 'pointer', marginTop: 8, padding: 0, textDecoration: 'underline' }}>
+                  ← Back to standard login
                 </button>
               </div>
-            </div>
+            ) : (
+              <>
+                <div>
+                  <Label>Username</Label>
+                  <Input type="text" placeholder="username" value={form.username} autoComplete="username" required
+                    onChange={e => setForm(f => ({ ...f, username:e.target.value }))} />
+                </div>
+                <div>
+                  <Label>Password</Label>
+                  <div style={{ position:'relative' }}>
+                    <Input type={showPwd?'text':'password'} placeholder="Password@123" value={form.password} autoComplete="current-password" required
+                      onChange={e => setForm(f => ({ ...f, password:e.target.value }))}
+                      style={{ paddingRight:42 }} />
+                    <button type="button" onClick={() => setShowPwd(s=>!s)}
+                      style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', color:'var(--text-muted)', background:'none', border:'none', cursor:'pointer', display:'grid', placeItems:'center' }}>
+                      {showPwd ? <EyeOff size={16}/> : <Eye size={16}/>}
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
 
             <AnimatePresence>
               {err && (
@@ -126,7 +168,7 @@ export default function LoginPage() {
 
             <Button type="submit" isLoading={loading} icon={ArrowRight}
               style={{ justifyContent:'center', marginTop:4 }}>
-              Sign in to EOMS
+              {mfaChallenge ? 'Verify Code' : 'Sign in to EOMS'}
             </Button>
           </form>
 

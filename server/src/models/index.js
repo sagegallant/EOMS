@@ -19,6 +19,7 @@ import { DocumentVerification } from './DocumentVerification.js';
 import { TrainingCourse } from './TrainingCourse.js';
 import { TrainingModule } from './TrainingModule.js';
 import { TrainingRecord } from './TrainingRecord.js';
+import { TrainingQuizAttempt } from './TrainingQuizAttempt.js';
 import { AssetCategory } from './AssetCategory.js';
 import { AssetModel } from './AssetModel.js';
 import { Asset } from './Asset.js';
@@ -26,6 +27,7 @@ import { AssetAllocation } from './AssetAllocation.js';
 import { Notification } from './Notification.js';
 import { AuditLog } from './AuditLog.js';
 import { SystemSetting } from './SystemSetting.js';
+import { MfaBackupCode } from './MfaBackupCode.js';
 
 // Setup RBAC associations
 SystemUser.belongsToMany(Role, { through: UserRole, foreignKey: 'user_id', otherKey: 'role_id' });
@@ -56,6 +58,7 @@ Employee.hasMany(EmergencyContact, { foreignKey: 'employee_id' });
 EmergencyContact.belongsTo(Employee, { foreignKey: 'employee_id' });
 
 // Plan, Template, Checklist, Task associations
+OnboardingPlan.belongsTo(Employee, { foreignKey: 'employee_id' });
 OnboardingPlan.belongsTo(OnboardingTemplate, { foreignKey: 'template_id' });
 OnboardingPlan.hasMany(Checklist, { foreignKey: 'plan_id' });
 Checklist.belongsTo(OnboardingPlan, { foreignKey: 'plan_id' });
@@ -81,21 +84,26 @@ TrainingModule.belongsTo(TrainingCourse, { foreignKey: 'course_id' });
 TrainingRecord.belongsTo(TrainingCourse, { foreignKey: 'course_id' });
 TrainingRecord.belongsTo(Employee, { foreignKey: 'employee_id' });
 TrainingCourse.hasMany(TrainingRecord, { foreignKey: 'course_id' });
+TrainingRecord.hasMany(TrainingQuizAttempt, { foreignKey: 'record_id' });
+TrainingQuizAttempt.belongsTo(TrainingRecord, { foreignKey: 'record_id' });
 
 // Asset associations
 AssetCategory.hasMany(AssetModel, { foreignKey: 'category_id' });
 AssetModel.belongsTo(AssetCategory, { foreignKey: 'category_id' });
 AssetModel.hasMany(Asset, { foreignKey: 'model_id' });
 Asset.belongsTo(AssetModel, { foreignKey: 'model_id' });
+Asset.hasMany(AssetAllocation, { foreignKey: 'asset_id' });
 AssetAllocation.belongsTo(Asset, { foreignKey: 'asset_id' });
 AssetAllocation.belongsTo(Employee, { foreignKey: 'employee_id' });
 AssetAllocation.belongsTo(SystemUser, { as: 'AllocatedByUser', foreignKey: 'allocated_by' });
 
 // Notifications & Auditing
-SystemUser.hasMany(Notification, { foreignKey: 'user_id' });
-Notification.belongsTo(SystemUser, { foreignKey: 'user_id' });
-SystemUser.hasMany(AuditLog, { foreignKey: 'user_id' });
-AuditLog.belongsTo(SystemUser, { as: 'Actor', foreignKey: 'user_id' });
+SystemUser.hasMany(Notification, { foreignKey: 'userId' });
+Notification.belongsTo(SystemUser, { foreignKey: 'userId' });
+SystemUser.hasMany(AuditLog, { foreignKey: 'userId' });
+AuditLog.belongsTo(SystemUser, { as: 'Actor', foreignKey: 'userId' });
+SystemUser.hasMany(MfaBackupCode, { foreignKey: 'userId' });
+MfaBackupCode.belongsTo(SystemUser, { foreignKey: 'userId' });
 
 export {
   sequelize,
@@ -119,6 +127,7 @@ export {
   TrainingCourse,
   TrainingModule,
   TrainingRecord,
+  TrainingQuizAttempt,
   AssetCategory,
   AssetModel,
   Asset,
@@ -126,4 +135,6 @@ export {
   Notification,
   AuditLog,
   SystemSetting,
+  MfaBackupCode,
 };
+

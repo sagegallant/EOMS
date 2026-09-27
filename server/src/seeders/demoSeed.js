@@ -44,7 +44,7 @@ export async function seed() {
     'training_quiz_attempts', 'training_records', 'training_modules', 'training_courses',
     'asset_allocations', 'assets', 'asset_models', 'asset_categories', 'software_provisioning',
     'emergency_contacts', 'employees', 'positions', 'departments',
-    'user_roles', 'role_permissions', 'permissions', 'roles', 'system_users', 'system_settings'
+    'user_roles', 'role_permissions', 'permissions', 'roles', 'system_users', 'system_settings', 'mfa_backup_codes'
   ];
 
   for (const table of tablesToClear) {

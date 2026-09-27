@@ -1,4 +1,5 @@
 import {
+  sequelize,
   Task,
   Checklist,
   TaskProgress,
@@ -147,80 +148,135 @@ export async function updateTaskProgress(req, res, next) {
       return res.status(400).json({ code: 'VALIDATION_ERROR', message: 'employeeId and status are required.' });
     }
 
-    let progress = await TaskProgress.findOne({
-      where: { taskId, employeeId },
-    });
-
-    const isCompleted = status === 'completed';
-    const completedAt = isCompleted ? new Date() : null;
-    const completedBy = isCompleted ? req.user?.userId : null;
-
-    if (progress) {
-      await progress.update({
-        status,
-        notes: notes !== undefined ? notes : progress.notes,
-        completedAt,
-        completedBy,
-      });
-    } else {
-      progress = await TaskProgress.create({
-        taskId,
-        employeeId,
-        status,
-        notes: notes || null,
-        completedAt,
-        completedBy,
+    const validStatuses = ['not_started', 'in_progress', 'completed', 'blocked'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        code: 'VALIDATION_ERROR',
+        message: `Invalid status. Allowed values: ${validStatuses.join(', ')}.`,
       });
     }
 
-    // Auto-recalculate onboarding plan progress percent for this employee
-    const plan = await OnboardingPlan.findOne({
-      where: { employeeId },
-      include: [
-        {
-          model: Checklist,
-          include: [{ model: Task }],
-        },
-      ],
-    });
+    const task = await Task.findByPk(taskId);
+    if (!task) {
+      return res.status(404).json({ code: 'NOT_FOUND', message: 'Task not found.' });
+    }
 
-    if (plan) {
-      const allTasks = [];
-      plan.Checklists?.forEach(c => {
-        if (c.Tasks) allTasks.push(...c.Tasks);
+    const employee = await Employee.findByPk(employeeId);
+    if (!employee) {
+      return res.status(404).json({ code: 'NOT_FOUND', message: 'Employee not found.' });
+    }
+
+    // Object-level authorization: ensure employee can only update their own tasks unless HR/Manager
+    const roles = req.user?.roles || [];
+    const isPrivileged = roles.some(r => ['HR_ADMIN', 'HR_SPECIALIST', 'SYSTEM_ADMIN'].includes(r));
+    const isSelf = employee.userId === req.user?.userId || req.user?.employeeId === Number(employeeId);
+    const isManager = roles.some(r => ['DEPARTMENT_MANAGER', 'MANAGER'].includes(r)) && employee.managerId === req.user?.employeeId;
+
+    if (!isPrivileged && !isSelf && !isManager) {
+      return res.status(403).json({
+        code: 'FORBIDDEN',
+        message: 'You are not authorized to modify task progress for another employee.',
+      });
+    }
+
+    const result = await sequelize.transaction(async (t) => {
+      let progress = await TaskProgress.findOne({
+        where: { taskId, employeeId },
+        transaction: t,
       });
 
-      if (allTasks.length > 0) {
-        const taskIds = allTasks.map(t => t.taskId);
-        const completedCount = await TaskProgress.count({
-          where: {
-            employeeId,
-            taskId: taskIds,
-            status: 'completed',
+      const isCompleted = status === 'completed';
+      const completedAt = isCompleted ? new Date() : null;
+      const completedBy = isCompleted ? req.user?.userId : null;
+
+      if (progress) {
+        await progress.update(
+          {
+            status,
+            notes: notes !== undefined ? notes : progress.notes,
+            completedAt,
+            completedBy,
           },
-        });
-
-        const percent = Math.round((completedCount / allTasks.length) * 100);
-        const newStatus = percent === 100 ? 'completed' : percent > 0 ? 'in_progress' : 'not_started';
-        await plan.update({
-          progressPercent: percent,
-          status: newStatus,
-          ...(percent === 100 && { actualCompletionDate: new Date().toISOString().split('T')[0] }),
-        });
+          { transaction: t }
+        );
+      } else {
+        progress = await TaskProgress.create(
+          {
+            taskId,
+            employeeId,
+            status,
+            notes: notes || null,
+            completedAt,
+            completedBy,
+          },
+          { transaction: t }
+        );
       }
-    }
 
-    await logAudit({
-      userId: req.user?.userId,
-      action: 'UPDATE_TASK_PROGRESS',
-      targetTable: 'task_progress',
-      targetId: progress.progressId,
-      ip: req.ip,
-      userAgent: req.headers['user-agent'],
-      details: { taskId, employeeId, status },
+      // Auto-recalculate onboarding plan progress percent for this employee
+      const plan = await OnboardingPlan.findOne({
+        where: { employeeId },
+        include: [
+          {
+            model: Checklist,
+            include: [{ model: Task }],
+          },
+        ],
+        transaction: t,
+      });
+
+      let recalculatedPercent = 0;
+      let newPlanStatus = 'in_progress';
+
+      if (plan) {
+        const allTasks = [];
+        plan.Checklists?.forEach(c => {
+          if (c.Tasks) allTasks.push(...c.Tasks);
+        });
+
+        if (allTasks.length > 0) {
+          const taskIds = allTasks.map(tk => tk.taskId);
+          const completedCount = await TaskProgress.count({
+            where: {
+              employeeId,
+              taskId: taskIds,
+              status: 'completed',
+            },
+            transaction: t,
+          });
+
+          recalculatedPercent = Math.round((completedCount / allTasks.length) * 100);
+          newPlanStatus = recalculatedPercent === 100 ? 'completed' : recalculatedPercent > 0 ? 'in_progress' : 'not_started';
+
+          await plan.update(
+            {
+              progressPercent: recalculatedPercent,
+              status: newPlanStatus,
+              ...(recalculatedPercent === 100 && { actualCompletionDate: new Date().toISOString().split('T')[0] }),
+            },
+            { transaction: t }
+          );
+        }
+      }
+
+      await logAudit({
+        userId: req.user?.userId,
+        action: 'UPDATE_TASK_PROGRESS',
+        targetTable: 'task_progress',
+        targetId: progress.progressId,
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
+        details: { taskId, employeeId, status, progressPercent: recalculatedPercent },
+      });
+
+      return { progress, plan: { progressPercent: recalculatedPercent, status: newPlanStatus } };
     });
 
-    res.json({ message: 'Task progress updated.', data: progress });
+    res.json({
+      message: 'Task progress updated.',
+      data: result.progress,
+      plan: result.plan,
+    });
   } catch (e) {
     next(e);
   }

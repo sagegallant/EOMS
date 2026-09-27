@@ -38,6 +38,7 @@ services:
       DB_PORT: 3306
       DB_NAME: eoms
       DB_USER: eoms_user
+      DB_PASSWORD: eoms_password
       DB_PASS: eoms_password
       JWT_SECRET: eoms_super_secret_jwt_key_change_in_production_2026
       CLIENT_URL: http://localhost:3000

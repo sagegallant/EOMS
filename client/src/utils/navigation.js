@@ -61,6 +61,37 @@ export const NAV = {
       { label: 'Help',        to: '/help',              icon: 'help' },
     ]},
   ],
+  COMPLIANCE_OFFICER: [
+    { section: 'Compliance', items: [
+      { label: 'Dashboard',   to: '/dashboard',        icon: 'grid' },
+      { label: 'Documents',   to: '/documents',         icon: 'file' },
+      { label: 'Training',    to: '/training',          icon: 'cap' },
+      { label: 'Employees',   to: '/employees',         icon: 'users' },
+    ]},
+    { section: 'Governance', items: [
+      { label: 'Audit Log',   to: '/audit',             icon: 'list' },
+      { label: 'Reports',     to: '/reports',           icon: 'chart' },
+      { label: 'Notifications', to: '/notifications',  icon: 'bell' },
+      { label: 'Help',        to: '/help',              icon: 'help' },
+    ]},
+  ],
+  HR_SPECIALIST: [
+    { section: 'Core', items: [
+      { label: 'Dashboard',   to: '/dashboard',       icon: 'grid' },
+      { label: 'Employees',   to: '/employees',       icon: 'users' },
+      { label: 'Onboarding',  to: '/onboarding',      icon: 'route' },
+      { label: 'Tasks',       to: '/tasks',            icon: 'check' },
+      { label: 'Documents',   to: '/documents',        icon: 'file' },
+      { label: 'Training',    to: '/training',         icon: 'cap' },
+      { label: 'Assets',      to: '/assets',           icon: 'laptop' },
+    ]},
+    { section: 'Insight', items: [
+      { label: 'Notifications', to: '/notifications', icon: 'bell' },
+      { label: 'Reports',     to: '/reports',          icon: 'chart' },
+      { label: 'Audit',       to: '/audit',            icon: 'list' },
+      { label: 'Help',        to: '/help',             icon: 'help' },
+    ]},
+  ],
   EMPLOYEE: [
     { section: 'My Journey', items: [
       { label: 'Dashboard',   to: '/dashboard',        icon: 'grid' },
@@ -80,5 +111,8 @@ export const NAV = {
 
 export const navFor = (roles = []) => {
   if (!roles || !roles.length) return NAV.EMPLOYEE;
-  return NAV[roles[0]] ?? NAV.EMPLOYEE;
+  for (const r of roles) {
+    if (NAV[r]) return NAV[r];
+  }
+  return NAV.EMPLOYEE;
 };
