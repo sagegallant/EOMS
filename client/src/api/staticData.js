@@ -2,12 +2,12 @@
 // Matches the Indian Corporate 19-Persona EOMS Dataset
 
 export const STATIC_USERS = [
-  { userId: 1, username: 'admin', email: 'admin@eoms.in', roles: ['SYSTEM_ADMIN'], employeeId: 1, firstName: 'Rajesh', lastName: 'Nambiar' },
+  { userId: 1, username: 'admin', email: 'admin@eoms.in', roles: ['SYSTEM_ADMIN', 'HR_ADMIN'], employeeId: 1, firstName: 'Rajesh', lastName: 'Nambiar' },
   { userId: 2, username: 'priya.patel', email: 'priya.patel@eoms.in', roles: ['HR_ADMIN'], employeeId: 2, firstName: 'Priya', lastName: 'Patel' },
   { userId: 3, username: 'aarav.sharma', email: 'aarav.sharma@eoms.in', roles: ['EMPLOYEE'], employeeId: 6, firstName: 'Aarav', lastName: 'Sharma' },
-  { userId: 4, username: 'vikram.malhotra', email: 'vikram.malhotra@eoms.in', roles: ['DEPARTMENT_MANAGER'], employeeId: 3, firstName: 'Vikram', lastName: 'Malhotra' },
+  { userId: 4, username: 'vikram.malhotra', email: 'vikram.malhotra@eoms.in', roles: ['DEPARTMENT_MANAGER', 'MANAGER'], employeeId: 3, firstName: 'Vikram', lastName: 'Malhotra' },
   { userId: 5, username: 'rohan.verma', email: 'rohan.verma@eoms.in', roles: ['IT_ADMIN'], employeeId: 4, firstName: 'Rohan', lastName: 'Verma' },
-  { userId: 6, username: 'neha.nair', email: 'neha.nair@eoms.in', roles: ['COMPLIANCE_OFFICER'], employeeId: 5, firstName: 'Neha', lastName: 'Nair' },
+  { userId: 6, username: 'neha.nair', email: 'neha.nair@eoms.in', roles: ['COMPLIANCE_OFFICER', 'HR_SPECIALIST'], employeeId: 5, firstName: 'Neha', lastName: 'Nair' },
   { userId: 7, username: 'sneha.kulkarni', email: 'sneha.kulkarni@eoms.in', roles: ['EMPLOYEE'], employeeId: 7, firstName: 'Sneha', lastName: 'Kulkarni' },
   { userId: 8, username: 'arjun.rao', email: 'arjun.rao@eoms.in', roles: ['EMPLOYEE'], employeeId: 8, firstName: 'Arjun', lastName: 'Rao' },
   { userId: 9, username: 'ananya.iyer', email: 'ananya.iyer@eoms.in', roles: ['HR_SPECIALIST'], employeeId: 9, firstName: 'Ananya', lastName: 'Iyer' },

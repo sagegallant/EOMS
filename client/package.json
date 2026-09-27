@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:static": "vite build && node scripts/prepare-gh-pages.js",
+    "build:static": "vite build --mode static && node scripts/prepare-gh-pages.js",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -24,7 +24,25 @@ export default function LoginPage() {
   const { login, verifyMfa } = useAuthStore();
   const navigate = useNavigate();
 
-  const fill = demo => setForm({ username: demo.id, password:'Password@123' });
+  const fill = async demo => {
+    const username = demo.id;
+    const password = 'Password@123';
+    setForm({ username, password });
+    setErr('');
+    setLoading(true);
+    try {
+      const result = await login(username, password);
+      if (result?.mfaRequired) {
+        setMfaChallenge(result.challenge);
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (e) {
+      setErr(e.message || 'Invalid credentials');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const submit = async e => {
     e.preventDefault();
@@ -103,8 +121,8 @@ export default function LoginPage() {
             <div className="label-caps" style={{ marginBottom:8 }}>Quick sign-in as</div>
             <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
               {DEMOS.map(d => (
-                <button key={d.id} onClick={() => fill(d)}
-                  style={{ padding:'5px 12px', fontSize:'0.75rem', fontWeight:600, borderRadius:'var(--r-full)', border:'1.5px solid var(--border-default)', background: form.username===d.id ? 'var(--sage-100)' : '#fff', color: form.username===d.id ? 'var(--sage-800)' : 'var(--text-secondary)', cursor:'pointer', transition:'all var(--t-fast)' }}>
+                <button key={d.id} type="button" disabled={loading} onClick={() => fill(d)}
+                  style={{ padding:'5px 12px', fontSize:'0.75rem', fontWeight:600, borderRadius:'var(--r-full)', border:'1.5px solid var(--border-default)', background: form.username===d.id ? 'var(--sage-100)' : '#fff', color: form.username===d.id ? 'var(--sage-800)' : 'var(--text-secondary)', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, transition:'all var(--t-fast)' }}>
                   {d.label}
                 </button>
               ))}

@@ -59,9 +59,46 @@ export function handleStaticRequest(config) {
         firstName: user.firstName,
         lastName: user.lastName,
         fullName: `${user.firstName} ${user.lastName}`,
+        name: `${user.firstName} ${user.lastName}`,
+        dept: user.dept || 'Engineering',
+        hub: user.hub || 'Bengaluru',
         mfaEnabled: false,
       },
     });
+  }
+
+  // 1b. Auth: MFA endpoints
+  if (url === '/auth/mfa/verify' && method === 'post') {
+    return respond(200, {
+      token: `static-mfa-token-${Date.now()}`,
+      user: {
+        id: STATIC_USERS[1].userId,
+        userId: STATIC_USERS[1].userId,
+        username: STATIC_USERS[1].username,
+        email: STATIC_USERS[1].email,
+        roles: STATIC_USERS[1].roles,
+        employeeId: STATIC_USERS[1].employeeId,
+        firstName: STATIC_USERS[1].firstName,
+        lastName: STATIC_USERS[1].lastName,
+        fullName: `${STATIC_USERS[1].firstName} ${STATIC_USERS[1].lastName}`,
+        name: `${STATIC_USERS[1].firstName} ${STATIC_USERS[1].lastName}`,
+        mfaEnabled: false,
+      },
+    });
+  }
+  if (url === '/auth/mfa/setup' && method === 'post') {
+    return respond(200, {
+      qrCode: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="%23e2e8f0"/><text x="50" y="55" font-size="12" text-anchor="middle" fill="%23475569">MFA QR Code</text></svg>',
+      manualSecret: 'JBSWY3DPEHPK3PXP',
+      backupCodes: ['ABCD1234', 'EFGH5678', 'IJKL9012'],
+      setupToken: 'static-setup-token',
+    });
+  }
+  if (url === '/auth/mfa/enable' && method === 'post') {
+    return respond(200, { message: 'Multi-factor authentication (TOTP) successfully activated.' });
+  }
+  if (url === '/auth/mfa/disable' && method === 'post') {
+    return respond(200, { message: 'MFA has been disabled.' });
   }
 
   // 2. Auth: Me
@@ -69,7 +106,21 @@ export function handleStaticRequest(config) {
     return respond(200, { user: STATIC_USERS[1] });
   }
 
-  // 3. Employees
+  // 3. Departments & Positions (must precede generic /employees)
+  if (url === '/employees/departments' || url === '/departments') {
+    return respond(200, { data: STATIC_DEPARTMENTS });
+  }
+  if (url === '/employees/positions' || url === '/positions') {
+    return respond(200, { data: STATIC_POSITIONS });
+  }
+
+  // 4. Employees
+  const empIdMatch = url.match(/^\/employees\/(\d+)$/);
+  if (empIdMatch && method === 'get') {
+    const id = Number(empIdMatch[1]);
+    const emp = employees.find(e => e.employeeId === id) || employees[0];
+    return respond(200, { data: emp });
+  }
   if (url.startsWith('/employees') && method === 'get') {
     return respond(200, { data: employees });
   }
@@ -90,14 +141,6 @@ export function handleStaticRequest(config) {
     };
     employees.unshift(newEmp);
     return respond(201, { message: 'Employee registered.', data: newEmp });
-  }
-
-  // 4. Departments & Positions
-  if (url === '/departments') {
-    return respond(200, { data: STATIC_DEPARTMENTS });
-  }
-  if (url === '/positions') {
-    return respond(200, { data: STATIC_POSITIONS });
   }
 
   // 5. Onboarding & Cohorts

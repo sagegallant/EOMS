@@ -41,6 +41,7 @@ Department.hasMany(Department, { as: 'SubDepartments', foreignKey: 'parent_dept_
 Department.belongsTo(Department, { as: 'ParentDepartment', foreignKey: 'parent_dept_id' });
 Department.hasMany(Position, { foreignKey: 'dept_id' });
 Position.belongsTo(Department, { foreignKey: 'dept_id' });
+Position.hasMany(Employee, { foreignKey: 'position_id' });
 
 // Employee associations
 Employee.associate({
