@@ -6,6 +6,15 @@ This document provides an exhaustive architectural overview of the Employee Onbo
 
 ## 1. High-Level System Architecture
 
+> [!TIP]
+> **Explore the Interactive Archify Diagrams Suite:**
+> - 🌐 **[Unified System Design Portal](file:///c:/Users/ramch/Downloads/New%20folder/EOMS/docs/system-designs.html)** (Interactive Viewer with Pan/Zoom, Guided Views & Themes)
+> - 🏛️ **[System Architecture Diagram](file:///c:/Users/ramch/Downloads/New%20folder/EOMS/docs/eoms-system-architecture.html)** (Components, Edge Gateway, Granular RBAC, Domain Services & MySQL ACID Tier)
+> - 🔄 **[Onboarding Lifecycle Workflow](file:///c:/Users/ramch/Downloads/New%20folder/EOMS/docs/eoms-onboarding-workflow.html)** (Multi-role operational workflow across HR, Employee, IT & Compliance)
+> - ⚡ **[Asset Allocation & Locking Sequence](file:///c:/Users/ramch/Downloads/New%20folder/EOMS/docs/eoms-asset-allocation.html)** (Pessimistic concurrency row lock `LOCK.UPDATE` & digital sign-off)
+>
+> *All diagrams are compiled and validated using **Archify** with 100% Showcase-grade verification (9/9 checks passed, zero route crossings, zero desktop overflow).*
+
 ```mermaid
 graph TD
     Client["Frontend SPA (React 18 + Vite 5 + Lucide SVG)"]

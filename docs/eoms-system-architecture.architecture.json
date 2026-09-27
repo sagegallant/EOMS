@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "EOMS System Architecture",
+    "quality_profile": "showcase",
+    "viewBox": [1280, 580],
+    "views": [
+      {
+        "id": "onboarding-flow",
+        "label": "Onboarding Request Flow",
+        "focus": ["clients", "spa", "gateway", "onboarding_ctl", "audit_svc", "mysql"],
+        "note": "Trace an onboarding plan request from client interaction through the gateway and controller to MySQL."
+      },
+      {
+        "id": "identity-and-rbac",
+        "label": "Identity, MFA & RBAC",
+        "focus": ["mfa", "clients", "spa", "gateway", "auth_guard"],
+        "note": "Verify JWT bearer credentials, RFC 6238 TOTP codes, and in-process cached granular permissions."
+      },
+      {
+        "id": "asset-concurrency",
+        "label": "Asset Allocation & Locking",
+        "focus": ["spa", "gateway", "asset_ctl", "mysql"],
+        "note": "Pessimistic row locking (t.LOCK.UPDATE) guarantees race-free hardware allocation and digital employee sign-off."
+      },
+      {
+        "id": "compliance-and-docs",
+        "label": "Compliance & Document Vault",
+        "focus": ["spa", "gateway", "doc_ctl", "doc_storage"],
+        "note": "Secure multipart upload, MIME whitelist validation, path traversal prevention, and POSH Act 2013 scoring."
+      },
+      {
+        "id": "sla-and-alerts",
+        "label": "SLA & Notification Alerts",
+        "focus": ["sla_daemon", "mysql"],
+        "note": "Automated SLA daemon scans overdue onboarding milestones and triggers targeted notification alerts."
+      }
+    ]
+  },
+  "components": [
+    { "id": "clients", "type": "external", "label": "EOMS Users", "sublabel": "Multi-Role Portals", "pos": [30, 270], "size": [130, 64] },
+    { "id": "mfa", "type": "security", "label": "TOTP 2FA", "sublabel": "RFC 6238 / Backup", "tag": "2FA Guard", "pos": [30, 110], "size": [130, 64] },
+    { "id": "spa", "type": "frontend", "label": "React 18 SPA", "sublabel": "Vite + Zustand", "brand": "react", "pos": [230, 270], "size": [130, 64] },
+    { "id": "gateway", "type": "security", "label": "API Gateway", "sublabel": "Helmet · Rate-Limit", "brand": "node-js", "pos": [435, 270], "size": [140, 64] },
+    { "id": "auth_guard", "type": "security", "label": "Auth & RBAC", "sublabel": "JWT · 60+ Perms", "tag": "Security Guard", "pos": [435, 110], "size": [140, 64] },
+    { "id": "onboarding_ctl", "type": "backend", "label": "Onboarding Engine", "sublabel": "Workflows & Tasks", "pos": [660, 110], "size": [140, 64] },
+    { "id": "asset_ctl", "type": "backend", "label": "Asset Manager", "sublabel": "Pessimistic Lock", "tag": "t.LOCK.UPDATE", "pos": [660, 270], "size": [140, 64] },
+    { "id": "doc_ctl", "type": "backend", "label": "Document Vault", "sublabel": "Multer & POSH", "pos": [660, 430], "size": [140, 64] },
+    { "id": "audit_svc", "type": "backend", "label": "Audit Service", "sublabel": "Append-Only Log", "tag": "Forensic Trace", "pos": [890, 110], "size": [140, 64] },
+    { "id": "mysql", "type": "database", "label": "MySQL 8.0", "sublabel": "InnoDB ACID DB", "brand": "mysql", "pos": [890, 270], "size": [140, 64] },
+    { "id": "doc_storage", "type": "cloud", "label": "Document Store", "sublabel": "Sanitized Files", "tag": "Encrypted", "pos": [890, 430], "size": [140, 64] },
+    { "id": "sla_daemon", "type": "backend", "label": "SLA Daemon", "sublabel": "Overdue Alerts", "tag": "Scheduled", "pos": [1115, 270], "size": [130, 64] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "EOMS Server Runtime / Docker Environment", "wraps": ["gateway", "auth_guard", "onboarding_ctl", "asset_ctl", "doc_ctl", "audit_svc", "mysql", "doc_storage", "sla_daemon"] },
+    { "kind": "security-group", "label": "Application & Domain Services Tier", "wraps": ["auth_guard", "onboarding_ctl", "asset_ctl", "doc_ctl", "audit_svc"] },
+    { "kind": "security-group", "label": "Persistence & Storage Tier", "wraps": ["mysql", "doc_storage"] }
+  ],
+  "connections": [
+    { "id": "users-to-spa", "from": "clients", "to": "spa", "label": "HTTPS", "variant": "emphasis" },
+    { "id": "mfa-to-spa", "from": "mfa", "to": "spa", "label": "TOTP Code", "variant": "security", "fromSide": "bottom", "toSide": "top" },
+    { "id": "spa-to-gateway", "from": "spa", "to": "gateway", "label": "REST API", "variant": "emphasis" },
+    { "id": "gateway-to-auth", "from": "gateway", "to": "auth_guard", "label": "Verify JWT", "variant": "security", "fromSide": "top", "toSide": "bottom" },
+    { "id": "auth-to-onboarding", "from": "auth_guard", "to": "onboarding_ctl", "label": "Authorize" },
+    { "id": "gateway-to-asset", "from": "gateway", "to": "asset_ctl", "label": "Dispatch" },
+    { "id": "gateway-to-doc", "from": "gateway", "to": "doc_ctl", "label": "Upload Doc", "fromSide": "bottom", "toSide": "left" },
+    { "id": "onboarding-to-audit", "from": "onboarding_ctl", "to": "audit_svc", "label": "logAudit()" },
+    { "id": "asset-to-mysql", "from": "asset_ctl", "to": "mysql", "label": "t.LOCK.UPDATE", "variant": "emphasis" },
+    { "id": "audit-to-mysql", "from": "audit_svc", "to": "mysql", "label": "Audit Trail", "variant": "dashed", "fromSide": "bottom", "toSide": "top", "labelDy": 24 },
+    { "id": "doc-to-storage", "from": "doc_ctl", "to": "doc_storage", "label": "Stream Files" },
+    { "id": "sla-to-mysql", "from": "sla_daemon", "to": "mysql", "label": "Poll Overdue" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Presentation & Gateway", "items": ["React 18 SPA with Zustand and Axios interceptors", "Express API Gateway with Helmet, CORS, and Rate Limiting", "Dual mode: live Express API or static mock adapter"] },
+    { "dot": "emerald", "title": "Domain Engine & Concurrency", "items": ["Pessimistic row locking (t.LOCK.UPDATE) on asset allocations", "Atomic multi-step onboarding plan provisioning", "Server-side POSH Act 2013 compliance scoring"] },
+    { "dot": "rose", "title": "Security & Persistence", "items": ["JWT authentication with RFC 6238 TOTP MFA & backup codes", "Role-based access control with 60+ granular permissions", "MySQL 8.0 InnoDB engine with 34 relational tables", "Append-only immutable audit trail for compliance verification"] }
+  ]
+}

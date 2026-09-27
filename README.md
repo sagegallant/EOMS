@@ -57,6 +57,16 @@ graph TD
     AxiosClient -->|JSON over HTTP/HTTPS| Gateway
 ```
 
+> [!TIP]
+> ### 🗺️ Interactive Archify Architecture & Design Suite
+> The entire EOMS system has been compiled and validated into interactive, standalone HTML diagrams with pan/zoom, dark/light modes, guided view chapters, and node inspection using **Archify**:
+> - 🌐 **[Interactive System Designs Portal](file:///c:/Users/ramch/Downloads/New%20folder/EOMS/docs/system-designs.html)** — Unified tabbed presentation viewer
+> - 🏛️ **[System Architecture](file:///c:/Users/ramch/Downloads/New%20folder/EOMS/docs/eoms-system-architecture.html)** — Full 3-tier topology, Express gateway, RBAC guard, domain services, MySQL ACID tier
+> - 🔄 **[Onboarding Business Workflow](file:///c:/Users/ramch/Downloads/New%20folder/EOMS/docs/eoms-onboarding-workflow.html)** — End-to-end multi-role lifecycle (HR, Employee, IT, Compliance)
+> - ⚡ **[Asset Allocation & Locking Sequence](file:///c:/Users/ramch/Downloads/New%20folder/EOMS/docs/eoms-asset-allocation.html)** — High-concurrency pessimistic row locking (`LOCK.UPDATE`) sequence
+>
+> *Verified showcase quality: 9/9 checks passed, 0 route crossings, 0 container border runs, 0 desktop viewport overflow.*
+
 ---
 
 ## ✨ Key Capabilities

@@ -1,0 +1,65 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "EOMS Employee Onboarding Workflow",
+    "quality_profile": "showcase",
+    "viewBox": [1100, 660],
+    "views": [
+      {
+        "id": "preboarding-gate",
+        "label": "Pre-boarding & Identity",
+        "focus": ["create_emp", "setup_mfa", "upload_docs", "verify_kyc"],
+        "note": "HR creates the employee profile, triggering mandatory MFA setup and statutory document collection."
+      },
+      {
+        "id": "day-one-readiness",
+        "label": "Hardware & POSH Training",
+        "focus": ["allocate_laptop", "sign_asset", "posh_quiz"],
+        "note": "IT provisions hardware under pessimistic row locking while the employee completes mandatory POSH 2013 compliance."
+      },
+      {
+        "id": "onboarding-graduation",
+        "label": "Milestone Completion",
+        "focus": ["sign_asset", "posh_quiz", "complete_plan"],
+        "note": "100% task completion triggers onboarding plan graduation and immutable audit log sealing."
+      }
+    ]
+  },
+  "lanes": [
+    { "id": "hr", "label": "HR Operations (Priya)" },
+    { "id": "employee", "label": "New Employee (Aarav)" },
+    { "id": "it", "label": "IT Infrastructure (Rohan)" },
+    { "id": "compliance", "label": "Compliance & Legal (Neha)", "variant": "exception" }
+  ],
+  "phases": [
+    { "id": "preboarding", "label": "Pre-Boarding", "fromCol": 0, "toCol": 2 },
+    { "id": "day_one", "label": "Day 1 Provisioning", "fromCol": 3, "toCol": 4, "variant": "emphasis" },
+    { "id": "graduation", "label": "Milestone Sealing", "fromCol": 5, "toCol": 5, "variant": "dashed" }
+  ],
+  "mainPath": ["create_emp", "setup_mfa", "upload_docs", "allocate_laptop", "sign_asset", "complete_plan"],
+  "nodes": [
+    { "id": "create_emp", "lane": "hr", "col": 0, "type": "frontend", "label": "Create Profile", "sublabel": "provisions plan", "width": 132 },
+    { "id": "setup_mfa", "lane": "employee", "col": 1, "type": "security", "label": "Setup 2FA", "sublabel": "TOTP & backup key", "tag": "RFC 6238", "width": 132 },
+    { "id": "upload_docs", "lane": "employee", "col": 2, "type": "frontend", "label": "Submit KYC", "sublabel": "Aadhaar & PAN", "width": 132 },
+    { "id": "verify_kyc", "lane": "compliance", "col": 2, "type": "security", "label": "Verify KYC", "sublabel": "statutory audit", "tag": "Audit Trail", "width": 132 },
+    { "id": "allocate_laptop", "lane": "it", "col": 3, "type": "backend", "label": "Allocate Laptop", "sublabel": "serial assignment", "tag": "LOCK.UPDATE", "width": 132 },
+    { "id": "sign_asset", "lane": "employee", "col": 4, "type": "frontend", "label": "Sign Hardware", "sublabel": "digital handover", "width": 132 },
+    { "id": "posh_quiz", "lane": "compliance", "col": 4, "type": "backend", "label": "POSH Training", "sublabel": "80% passing grade", "tag": "Act 2013", "width": 132 },
+    { "id": "complete_plan", "lane": "hr", "col": 5, "type": "database", "label": "Plan Certified", "sublabel": "100% completed", "tag": "Graduated", "width": 132 }
+  ],
+  "edges": [
+    { "id": "edge-invite", "from": "create_emp", "to": "setup_mfa", "label": "invite", "variant": "emphasis" },
+    { "id": "edge-mfa-docs", "from": "setup_mfa", "to": "upload_docs", "variant": "default" },
+    { "id": "edge-kyc-verify", "from": "upload_docs", "to": "verify_kyc", "label": "review", "variant": "security" },
+    { "id": "edge-req-laptop", "from": "upload_docs", "to": "allocate_laptop", "label": "provision", "variant": "emphasis" },
+    { "id": "edge-sign-laptop", "from": "allocate_laptop", "to": "sign_asset", "variant": "emphasis" },
+    { "id": "edge-posh-training", "from": "sign_asset", "to": "posh_quiz", "variant": "default" },
+    { "id": "edge-complete", "from": "posh_quiz", "to": "complete_plan", "label": "certified", "variant": "emphasis" },
+    { "id": "edge-plan-ready", "from": "sign_asset", "to": "complete_plan", "variant": "default" }
+  ],
+  "cards": [
+    { "dot": "emerald", "title": "Automated Lifecycle", "items": ["HR profile creation provisions a 30-day onboarding plan", "Task progress auto-recalculates until milestone graduation"] },
+    { "dot": "cyan", "title": "Compliance & Security", "items": ["Indian statutory verification (Aadhaar & PAN) with audit trails", "Pessimistic row locking on assets and POSH Act 2013 scoring"] }
+  ]
+}
