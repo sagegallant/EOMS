@@ -3,29 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EOMS — Interactive System Design Architecture Portal</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <title>EOMS — Dedicated Micro-Architecture Portal</title>
   <style>
     :root {
       --bg: #090d16;
-      --card-bg: #111827;
-      --border: #1f2937;
-      --accent: #3b82f6;
-      --accent-glow: rgba(59, 130, 246, 0.25);
-      --emerald: #10b981;
+      --surface: #111827;
+      --surface-border: #1f293d;
+      --primary: #38bdf8;
+      --primary-glow: rgba(56, 189, 248, 0.15);
       --text: #f3f4f6;
-      --text-muted: #9ca3af;
+      --text-muted: #94a3b8;
     }
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background-color: var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
       color: var(--text);
       display: flex;
       flex-direction: column;
@@ -33,117 +25,84 @@
       overflow: hidden;
     }
     header {
-      background: rgba(17, 24, 39, 0.85);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      border-bottom: 1px solid var(--surface-border);
       padding: 12px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      z-index: 10;
+      flex-shrink: 0;
+      gap: 16px;
+      flex-wrap: wrap;
     }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .badge-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      background: linear-gradient(135deg, #2563eb, #7c3aed);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 14px;
-      color: #fff;
-      box-shadow: 0 0 16px var(--accent-glow);
-    }
-    .title-group h1 {
+    .brand-title {
       font-size: 15px;
       font-weight: 700;
-      letter-spacing: -0.01em;
+      letter-spacing: -0.02em;
       color: #fff;
-    }
-    .title-group p {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-    .nav-tabs {
       display: flex;
-      background: #0d131f;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 4px;
-      gap: 4px;
+      align-items: center;
+      gap: 10px;
+    }
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--primary-glow);
+      color: var(--primary);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+    nav {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 2px;
     }
     .tab-btn {
       background: transparent;
-      border: none;
+      border: 1px solid transparent;
       color: var(--text-muted);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 6px 14px;
-      border-radius: 6px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
       cursor: pointer;
+      white-space: nowrap;
       transition: all 0.15s ease;
-      display: flex;
-      align-items: center;
-      gap: 6px;
     }
     .tab-btn:hover {
       color: #fff;
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.04);
     }
     .tab-btn.active {
-      background: var(--accent);
       color: #fff;
-      box-shadow: 0 0 12px var(--accent-glow);
+      background: rgba(56, 189, 248, 0.12);
+      border-color: rgba(56, 189, 248, 0.3);
     }
     .actions {
       display: flex;
       align-items: center;
       gap: 10px;
     }
-    .status-tag {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      color: var(--emerald);
-      background: rgba(16, 185, 129, 0.1);
-      border: 1px solid rgba(16, 185, 129, 0.25);
-      padding: 4px 10px;
-      border-radius: 999px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .status-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--emerald);
-      box-shadow: 0 0 8px var(--emerald);
-    }
-    .fullscreen-btn {
-      background: #1f2937;
-      color: #d1d5db;
-      border: 1px solid #374151;
-      padding: 6px 12px;
-      border-radius: 6px;
+    .action-btn {
+      color: var(--text-muted);
       font-size: 12px;
-      font-weight: 500;
       text-decoration: none;
+      padding: 6px 12px;
+      border: 1px solid var(--surface-border);
+      border-radius: 6px;
       transition: all 0.15s ease;
+      background: rgba(255, 255, 255, 0.02);
     }
-    .fullscreen-btn:hover {
-      background: #374151;
+    .action-btn:hover {
       color: #fff;
+      border-color: var(--primary);
     }
     main {
       flex: 1;
       position: relative;
-      background: #000;
+      background: #06090e;
     }
     iframe {
       width: 100%;
@@ -155,48 +114,41 @@
 </head>
 <body>
   <header>
-    <div class="brand">
-      <div class="badge-icon">🏛️</div>
-      <div class="title-group">
-        <h1>EOMS — Archify System Architecture & Design Suite</h1>
-        <p>Verified Interactive Diagrams · Node.js 24 · Express 4 · React 18 · MySQL 8.0 InnoDB</p>
-      </div>
+    <div class="brand-title">
+      EOMS Micro-Architectures
+      <span class="badge">Archify Animated</span>
     </div>
-
-    <div class="nav-tabs">
-      <button class="tab-btn active" onclick="switchDiagram('eoms-system-architecture.html', this)">
-        <span>🏛️</span> System Architecture
-      </button>
-      <button class="tab-btn" onclick="switchDiagram('eoms-onboarding-workflow.html', this)">
-        <span>🔄</span> Onboarding Workflow
-      </button>
-      <button class="tab-btn" onclick="switchDiagram('eoms-asset-allocation.html', this)">
-        <span>⚡</span> Concurrency & Locking Sequence
-      </button>
-    </div>
-
+    <nav>
+      <button class="tab-btn active" data-src="micro-auth-security.html">1. Auth & MFA Security</button>
+      <button class="tab-btn" data-src="micro-rbac-engine.html">2. RBAC Policy Cache</button>
+      <button class="tab-btn" data-src="micro-provisioning-pipeline.html">3. Provisioning Tx</button>
+      <button class="tab-btn" data-src="micro-asset-allocation.html">4. Asset Row-Locking</button>
+      <button class="tab-btn" data-src="micro-document-vault.html">5. Document Vault</button>
+      <button class="tab-btn" data-src="micro-lms-sla-engine.html">6. LMS Quiz & SLA</button>
+    </nav>
     <div class="actions">
-      <div class="status-tag">
-        <span class="status-dot"></span>
-        Archify Showcase Verified
-      </div>
-      <a id="fullscreenLink" class="fullscreen-btn" href="eoms-system-architecture.html" target="_blank" rel="noopener">
-        Open Standalone ↗
-      </a>
+      <a id="openTab" class="action-btn" href="micro-auth-security.html" target="_blank" rel="noopener">Open Dedicated Window ↗</a>
     </div>
   </header>
 
   <main>
-    <iframe id="diagramFrame" src="eoms-system-architecture.html" title="EOMS Architecture Diagram"></iframe>
+    <iframe id="diagramFrame" src="micro-auth-security.html" title="EOMS Micro Architecture"></iframe>
   </main>
 
   <script>
-    function switchDiagram(url, button) {
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      button.classList.add('active');
-      document.getElementById('diagramFrame').src = url;
-      document.getElementById('fullscreenLink').href = url;
-    }
+    const frame = document.getElementById('diagramFrame');
+    const openBtn = document.getElementById('openTab');
+    const buttons = document.querySelectorAll('.tab-btn');
+
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        buttons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const src = btn.getAttribute('data-src');
+        frame.src = src;
+        openBtn.href = src;
+      });
+    });
   </script>
 </body>
 </html>

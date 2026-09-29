@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "LMS Quiz & SLA Escalation Micro-Architecture",
+    "output": "micro-lms-sla-engine.html",
+    "quality_profile": "showcase",
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "views": [
+      {
+        "id": "quiz-grading",
+        "label": "Blind quiz evaluation & progress rollup",
+        "focus": ["trainee_portal", "lms_ctrl", "blind_scorer", "progress_aggregator", "training_db"],
+        "note": "Client submits quiz answers; server calculates grade with zero answer key exposure and updates overall progress."
+      },
+      {
+        "id": "sla-escalation",
+        "label": "Automated background SLA monitoring",
+        "focus": ["sla_scheduler", "escalation_engine", "alert_service", "notification_queue"],
+        "note": "Scheduled cron sweeps active tasks for SLA breaches and triggers manager escalations."
+      }
+    ]
+  },
+  "components": [
+    { "id": "trainee_portal", "type": "frontend", "label": "Trainee Portal", "sublabel": "LMS & Quiz UI", "pos": [40, 200], "size": [140, 64] },
+    { "id": "lms_ctrl", "type": "backend", "label": "LMS Controller", "sublabel": "Quiz Submission Handler", "pos": [270, 200], "size": [140, 64], "tag": "Submission Guard" },
+    { "id": "blind_scorer", "type": "security", "label": "Blind Quiz Scorer", "sublabel": "Server-Side Key Verify", "pos": [520, 200], "size": [150, 64], "tag": "Zero Client Leak" },
+    { "id": "progress_aggregator", "type": "backend", "label": "Progress Aggregator", "sublabel": "Weighted Completion Calc", "pos": [770, 200], "size": [150, 64], "tag": "Rollup Engine" },
+    { "id": "training_db", "type": "database", "label": "Training & Tasks Store", "sublabel": "MySQL Relational Tables", "pos": [1020, 200], "size": [150, 64] },
+    { "id": "sla_scheduler", "type": "backend", "label": "SLA Scheduler", "sublabel": "Node-Cron Background Job", "pos": [270, 360], "size": [140, 64], "tag": "1h Sweeper" },
+    { "id": "escalation_engine", "type": "backend", "label": "Escalation Monitor", "sublabel": "Due Date vs NOW() Filter", "pos": [520, 360], "size": [150, 64], "tag": "Breach Evaluator" },
+    { "id": "alert_service", "type": "backend", "label": "Alert Service", "sublabel": "Manager Escalation Builder", "pos": [770, 360], "size": [150, 64], "tag": "Priority Alert" },
+    { "id": "notification_queue", "type": "messagebus", "label": "Notification Stream", "sublabel": "In-App & Email Dispatch", "pos": [1020, 360], "size": [150, 64] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Trainee Interaction Perimeter", "wraps": ["trainee_portal", "lms_ctrl"] },
+    { "kind": "security-group", "label": "LMS Grading & SLA Evaluation Hub", "wraps": ["blind_scorer", "progress_aggregator", "sla_scheduler", "escalation_engine", "alert_service"] },
+    { "kind": "region", "label": "Durable Records & Dispatch Tier", "wraps": ["training_db", "notification_queue"] }
+  ],
+  "connections": [
+    { "id": "trainee-to-lms", "from": "trainee_portal", "to": "lms_ctrl", "label": "Submit quiz", "variant": "emphasis" },
+    { "id": "lms-to-scorer", "from": "lms_ctrl", "to": "blind_scorer", "label": "Verify answers" },
+    { "id": "scorer-to-progress", "from": "blind_scorer", "to": "progress_aggregator", "label": "Calculate rollup" },
+    { "id": "progress-to-db", "from": "progress_aggregator", "to": "training_db", "label": "Save completion" },
+    { "id": "sla-to-escalation", "from": "sla_scheduler", "to": "escalation_engine", "label": "Periodic sweep" },
+    { "id": "escalation-to-alert", "from": "escalation_engine", "to": "alert_service", "label": "Task overdue" },
+    { "id": "alert-to-queue", "from": "alert_service", "to": "notification_queue", "label": "Dispatch notices", "variant": "dashed" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Blind Quiz Integrity", "items": ["Answer keys are never transmitted to frontend clients", "Server-side grading prevents tampering or inspect-element cheating"] },
+    { "dot": "amber", "title": "Onboarding Progress Metric", "items": ["Completed modules update employee onboarding completion percentage", "Reaching 100% triggers automated compliance certification"] },
+    { "dot": "emerald", "title": "Automated SLA Escalation", "items": ["Hourly scheduler identifies overdue onboarding milestones", "Dispatches multi-channel alerts to assigned buddy and manager"] }
+  ]
+}

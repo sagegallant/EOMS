@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Atomic Provisioning Pipeline Micro-Architecture",
+    "output": "micro-provisioning-pipeline.html",
+    "quality_profile": "showcase",
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "views": [
+      {
+        "id": "provisioning-tx",
+        "label": "Atomic onboarding transaction",
+        "focus": ["hr_portal", "validator", "tx_coordinator", "entity_pipeline", "mysql_db"],
+        "note": "All-or-nothing database transaction creating user account, profile, and onboarding tasks."
+      },
+      {
+        "id": "event-dispatch",
+        "label": "Post-commit event propagation",
+        "focus": ["tx_coordinator", "asset_trigger", "audit_notifier"],
+        "note": "Asynchronous IT hardware alerts and welcome notifications dispatched only after COMMIT."
+      }
+    ]
+  },
+  "components": [
+    { "id": "hr_portal", "type": "frontend", "label": "HR Portal", "sublabel": "Onboarding Form", "pos": [40, 240], "size": [140, 64] },
+    { "id": "validator", "type": "security", "label": "Payload Guard", "sublabel": "Schema & Email Uniqueness", "pos": [270, 240], "size": [140, 64], "tag": "Input Check" },
+    { "id": "tx_coordinator", "type": "backend", "label": "Tx Coordinator", "sublabel": "Sequelize Managed Tx", "pos": [510, 240], "size": [150, 64], "tag": "READ COMMITTED" },
+    { "id": "entity_pipeline", "type": "backend", "label": "Entity Pipeline", "sublabel": "User, Profile & Tasks", "pos": [760, 160], "size": [150, 64], "tag": "Atomic Batch" },
+    { "id": "asset_trigger", "type": "backend", "label": "Asset & Event Unit", "sublabel": "Hardware Pre-allocation", "pos": [760, 320], "size": [150, 64], "tag": "Post-Commit Hook" },
+    { "id": "mysql_db", "type": "database", "label": "MySQL InnoDB", "sublabel": "ACID Tables :3306", "pos": [1010, 160], "size": [150, 64] },
+    { "id": "audit_notifier", "type": "messagebus", "label": "Event Dispatcher", "sublabel": "Audit & Welcome Alerts", "pos": [1010, 320], "size": [150, 64] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Management Ingress Perimeter", "wraps": ["hr_portal", "validator"] },
+    { "kind": "security-group", "label": "Transactional Orchestration Boundary", "wraps": ["tx_coordinator", "entity_pipeline", "asset_trigger"] },
+    { "kind": "region", "label": "Durable State & Event Tier", "wraps": ["mysql_db", "audit_notifier"] }
+  ],
+  "connections": [
+    { "id": "hr-to-validator", "from": "hr_portal", "to": "validator", "label": "POST /employees", "variant": "emphasis" },
+    { "id": "validator-to-tx", "from": "validator", "to": "tx_coordinator", "label": "Validated data" },
+    { "id": "tx-to-entities", "from": "tx_coordinator", "to": "entity_pipeline", "label": "Execute batch", "fromSide": "right", "toSide": "left" },
+    { "id": "tx-to-assets", "from": "tx_coordinator", "to": "asset_trigger", "label": "Prepare assets", "fromSide": "bottom", "toSide": "left", "labelDy": 20 },
+    { "id": "entities-to-db", "from": "entity_pipeline", "to": "mysql_db", "label": "COMMIT atomic", "fromSide": "right", "toSide": "left" },
+    { "id": "assets-to-events", "from": "asset_trigger", "to": "audit_notifier", "label": "Dispatch alerts", "variant": "dashed", "fromSide": "right", "toSide": "left" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Atomic Integrity", "items": ["Multi-entity provisioning within one Sequelize transaction", "Automatic ROLLBACK on email collision or validation failure"] },
+    { "dot": "amber", "title": "Checklist Seeding", "items": ["Standard Day 1, Week 1, Month 1 onboarding tasks created", "Role-specific template instantiation"] },
+    { "dot": "emerald", "title": "Post-Commit Isolation", "items": ["Notifications and IT asset alerts defer until transaction COMMIT", "Guaranteed zero orphan accounts on failure"] }
+  ]
+}

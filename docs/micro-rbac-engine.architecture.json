@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "RBAC Policy & Cache Engine Micro-Architecture",
+    "output": "micro-rbac-engine.html",
+    "quality_profile": "showcase",
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "views": [
+      {
+        "id": "cached-auth",
+        "label": "Fast-path in-memory grant",
+        "focus": ["client", "auth_guard", "rbac_middleware", "inmemory_cache", "route_handler"],
+        "note": "Sub-millisecond permission resolution via in-process TTL cache."
+      },
+      {
+        "id": "cache-miss-auth",
+        "label": "Database join fallback",
+        "focus": ["rbac_middleware", "policy_resolver", "rbac_db", "inmemory_cache"],
+        "note": "Cache-miss triggers Sequelize query across Roles, Permissions, and RolePermissions."
+      }
+    ]
+  },
+  "components": [
+    { "id": "client", "type": "frontend", "label": "Client Request", "sublabel": "Axios Bearer Token", "pos": [40, 240], "size": [140, 64] },
+    { "id": "auth_guard", "type": "security", "label": "Auth Guard", "sublabel": "authenticateToken()", "pos": [270, 240], "size": [140, 64], "tag": "JWT Verify" },
+    { "id": "rbac_middleware", "type": "backend", "label": "RBAC Middleware", "sublabel": "authorizePermission()", "pos": [510, 240], "size": [150, 64] },
+    { "id": "inmemory_cache", "type": "database", "label": "In-Memory Cache", "sublabel": "TTL: 60s / Process Map", "pos": [510, 90], "size": [150, 64], "tag": "Fast-Path" },
+    { "id": "policy_resolver", "type": "backend", "label": "Policy Resolver", "sublabel": "Role-Permission Join", "pos": [760, 240], "size": [150, 64], "tag": "Matrix Evaluator" },
+    { "id": "rbac_db", "type": "database", "label": "Roles & Perms DB", "sublabel": "MySQL Relational Joins", "pos": [1010, 160], "size": [150, 64] },
+    { "id": "route_handler", "type": "backend", "label": "Route Controller", "sublabel": "Protected Endpoint", "pos": [1010, 320], "size": [150, 64], "tag": "Authorized 200" }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "API Ingress & Guard Tier", "wraps": ["client", "auth_guard"] },
+    { "kind": "security-group", "label": "Policy Decision Point (PDP)", "wraps": ["rbac_middleware", "inmemory_cache", "policy_resolver"] },
+    { "kind": "region", "label": "Data & Execution Tier", "wraps": ["rbac_db", "route_handler"] }
+  ],
+  "connections": [
+    { "id": "client-to-guard", "from": "client", "to": "auth_guard", "label": "Bearer token", "variant": "emphasis" },
+    { "id": "guard-to-rbac", "from": "auth_guard", "to": "rbac_middleware", "label": "Decoded user" },
+    { "id": "rbac-to-cache", "from": "rbac_middleware", "to": "inmemory_cache", "label": "Check cache", "variant": "security", "fromSide": "top", "toSide": "bottom", "labelDy": -20 },
+    { "id": "rbac-to-resolver", "from": "rbac_middleware", "to": "policy_resolver", "label": "On cache miss" },
+    { "id": "resolver-to-db", "from": "policy_resolver", "to": "rbac_db", "label": "Query joins", "fromSide": "right", "toSide": "left" },
+    { "id": "resolver-to-handler", "from": "policy_resolver", "to": "route_handler", "label": "Grant access", "fromSide": "right", "toSide": "left" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Zero-Overhead Enforcement", "items": ["In-memory 60s TTL prevents per-request DB hits", "Instant revocation via cache invalidation hooks"] },
+    { "dot": "amber", "title": "Dynamic Matrix", "items": ["Fine-grained permissions mapped to roles", "Explicit 403 Forbidden on capability deficit"] },
+    { "dot": "emerald", "title": "Audit & Compliance", "items": ["All policy failures logged to audit trail", "Strict isolation between PDP and Route Handler"] }
+  ]
+}

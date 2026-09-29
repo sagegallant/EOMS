@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Auth & MFA Security Micro-Architecture",
+    "output": "micro-auth-security.html",
+    "quality_profile": "showcase",
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "views": [
+      {
+        "id": "login-flow",
+        "label": "Primary credential auth",
+        "focus": ["client", "ratelimit", "auth_ctrl", "bcrypt_engine", "users_db"],
+        "note": "Rate-limited entry validating email and bcrypt password hash against MySQL."
+      },
+      {
+        "id": "mfa-flow",
+        "label": "TOTP MFA & token issue",
+        "focus": ["auth_ctrl", "totp_engine", "jwt_issuer", "audit_log"],
+        "note": "RFC 6238 time-step verification emitting dual JWT access and refresh tokens."
+      }
+    ]
+  },
+  "components": [
+    { "id": "client", "type": "frontend", "label": "Client App", "sublabel": "React SPA / Axios", "pos": [40, 240], "size": [140, 64] },
+    { "id": "ratelimit", "type": "security", "label": "Rate Limiter", "sublabel": "express-rate-limit", "pos": [270, 240], "size": [140, 64], "tag": "5 req / min" },
+    { "id": "auth_ctrl", "type": "backend", "label": "Auth Controller", "sublabel": "login & mfa handlers", "pos": [520, 240], "size": [150, 64] },
+    { "id": "bcrypt_engine", "type": "security", "label": "Bcrypt Engine", "sublabel": "Cost Factor: 10", "pos": [520, 90], "size": [150, 64], "tag": "Password Compare" },
+    { "id": "totp_engine", "type": "security", "label": "TOTP MFA Engine", "sublabel": "RFC 6238 / otplib", "pos": [520, 390], "size": [150, 64], "tag": "Time-step Window" },
+    { "id": "jwt_issuer", "type": "backend", "label": "JWT Token Engine", "sublabel": "HS256 Signer", "pos": [770, 240], "size": [150, 64], "tag": "15m Access / 7d Refresh" },
+    { "id": "users_db", "type": "database", "label": "Users Store", "sublabel": "MySQL :3306", "pos": [1020, 160], "size": [150, 64] },
+    { "id": "audit_log", "type": "messagebus", "label": "Audit Logger", "sublabel": "Security Event Log", "pos": [1020, 320], "size": [150, 64] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "API Ingress & Edge Tier", "wraps": ["ratelimit", "auth_ctrl"] },
+    { "kind": "security-group", "label": "Crypto & Authentication Core", "wraps": ["bcrypt_engine", "auth_ctrl", "totp_engine", "jwt_issuer"] },
+    { "kind": "region", "label": "Persistence & Audit Tier", "wraps": ["users_db", "audit_log"] }
+  ],
+  "connections": [
+    { "id": "client-to-ratelimit", "from": "client", "to": "ratelimit", "label": "HTTPS :5000", "variant": "emphasis" },
+    { "id": "ratelimit-to-auth", "from": "ratelimit", "to": "auth_ctrl", "label": "Forward" },
+    { "id": "auth-to-bcrypt", "from": "auth_ctrl", "to": "bcrypt_engine", "label": "Verify hash", "variant": "security", "fromSide": "top", "toSide": "bottom", "labelDy": -20 },
+    { "id": "auth-to-totp", "from": "auth_ctrl", "to": "totp_engine", "label": "Validate MFA", "variant": "security", "fromSide": "bottom", "toSide": "top", "labelDy": 20 },
+    { "id": "auth-to-jwt", "from": "auth_ctrl", "to": "jwt_issuer", "label": "Issue tokens" },
+    { "id": "jwt-to-db", "from": "jwt_issuer", "to": "users_db", "label": "Store refresh", "fromSide": "right", "toSide": "left" },
+    { "id": "jwt-to-audit", "from": "jwt_issuer", "to": "audit_log", "label": "Log auth event", "variant": "dashed", "fromSide": "right", "toSide": "left" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Ingress Defense", "items": ["IP rate limiting protects /auth endpoints", "Sanitized email and password inputs"] },
+    { "dot": "amber", "title": "Zero-Knowledge MFA", "items": ["RFC 6238 TOTP with ±1 step window drift", "Single-use SHA-256 backup recovery codes"] },
+    { "dot": "emerald", "title": "Session Tokens", "items": ["Stateless 15-minute access token", "Rotating 7-day refresh token stored in DB"] }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Asset Allocation & Lock Micro-Architecture",
+    "output": "micro-asset-allocation.html",
+    "quality_profile": "showcase",
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "views": [
+      {
+        "id": "pessimistic-lock",
+        "label": "Pessimistic row-locking allocation",
+        "focus": ["it_admin", "asset_ctrl", "lock_mgr", "asset_db"],
+        "note": "Prevents race conditions by locking asset row with SELECT ... FOR UPDATE during assignment."
+      },
+      {
+        "id": "lifecycle-transition",
+        "label": "Hardware state transition & alerts",
+        "focus": ["lock_mgr", "state_machine", "barcode_tracker", "it_notifier"],
+        "note": "Enforces AVAILABLE to ALLOCATED state machine guard and dispatches employee alert."
+      }
+    ]
+  },
+  "components": [
+    { "id": "it_admin", "type": "frontend", "label": "IT Ops Portal", "sublabel": "Asset Dashboard", "pos": [40, 240], "size": [140, 64] },
+    { "id": "asset_ctrl", "type": "backend", "label": "Asset Controller", "sublabel": "allocate() Handler", "pos": [270, 240], "size": [140, 64], "tag": "Request Guard" },
+    { "id": "lock_mgr", "type": "backend", "label": "Lock Coordinator", "sublabel": "SELECT FOR UPDATE", "pos": [510, 240], "size": [150, 64], "tag": "Pessimistic Lock" },
+    { "id": "state_machine", "type": "backend", "label": "State Evaluator", "sublabel": "AVAILABLE -> ALLOCATED", "pos": [760, 160], "size": [150, 64], "tag": "Status Guard" },
+    { "id": "barcode_tracker", "type": "backend", "label": "Serial Unit", "sublabel": "AssetAllocation Record", "pos": [760, 320], "size": [150, 64], "tag": "Binding Engine" },
+    { "id": "asset_db", "type": "database", "label": "Assets & Allocations", "sublabel": "MySQL InnoDB Row-Locked", "pos": [1010, 160], "size": [150, 64] },
+    { "id": "it_notifier", "type": "messagebus", "label": "Alert Dispatcher", "sublabel": "Employee Notification", "pos": [1010, 320], "size": [150, 64] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "IT Admin Tier", "wraps": ["it_admin", "asset_ctrl"] },
+    { "kind": "security-group", "label": "Concurrency & State Engine", "wraps": ["lock_mgr", "state_machine", "barcode_tracker"] },
+    { "kind": "region", "label": "Durable Store & Notifier", "wraps": ["asset_db", "it_notifier"] }
+  ],
+  "connections": [
+    { "id": "admin-to-ctrl", "from": "it_admin", "to": "asset_ctrl", "label": "POST /allocate", "variant": "emphasis" },
+    { "id": "ctrl-to-lock", "from": "asset_ctrl", "to": "lock_mgr", "label": "Acquire lock" },
+    { "id": "lock-to-state", "from": "lock_mgr", "to": "state_machine", "label": "Verify state", "fromSide": "right", "toSide": "left" },
+    { "id": "lock-to-barcode", "from": "lock_mgr", "to": "barcode_tracker", "label": "Bind serial", "fromSide": "bottom", "toSide": "left", "labelDy": 20 },
+    { "id": "state-to-db", "from": "state_machine", "to": "asset_db", "label": "Release & commit", "fromSide": "right", "toSide": "left" },
+    { "id": "barcode-to-notify", "from": "barcode_tracker", "to": "it_notifier", "label": "Dispatch alert", "variant": "dashed", "fromSide": "right", "toSide": "left" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Zero Double-Allocation", "items": ["Pessimistic row-locking blocks competing concurrent IT assignments", "Ensures strict single-owner integrity for all hardware"] },
+    { "dot": "amber", "title": "Finite State Validation", "items": ["Enforces AVAILABLE to ALLOCATED to RETURNED lifecycle", "Rejects allocation requests if asset is in MAINTENANCE or RETIRED"] },
+    { "dot": "emerald", "title": "Audit Binding", "items": ["Records asset serial number, condition notes, and IT technician ID", "Triggers immediate onboarding checklist task updates"] }
+  ]
+}

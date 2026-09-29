@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark" data-preset="classic">
+<html lang="en" data-theme="dark" data-preset="signal-flow">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="generator" content="archify 2.17.0-dev.1">
-  <title>EOMS System Architecture Diagram</title>
+  <title>Asset Allocation &amp; Lock Micro-Architecture Diagram</title>
   <script>
     // Resolve the theme before first paint so light-preference users don't
     // see a dark flash. The toolbar script below re-applies with UI state.
@@ -5081,11 +5081,11 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
            data-preset-badge-blueprint="BLUEPRINT / REV 01"
            data-preset-badge-editorial="EDITORIAL / FIELD NOTE">
         <div class="pulse-dot"></div>
-        <h1>EOMS System Architecture</h1>
+        <h1>Asset Allocation &amp; Lock Micro-Architecture</h1>
       </div>
     </div>
 
-    <script id="archify-guided-views-data" type="application/json">[{"id":"onboarding-flow","label":"Onboarding Request Flow","focus":["clients","spa","gateway","onboarding_ctl","audit_svc","mysql"],"note":"Trace an onboarding plan request from client interaction through the gateway and controller to MySQL."},{"id":"identity-and-rbac","label":"Identity, MFA \u0026 RBAC","focus":["mfa","clients","spa","gateway","auth_guard"],"note":"Verify JWT bearer credentials, RFC 6238 TOTP codes, and in-process cached granular permissions."},{"id":"asset-concurrency","label":"Asset Allocation \u0026 Locking","focus":["spa","gateway","asset_ctl","mysql"],"note":"Pessimistic row locking (t.LOCK.UPDATE) guarantees race-free hardware allocation and digital employee sign-off."},{"id":"compliance-and-docs","label":"Compliance \u0026 Document Vault","focus":["spa","gateway","doc_ctl","doc_storage"],"note":"Secure multipart upload, MIME whitelist validation, path traversal prevention, and POSH Act 2013 scoring."},{"id":"sla-and-alerts","label":"SLA \u0026 Notification Alerts","focus":["sla_daemon","mysql"],"note":"Automated SLA daemon scans overdue onboarding milestones and triggers targeted notification alerts."}]</script>
+    <script id="archify-guided-views-data" type="application/json">[{"id":"pessimistic-lock","label":"Pessimistic row-locking allocation","focus":["it_admin","asset_ctrl","lock_mgr","asset_db"],"note":"Prevents race conditions by locking asset row with SELECT ... FOR UPDATE during assignment."},{"id":"lifecycle-transition","label":"Hardware state transition \u0026 alerts","focus":["lock_mgr","state_machine","barcode_tracker","it_notifier"],"note":"Enforces AVAILABLE to ALLOCATED state machine guard and dispatches employee alert."}]</script>
 
     <script id="archify-i18n-data" type="application/json">{"locale":"en","messages":{"viewer.kind.frontend":"Frontend","viewer.kind.backend":"Backend","viewer.kind.database":"Database","viewer.kind.cloud":"Cloud","viewer.kind.security":"Security","viewer.kind.messagebus":"Message bus","viewer.kind.external":"External","viewer.kind.neutral":"Neutral","viewer.kind.node":"Node","viewer.kind.start":"Start","viewer.kind.active":"Active","viewer.kind.waiting":"Waiting","viewer.kind.decision":"Decision","viewer.kind.success":"Success","viewer.kind.failure":"Failure","viewer.toolbar.actions":"Diagram actions","viewer.theme.toggle.title":"Toggle theme (T)","viewer.theme.toggle":"Toggle color theme","viewer.theme.dark":"Dark","viewer.theme.light":"Light","viewer.preset.choose.title":"Choose visual style (S cycles)","viewer.preset.choose":"Choose visual style","viewer.preset.style":"Style","viewer.preset.menu":"Visual style","viewer.preset.identity":"Visual identity","viewer.preset.cycles":"S cycles","viewer.preset.classic":"Classic","viewer.preset.classic.short":"Classic","viewer.preset.classic.hint":"Stable technical default","viewer.preset.flow":"Signal Flow","viewer.preset.flow.short":"Flow","viewer.preset.flow.hint":"Motion-forward presentation","viewer.preset.blueprint":"Blueprint","viewer.preset.blueprint.hint":"Engineering review","viewer.preset.editorial":"Editorial","viewer.preset.editorial.hint":"Publication and launch notes","viewer.preset.badge.signalFlow":"SIGNAL FLOW","viewer.preset.badge.blueprint":"BLUEPRINT / REV 01","viewer.preset.badge.editorial":"EDITORIAL / FIELD NOTE","viewer.preset.badge.editorialPlate":"ARCHIFY / PLATE 04","viewer.preset.current":"Visual style: {style}. Choose visual style","viewer.motion.live":"Live","viewer.motion.still":"Still","viewer.motion.pause":"Pause motion","viewer.motion.resume":"Resume motion","viewer.motion.reduced":"Motion paused by reduced-motion preference","viewer.motion.hidden":"Motion paused while this page is hidden","viewer.motion.yielding":"Pause motion; currently yielding to {owner}","viewer.motion.yielding.title":"Live preview enabled · yielding to {owner}","viewer.owner.story":"the guided story","viewer.owner.chapter":"the active chapter","viewer.owner.chapterPreview":"the chapter delta preview","viewer.owner.handoff":"the chapter handoff","viewer.owner.route":"Route Probe","viewer.owner.lens":"Semantic Lens","viewer.owner.relationship":"Relationship Preview","viewer.owner.intent":"Intent Trace","viewer.owner.focus":"semantic focus","viewer.owner.legend":"legend preview","viewer.owner.reader":"reader interaction","viewer.present.enter":"Enter presentation stage","viewer.present.enter.title":"Presentation stage (F)","viewer.present.exit":"Exit presentation stage","viewer.present.exit.title":"Exit presentation stage (F or Escape)","viewer.present.present":"Present","viewer.present.exit.label":"Exit","viewer.export.button":"Export","viewer.export.button.title":"Export diagram (E)","viewer.export.diagram":"Export diagram","viewer.export.menu":"Export","viewer.export.subtitle":"Portable, clean outputs","viewer.export.share":"Share","viewer.export.shareCard":"Share Card","viewer.export.routeShareCard":"Route Share Card","viewer.export.reachShareCard":"Reach Share Card","viewer.export.copyShareCard":"Copy Share Card","viewer.export.copyDiagram":"Copy diagram","viewer.export.clipboardPng":"PNG to clipboard","viewer.export.raster":"Raster images","viewer.export.image":"Image","viewer.export.lossless":"Lossless image","viewer.export.compact":"Compact image","viewer.export.modern":"Modern image","viewer.export.vectorMotion":"Vector and motion","viewer.export.vectorMotion.heading":"Vector \u0026 motion","viewer.export.editable":"Editable vector","viewer.export.motion6s":"6s motion","viewer.export.unsupported":"Not supported by this browser","viewer.export.clipboardUnsupported":"Clipboard image write not supported by this browser","viewer.export.clipboardUnsupported.period":"Clipboard image write not supported by this browser.","viewer.export.clipboardUnsupported.short":"Clipboard image write not supported in this browser.","viewer.export.motionUnavailable":"Motion capture unavailable in this browser","viewer.export.webmUnavailable":"WebM unavailable in this browser","viewer.export.failed":"Export failed: {message}","viewer.export.unknownVariant":"Unknown Share Card variant: {variant}","viewer.export.routeRequired":"Trace a route before exporting a Route Share Card","viewer.export.reachRequired":"Trace authored reach before exporting a Reach Share Card","viewer.export.unknown":"unknown","viewer.export.routeFailed":"Route Share Card export failed: {message}","viewer.export.reachFailed":"Reach Share Card export failed: {message}","viewer.export.copyFailed":"Copy failed: {message}","viewer.export.copiedPng":"Copied PNG to clipboard","viewer.export.copiedShare":"Copied Share Card","viewer.export.downloadedShare":"Downloaded Share Card","viewer.export.downloadedRoute":"Downloaded Route Share Card","viewer.export.downloadedReach":"Downloaded Reach Share Card","viewer.export.downloadedWebm":"Downloaded WebM","viewer.export.recording":"Recording 6 seconds of motion…","viewer.export.card.routeSummary.one":"Route: {source} → {target} · {count} directed hop","viewer.export.card.routeSummary.other":"Route: {source} → {target} · {count} directed hops","viewer.export.card.reachSummary":"Authored {direction} from {origin} · {nodes} · {links} · max {hops}","viewer.export.card.node.one":"{count} node","viewer.export.card.node.other":"{count} nodes","viewer.export.card.link.one":"{count} link","viewer.export.card.link.other":"{count} links","viewer.export.card.hop.one":"{count} hop","viewer.export.card.hop.other":"{count} hops","viewer.export.card.routeBadge":"ARCHIFY · ROUTE · {hops}","viewer.export.card.reachBadge":"ARCHIFY · {direction} REACH","viewer.export.card.defaultBadge":"ARCHIFY · {preset} · {theme}","viewer.export.direction.upstream":"Upstream","viewer.export.direction.downstream":"Downstream","viewer.export.error.canvasUnavailable":"Canvas unavailable for {label}","viewer.export.error.contextUnavailable":"2D canvas context unavailable for {label}","viewer.export.error.toBlobUnavailable":"canvas.toBlob unavailable for {label}","viewer.export.error.toBlobNull":"canvas.toBlob returned no data for {label}","viewer.export.error.variantsCombined":"Share Card variants cannot be combined","viewer.export.error.viewerState":"Share Card export could not remove temporary viewer state","viewer.export.error.routeState":"Route Card export could not preserve the resolved route safely","viewer.export.error.reachState":"Reach Card export could not preserve authored reach safely","viewer.export.error.webmRequirements":"WebM motion export requires a trace animation and browser MediaRecorder support","viewer.export.error.mediaRecorder":"MediaRecorder failed","viewer.export.error.emptyWebm":"MediaRecorder produced an empty WebM","viewer.export.error.webmBackground":"SVG background could not be loaded for WebM export","viewer.guided.region":"Guided diagram views","viewer.guided.previous":"Previous guided view","viewer.guided.previous.title":"Previous guided view ([)","viewer.guided.next":"Next guided view","viewer.guided.next.title":"Next guided view (])","viewer.guided.views":"Guided views","viewer.guided.explore":"Explore this system","viewer.guided.intro":"Step through curated paths without changing the source diagram.","viewer.guided.trail":"Story trail","viewer.guided.beat":"Beat","viewer.guided.nextBeat":"Next","viewer.guided.play":"Play guided story","viewer.guided.play.title":"Play guided story (P)","viewer.guided.pause":"Pause guided story","viewer.guided.pause.title":"Pause guided story (P)","viewer.guided.replay":"Replay guided story","viewer.guided.replay.title":"Replay guided story (P)","viewer.guided.playStory":"Play story","viewer.guided.pauseStory":"Pause","viewer.guided.replayStory":"Replay story","viewer.guided.motionUnavailable":"Story playback unavailable while motion is Still","viewer.guided.enableMotion":"Switch motion to Live to play the guided story","viewer.guided.selectBeatLink":"Select a Story Beat to copy its exact link","viewer.guided.copyMoment":"Copy moment","viewer.guided.momentCopied":"Moment link copied","viewer.guided.momentCopyFailed":"Could not copy story moment link","viewer.guided.copied":"Copied","viewer.guided.copyFailed":"Copy failed","viewer.guided.showAll":"Show all","viewer.guided.showAll.aria":"Show entire diagram","viewer.guided.chapters":"Story chapters","viewer.guided.storyTrail":"Story trail for {label}: {count} beats","viewer.guided.chapter.open":"Open chapter {index} of {total}: {label}, {count} stops","viewer.guided.chapter.current":"Current chapter {index} of {total}: {label}, {count} stops","viewer.guided.chapter.selectedNodes":"{count} selected nodes","viewer.guided.chapter.stops":"{count} stops","viewer.guided.chapter.stop.one":"{count} stop","viewer.guided.chapter.stop.other":"{count} stops","viewer.guided.chapter.current.title":"{label} — current chapter, {count} stops","viewer.guided.chapter.delta.expanded":"{stay} stay, {enter} enter, {leave} leave","viewer.guided.chapter.delta.aria":"Open chapter {index} of {total}: {label}. Chapter focus delta: {delta}","viewer.guided.chapter.delta.title":"{label} — {delta} chapter focus","viewer.guided.handoff":"{from} → {to} · via {label}","viewer.guided.share.chapter":"Chapter {index} / {total}","viewer.guided.share.initial":"Chapter 01 / 01","viewer.guided.share.default":"Guided chapter","viewer.guided.state.ready":"Ready","viewer.guided.state.playing":"Playing","viewer.guided.state.settled":"Settled","viewer.guided.state.paused":"Paused","viewer.guided.state.pinned":"Pinned","viewer.guided.state.still":"Still","viewer.guided.share.step":"Step {index} / {total} · {label}","viewer.guided.share.staticMoment":"{step} · Static moment","viewer.guided.share.complete":"{count} steps complete · {note}","viewer.guided.share.settled":"Path settled for reading.","viewer.guided.share.staticPath":"{count} steps · Static path","viewer.guided.share.ready":"{count} steps · Ready","viewer.guided.share.aria":"{state} chapter {index} of {total}: {label}. {beat}. {route}","viewer.guided.beat.start":"Beat {index} / {total} · {label} · starting point","viewer.guided.beat.forward":"Beat {index} / {total} · {from} → {to}","viewer.guided.beat.reverse":"Beat {index} / {total} · {from} → {to} · reverse authored link","viewer.guided.beat.multiple":"Beat {index} / {total} · {from} ⇄ {to} · {count} authored links","viewer.guided.beat.group":"Beat {index} / {total} · {from} · {to} · grouped · no direct link","viewer.guided.beat.aria.prefix":"Story beat {index} of {total}: {label}. ","viewer.guided.beat.aria.start":"Starting point.","viewer.guided.beat.aria.forward":"From {from} through one authored forward relationship.","viewer.guided.beat.aria.reverse":"From {from}; the authored relationship points from {to} to {from}.","viewer.guided.beat.aria.multiple":"From {from} through {count} authored relationships; shown without arbitrary motion.","viewer.guided.beat.aria.group":"Grouped from {from} with no direct authored relationship.","viewer.guided.caption.start":"Starting point","viewer.guided.caption.grouped":"Grouped transition · no direct authored link","viewer.guided.caption.more":" +{count} more","viewer.guided.caption.reverse":"Reverse authored relationship","viewer.guided.caption.relationships":"{count} authored relationships","viewer.guided.caption.relationship":"Authored relationship","viewer.guided.caption.direction":"authored direction: {from} → {to}","viewer.guided.caption.starting":"Authored starting point","viewer.guided.beatLink":"Copy link to current story moment: Beat {index} of {total}: {label}","viewer.guided.noStory":"This diagram has no authored guided story.","viewer.guide.eyebrow":"Diagram guide","viewer.guide.close":"Close diagram guide","viewer.guide.inspecting":"Inspecting compiled semantics","viewer.guide.actions":"Diagram exploration actions","viewer.guide.find":"Find any node","viewer.guide.find.hint":"Search labels, responsibilities, kinds, and stable IDs.","viewer.guide.route":"Trace a route","viewer.guide.route.aria":"Trace a directed route","viewer.guide.route.hint":"Ask how two semantic nodes connect in authored direction.","viewer.guide.map":"See the whole system","viewer.guide.map.hint":"Open Semantic Radar with a live viewport and stable nodes.","viewer.guide.lens":"Compare semantic kinds","viewer.guide.lens.hint":"Count roles, reveal their traffic, and compare direct authored links.","viewer.guide.story":"Play the guided story","viewer.guide.story.hint":"Walk the authored chapters and real relationships.","viewer.guide.present":"Enter Presentation Stage","viewer.guide.present.hint":"Give the live diagram the viewport without changing export.","viewer.guide.shortcuts":"Additional keyboard shortcuts","viewer.guide.shortcut.export":"Export","viewer.guide.shortcut.theme":"Theme","viewer.guide.shortcut.style":"Style","viewer.guide.shortcut.reset":"Reset","viewer.guide.shortcut.zoomIn":"Zoom in","viewer.guide.shortcut.zoomOut":"Zoom out","viewer.guide.shortcut.close":"Close","viewer.guide.facts":"{nodes} · {relationships} · {views}","viewer.guide.fact.node.one":"{count} semantic node","viewer.guide.fact.node.other":"{count} semantic nodes","viewer.guide.fact.relationship.one":"{count} relationship","viewer.guide.fact.relationship.other":"{count} relationships","viewer.guide.fact.view.one":"{count} guided view","viewer.guide.fact.view.other":"{count} guided views","viewer.guide.story.available.one":"Walk {count} authored chapter and its real relationships.","viewer.guide.story.available.other":"Walk {count} authored chapters and their real relationships.","viewer.guide.story.unavailable":"No authored guided story in this diagram.","viewer.guide.open":"Open diagram guide","viewer.guide.noStory":"This diagram has no authored guided story.","viewer.finder.title":"Find a node","viewer.finder.close":"Close node finder","viewer.finder.placeholder":"Search labels or IDs","viewer.finder.search":"Search diagram nodes","viewer.finder.results":"Diagram nodes","viewer.finder.empty":"No matching nodes","viewer.finder.result.focus":"Focus {label}","viewer.finder.result.routeStart":"Choose {label} as route start","viewer.finder.result.routeTarget":"Choose {label} as route destination, {links}","viewer.finder.status.empty":"No matching nodes","viewer.finder.status.count.one":"{count} matching node","viewer.finder.status.count.other":"{count} matching nodes","viewer.finder.noun.nodes":"nodes","viewer.finder.link.one":"{count} link","viewer.finder.link.other":"{count} links","viewer.finder.result.focus.one":"Focus {label}, {count} related connection","viewer.finder.result.focus.other":"Focus {label}, {count} related connections","viewer.finder.status.filtered":"{visible} of {available} {noun}","viewer.finder.status.all":"{available} {noun}","viewer.passport.eyebrow":"Semantic passport","viewer.passport.metadata":"Node metadata","viewer.passport.evidence":"Verified source evidence","viewer.passport.verified":"Verified source","viewer.passport.verificationScope":"Verified against local Git at the pinned revision. Remote access has not been checked.","viewer.passport.reach":"Authored reach","viewer.passport.reach.trace":"Trace authored reachability","viewer.passport.upstream":"Upstream","viewer.passport.downstream":"Downstream","viewer.passport.upstream.trace":"Trace upstream authored reachability","viewer.passport.downstream.trace":"Trace downstream authored reachability","viewer.passport.close":"Close semantic passport","viewer.passport.copy":"Copy link","viewer.passport.copy.focus":"Copy link to focused node","viewer.passport.relations":"Relations","viewer.passport.relations.show":"Show connected relationships","viewer.passport.relations.hide":"Hide connected relationships","viewer.passport.relations.list":"Connected relationships","viewer.passport.copyRelation":"Copy relation","viewer.passport.copyNode":"Copy node","viewer.passport.copyPinned":"Copy link to pinned relationship","viewer.passport.copySource":"Copy link to source node","viewer.passport.copy.focused.success":"Focused node link copied","viewer.passport.copy.pinned.success":"Pinned relationship link copied","viewer.passport.copy.focused.failed":"Could not copy focused node link","viewer.passport.copy.pinned.failed":"Could not copy pinned relationship link","viewer.passport.relationship.none":"No connected relationships","viewer.passport.relationship.count.one":"{count} relation","viewer.passport.relationship.count.other":"{count} relations","viewer.passport.relationship.show.one":"Show {count} connected relationship","viewer.passport.relationship.show.other":"Show {count} connected relationships","viewer.passport.relationship.summary":"{out} outgoing · {in} incoming{loops}","viewer.passport.relationship.loops":" · {count} loop","viewer.passport.relationship.explorer":"Direct relationship explorer","viewer.passport.relationship.help":"Use arrow keys to explore relationships. Press Enter or Space to pin details; Escape clears.","viewer.passport.relationship.loopsBack":"loops back","viewer.passport.relationship.connectsTo":"connects to","viewer.passport.relationship.connectsFrom":"connects from","viewer.passport.relationship.pinned":"Pinned relationship · {from} → {to} · {label}","viewer.passport.relationship.inspect":"Inspect relationship {index} of {total}: {from} to {to}, {label}. Press Enter for details.","viewer.passport.relationship.group.out":"Outgoing","viewer.passport.relationship.group.in":"Incoming","viewer.passport.relationship.group.loop":"Self loops","viewer.passport.relationship.row":"{group}: {relationship}, {neighbor}","viewer.passport.relationship.direction.out":"OUT →","viewer.passport.relationship.direction.in":"← IN","viewer.passport.relationship.direction.loop":"LOOP","viewer.passport.sourceCount.one":"{count} verified source reference","viewer.passport.sourceCount.other":"{count} verified source references","viewer.passport.sourceMarker":"SRC","viewer.passport.beacon.one":"{count} verified source; focus this node to inspect","viewer.passport.beacon.other":"{count} verified sources; focus this node to inspect","viewer.passport.repository.open":"Open verified repository revision {revision}","viewer.passport.source.open":"Open verified source {path} at revision {revision}","viewer.passport.source.openLink":"Open ↗","viewer.passport.reach.upstream.one":"Trace {count} upstream authored node","viewer.passport.reach.upstream.other":"Trace {count} upstream authored nodes","viewer.passport.reach.downstream.one":"Trace {count} downstream authored node","viewer.passport.reach.downstream.other":"Trace {count} downstream authored nodes","viewer.passport.reach.noUpstream":"No upstream authored nodes","viewer.passport.reach.noDownstream":"No downstream authored nodes","viewer.passport.reach.status":"{direction} · {nodes} nodes · {links} links · max {hops} hops","viewer.route.eyebrow":"Route probe","viewer.route.start":"Choose a start node","viewer.route.start.find":"Find start","viewer.route.start.find.aria":"Find a route start","viewer.route.copy":"Copy link","viewer.route.copy.aria":"Copy link to traced route","viewer.route.clear":"Clear","viewer.route.clear.aria":"Clear route probe","viewer.route.traced":"Traced route","viewer.route.pickTwo":"Pick two semantic nodes on the diagram","viewer.route.pickOne":"Pick a semantic node on the diagram","viewer.route.controls":"Route journey controls","viewer.route.previous":"Previous route position","viewer.route.play":"Play route journey","viewer.route.pause":"Pause route journey","viewer.route.replay":"Replay route journey","viewer.route.next":"Next route position","viewer.route.journey":"Journey","viewer.route.pause.label":"Pause","viewer.route.replay.label":"Replay","viewer.route.overview":"Overview","viewer.route.overview.aria":"Show complete route overview","viewer.route.instructions":"Choose the source, then the destination. Direction matters.","viewer.route.destination":"Choose a destination from {label}","viewer.route.destination.find":"Find target","viewer.route.destination.find.aria":"Find a reachable route destination","viewer.route.differentDestination":"Choose a different destination","viewer.route.distinct":"A route needs two distinct semantic nodes.","viewer.route.unreachable":"No directed route to {label}","viewer.route.unreachable.detail":"{target} is not reachable from {source}. Pick a highlighted destination.","viewer.route.start.instructions":"Select the source. The next step will reveal only directed destinations.","viewer.route.copy.success":"Traced route link copied","viewer.route.copy.failed":"Could not copy traced route link","viewer.route.position":"Route position {index} of {total}: {label}","viewer.route.step":"Step {index} of {total} · {phase} · {label}","viewer.route.motionRequired":"Automatic journey requires Live motion","viewer.route.trigger.clear":"Clear traced route","viewer.route.overview.status":"{nodes} · {hops} · shortest authored route","viewer.route.overview.node.one":"{count} node","viewer.route.overview.node.other":"{count} nodes","viewer.route.overview.hop.one":"{count} directed hop","viewer.route.overview.hop.other":"{count} directed hops","viewer.route.phase.playing":"Playing","viewer.route.phase.complete":"Complete","viewer.route.phase.inspecting":"Inspecting","viewer.route.destination.count.one":"{count} directed destination available. Pick a highlighted node.","viewer.route.destination.count.other":"{count} directed destinations available. Pick a highlighted node.","viewer.route.noOutgoing":"No outgoing route starts here. Clear and choose another source.","viewer.route.result.title":"{source} to {target}","viewer.route.finder.source.title":"Choose route start","viewer.route.finder.source.placeholder":"Search route sources","viewer.route.finder.source.empty":"No matching route sources","viewer.route.finder.source.results":"Nodes that can start a route","viewer.route.finder.source.noun":"route sources","viewer.route.finder.source.badge":"start","viewer.route.finder.target.title":"Destination from {label}","viewer.route.finder.target.placeholder":"Search reachable destinations","viewer.route.finder.target.empty":"No matching reachable destinations","viewer.route.finder.target.results":"Reachable route destinations","viewer.route.finder.target.noun":"reachable destinations","viewer.route.hop.one":"{count} hop","viewer.route.hop.other":"{count} hops","viewer.lens.eyebrow":"Semantic lens","viewer.lens.title":"Compare system roles","viewer.lens.close":"Close semantic lens","viewer.lens.instruction":"Choose up to two semantic kinds. One reveals its real traffic; two compare only direct authored relationships.","viewer.lens.kinds":"Semantic kinds","viewer.lens.choose":"Choose a kind to inspect its nodes and touching relationships.","viewer.lens.copy":"Copy link to semantic lens","viewer.lens.clear":"Clear semantic lens","viewer.lens.open":"Open semantic lens","viewer.lens.openActive":"Open active semantic lens","viewer.lens.legend":"Semantic legend","viewer.lens.legend.inspect.one":"Inspect {label}, {count} node","viewer.lens.legend.inspect.other":"Inspect {label}, {count} nodes","viewer.lens.kind.count.one":"{label}, {count} node","viewer.lens.kind.count.other":"{label}, {count} nodes","viewer.lens.compare.one":"{first} → {second}: {forward} · {second} → {first}: {reverse} · {count} direct relationship","viewer.lens.compare.other":"{first} → {second}: {forward} · {second} → {first}: {reverse} · {count} direct relationships","viewer.lens.single":"{nodes} · {relationships} · connected peers remain visible","viewer.lens.node.one":"{count} {label} node","viewer.lens.node.other":"{count} {label} nodes","viewer.lens.relationship.one":"{count} touching relationship","viewer.lens.relationship.other":"{count} touching relationships","viewer.radar.title":"Semantic radar","viewer.radar.building":"Building overview","viewer.radar.openFull":"Open full semantic radar","viewer.radar.open":"Open radar","viewer.radar.close":"Close semantic radar","viewer.radar.surface":"Diagram overview. Click a node to focus it, or use arrow keys to pan.","viewer.radar.click":"Click node","viewer.radar.drag":"Drag to pan","viewer.radar.space":"Semantic radar needs more MAP space.","viewer.radar.nodes":"Semantic diagram radar nodes","viewer.radar.focus":"Focus {label} from Semantic Radar","viewer.radar.status":"{count} nodes · {viewport}","viewer.radar.fullMap":"{count} nodes · full map","viewer.radar.compacted":"Radar compacted to avoid covering the Semantic Passport or MAP controls.","viewer.radar.cancelWaiting":"Cancel semantic radar waiting for more MAP space","viewer.radar.needsSpace":"Semantic radar needs more visible MAP space","viewer.radar.viewport.full":"full map","viewer.radar.viewport.width":"{percent}% width","viewer.radar.viewport.scale":"{percent}% viewport","viewer.nav.controls":"Diagram view controls","viewer.nav.route":"Trace a directed route","viewer.nav.route.title":"Trace route (R)","viewer.nav.route.short":"PATH","viewer.nav.radar":"Open semantic radar","viewer.nav.radar.title":"Semantic radar (M)","viewer.nav.radar.short":"MAP","viewer.nav.lens":"Open semantic lens","viewer.nav.lens.title":"Semantic lens (L)","viewer.nav.lens.short":"LENS","viewer.nav.find":"Find a node","viewer.nav.find.title":"Find a node (/)","viewer.nav.guide":"Open diagram guide","viewer.nav.guide.title":"Diagram guide (?)","viewer.nav.zoomOut":"Zoom out","viewer.nav.zoomOut.title":"Zoom out (-)","viewer.nav.reset":"Reset diagram view","viewer.nav.reset.title":"Reset view (0)","viewer.nav.read":"READ","viewer.nav.zoomIn":"Zoom in","viewer.nav.zoomIn.title":"Zoom in (+)","viewer.nav.camera":"{hint}. Reset diagram view","viewer.nav.camera.title":"{semantic}{hint} · reset view (0)","viewer.nav.camera.semantic":"Semantic camera active · ","viewer.nav.level.map":"MAP","viewer.nav.level.read":"READ","viewer.nav.level.full":"FULL","viewer.nav.level.auto":"AUTO","viewer.nav.detail.map":"Zoom in to reveal relationship labels and node context","viewer.nav.detail.read":"Zoom in again to reveal tags and annotations","viewer.nav.detail.full":"Full diagram detail","viewer.intent.summary":"{label}. {out} outgoing, {in} incoming{loops}. {total} connections. Press Enter for details.","viewer.intent.loops":", {count} self loop","viewer.common.copied":"Copied","viewer.common.copyFailed":"Copy failed","viewer.common.copyLink":"Copy link","viewer.common.clear":"Clear","viewer.common.close":"Close"}}</script>
     <div class="guided-views no-print" id="guided-views" hidden aria-label="Guided diagram views">
@@ -5130,8 +5130,8 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
     <!-- Main Diagram -->
     <div class="diagram-container" data-detail-level="read"
          data-preset-badge-editorial-plate="ARCHIFY / PLATE 04">
-      <svg viewBox="0 0 1280 580" role="img" lang="en" aria-labelledby="archify-diagram-title archify-diagram-description" data-preset="classic" data-quality-profile="showcase">
-        <title id="archify-diagram-title">EOMS System Architecture</title>
+      <svg viewBox="0 0 1230 472" role="img" lang="en" aria-labelledby="archify-diagram-title archify-diagram-description" data-animation="trace" data-preset="signal-flow" data-quality-profile="showcase">
+        <title id="archify-diagram-title">Asset Allocation &amp; Lock Micro-Architecture</title>
         <desc id="archify-diagram-description">An architecture diagram generated by Archify.</desc>
         <!-- Definitions -->
         <defs>
@@ -5156,280 +5156,169 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         <rect width="100%" height="100%" fill="url(#grid)" />
 
         <!-- Boundaries (behind everything) -->
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="0" data-composition-frame-label="EOMS Server Runtime / Docker Environment" x="405" y="68" width="870" height="446" rx="12" class="c-region" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="0" data-composition-frame-label="IT Admin Tier" x="10" y="210" width="430" height="114" rx="12" class="c-region" stroke-width="1"/>
 
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="security-group" data-composition-frame-id="1" data-composition-frame-label="Application &amp; Domain Services Tier" x="405" y="80" width="655" height="434" rx="8" class="c-security-group" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="security-group" data-composition-frame-id="1" data-composition-frame-label="Concurrency &amp; State Engine" x="480" y="130" width="460" height="274" rx="8" class="c-security-group" stroke-width="1"/>
 
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="security-group" data-composition-frame-id="2" data-composition-frame-label="Persistence &amp; Storage Tier" x="860" y="240" width="200" height="274" rx="8" class="c-security-group" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="region" data-composition-frame-id="2" data-composition-frame-label="Durable Store &amp; Notifier" x="980" y="130" width="210" height="274" rx="12" class="c-region" stroke-width="1"/>
 
         <!-- Connection paths (before components for correct z-order) -->
-        <path data-edge-from="clients" data-edge-to="spa" data-edge-label="HTTPS" data-edge-key="0" data-edge-id="users-to-spa" data-composition-points="160,302;230,302" d="M 160 302 L 230 302" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
-        <path data-edge-from="mfa" data-edge-to="spa" data-edge-label="TOTP Code" data-edge-key="1" data-edge-id="mfa-to-spa" data-composition-points="95,174;95,222;295,222;295,270" d="M 95 174 L 95 214 Q 95 222 103 222 L 287 222 Q 295 222 295 230 L 295 270" class="a-security" stroke-width="1.5" marker-end="url(#arrowhead-security)"/>
-        <path data-edge-from="spa" data-edge-to="gateway" data-edge-label="REST API" data-edge-key="2" data-edge-id="spa-to-gateway" data-composition-points="360,302;435,302" d="M 360 302 L 435 302" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
-        <path data-edge-from="gateway" data-edge-to="auth_guard" data-edge-label="Verify JWT" data-edge-key="3" data-edge-id="gateway-to-auth" data-composition-points="505,270;505,174" d="M 505 270 L 505 174" class="a-security" stroke-width="1.5" marker-end="url(#arrowhead-security)"/>
-        <path data-edge-from="auth_guard" data-edge-to="onboarding_ctl" data-edge-label="Authorize" data-edge-key="4" data-edge-id="auth-to-onboarding" data-composition-points="575,142;660,142" d="M 575 142 L 660 142" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="gateway" data-edge-to="asset_ctl" data-edge-label="Dispatch" data-edge-key="5" data-edge-id="gateway-to-asset" data-composition-points="575,302;660,302" d="M 575 302 L 660 302" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="gateway" data-edge-to="doc_ctl" data-edge-label="Upload Doc" data-edge-key="6" data-edge-id="gateway-to-doc" data-composition-points="505,334;505,358;636,358;636,462;660,462" d="M 505 334 L 505 350 Q 505 358 513 358 L 628 358 Q 636 358 636 366 L 636 454 Q 636 462 644 462 L 660 462" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="onboarding_ctl" data-edge-to="audit_svc" data-edge-label="logAudit()" data-edge-key="7" data-edge-id="onboarding-to-audit" data-composition-points="800,142;890,142" d="M 800 142 L 890 142" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="asset_ctl" data-edge-to="mysql" data-edge-label="t.LOCK.UPDATE" data-edge-key="8" data-edge-id="asset-to-mysql" data-composition-points="800,302;890,302" d="M 800 302 L 890 302" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
-        <path data-edge-from="audit_svc" data-edge-to="mysql" data-edge-label="Audit Trail" data-edge-key="9" data-edge-id="audit-to-mysql" data-composition-points="960,174;960,270" d="M 960 174 L 960 270" class="a-dashed" stroke-width="1.5" marker-end="url(#arrowhead-dashed)"/>
-        <path data-edge-from="doc_ctl" data-edge-to="doc_storage" data-edge-label="Stream Files" data-edge-key="10" data-edge-id="doc-to-storage" data-composition-points="800,462;890,462" d="M 800 462 L 890 462" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="sla_daemon" data-edge-to="mysql" data-edge-label="Poll Overdue" data-edge-key="11" data-edge-id="sla-to-mysql" data-composition-points="1115,302;1030,302" d="M 1115 302 L 1030 302" class="a-default" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="it_admin" data-edge-to="asset_ctrl" data-edge-label="POST /allocate" data-edge-key="0" data-edge-id="admin-to-ctrl" data-composition-points="180,272;270,272" d="M 180 272 L 270 272" class="a-emphasis" data-animate="edge" style="--step:0" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <path data-edge-from="asset_ctrl" data-edge-to="lock_mgr" data-edge-label="Acquire lock" data-edge-key="1" data-edge-id="ctrl-to-lock" data-composition-points="410,272;510,272" d="M 410 272 L 510 272" class="a-default" data-animate="edge" style="--step:1" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="lock_mgr" data-edge-to="state_machine" data-edge-label="Verify state" data-edge-key="2" data-edge-id="lock-to-state" data-composition-points="660,272;710,272;710,192;760,192" d="M 660 272 L 702 272 Q 710 272 710 264 L 710 200 Q 710 192 718 192 L 760 192" class="a-default" data-animate="edge" style="--step:2" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="lock_mgr" data-edge-to="barcode_tracker" data-edge-label="Bind serial" data-edge-key="3" data-edge-id="lock-to-barcode" data-composition-points="585,304;585,328;736,328;736,352;760,352" d="M 585 304 L 585 320 Q 585 328 593 328 L 728 328 Q 736 328 736 336 L 736 344 Q 736 352 744 352 L 760 352" class="a-default" data-animate="edge" style="--step:3" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="state_machine" data-edge-to="asset_db" data-edge-label="Release &amp; commit" data-edge-key="4" data-edge-id="state-to-db" data-composition-points="910,192;1010,192" d="M 910 192 L 1010 192" class="a-default" data-animate="edge" style="--step:4" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="barcode_tracker" data-edge-to="it_notifier" data-edge-label="Dispatch alert" data-edge-key="5" data-edge-id="barcode-to-notify" data-composition-points="910,352;1010,352" d="M 910 352 L 1010 352" class="a-dashed" data-animate="edge" style="--step:5" stroke-width="1.5" marker-end="url(#arrowhead-dashed)"/>
 
         <!-- Components -->
-        <g id="node-clients" data-node-id="clients" data-node-label="EOMS Users" tabindex="0" role="button" aria-label="Focus EOMS Users, Multi-Role Portals, Architecture component" aria-pressed="false" data-node-kind="external" data-node-sublabel="Multi-Role Portals" data-node-context="Architecture component">
-          <title>EOMS Users · Multi-Role Portals · Architecture component</title>
-          <rect x="30" y="270" width="130" height="64" rx="6" class="c-mask"/>
-          <rect x="30" y="270" width="130" height="64" rx="6" class="c-external" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="external" class="semantic-sigil s-external" transform="translate(36 276) scale(0.6875)">
-            <rect x="2.5" y="5" width="8.5" height="8" rx="1.5"/>
-            <path d="M8 2.5h5.5V8M13.5 2.5 7.5 8.5"/>
-          </g>
-          <text data-node-label="" data-detail-anchor="" x="95" y="300" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">EOMS Users</text>
-        <text data-detail="context" x="95" y="316" class="t-muted" font-size="9" text-anchor="middle">Multi-Role Portals</text>
-        </g>
-
-        <g id="node-mfa" data-node-id="mfa" data-node-label="TOTP 2FA" tabindex="0" role="button" aria-label="Focus TOTP 2FA, RFC 6238 / Backup, Architecture component" aria-pressed="false" data-node-kind="security" data-node-sublabel="RFC 6238 / Backup" data-node-tag="2FA Guard" data-node-context="Architecture component">
-          <title>TOTP 2FA · RFC 6238 / Backup · Architecture component · 2FA Guard</title>
-          <rect x="30" y="110" width="130" height="64" rx="6" class="c-mask"/>
-          <rect x="30" y="110" width="130" height="64" rx="6" class="c-security" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(36 116) scale(0.6875)">
-            <path d="M8 2.2 13 4v3.5c0 3.1-1.8 5.4-5 6.5-3.2-1.1-5-3.4-5-6.5V4Z"/>
-            <path d="m5.8 8 1.5 1.5 3-3"/>
-          </g>
-          <text data-node-label="" data-detail-anchor="" x="95" y="140" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">TOTP 2FA</text>
-        <text data-detail="context" x="95" y="156" class="t-muted" font-size="9" text-anchor="middle">RFC 6238 / Backup</text>
-        <text data-detail="fine" x="95" y="166" class="t-security" font-size="7" text-anchor="middle">2FA Guard</text>
-        </g>
-
-        <g id="node-spa" data-node-id="spa" data-node-label="React 18 SPA" tabindex="0" role="button" aria-label="Focus React 18 SPA, Vite + Zustand, Architecture component, React" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="Vite + Zustand" data-node-context="Architecture component" data-node-brand="React" data-node-brand-id="react" data-node-brand-status="preset" data-node-brand-source="https://github.com/facebook/create-react-app/blob/282c03f9525fdf8061ffa1ec50dce89296d916bd/test/fixtures/relative-paths/src/logo.svg">
-          <title>React 18 SPA · Vite + Zustand · Architecture component · React</title>
-          <rect x="230" y="270" width="130" height="64" rx="6" class="c-mask"/>
-          <rect x="230" y="270" width="130" height="64" rx="6" class="c-frontend" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(236 276) scale(0.6875)">
+        <g id="node-it_admin" data-node-id="it_admin" data-node-label="IT Ops Portal" tabindex="0" role="button" aria-label="Focus IT Ops Portal, Asset Dashboard, IT Admin Tier" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="Asset Dashboard" data-node-context="IT Admin Tier">
+          <title>IT Ops Portal · Asset Dashboard · IT Admin Tier</title>
+          <rect x="40" y="240" width="140" height="64" rx="6" class="c-mask"/>
+          <rect x="40" y="240" width="140" height="64" rx="6" class="c-frontend" data-animate="node" style="--step:0" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(46 246) scale(0.6875)">
             <rect x="2" y="3" width="12" height="10" rx="2"/>
             <path d="M2 6.5h12"/>
             <circle cx="4.1" cy="4.8" r=".7" class="sigil-fill"/>
             <circle cx="6.3" cy="4.8" r=".7" class="sigil-fill"/>
           </g>
-          <g aria-hidden="true" data-brand-mark="react" data-brand-title="React" data-brand-status="preset" data-brand-source="https://github.com/facebook/create-react-app/blob/282c03f9525fdf8061ffa1ec50dce89296d916bd/test/fixtures/relative-paths/src/logo.svg" class="brand-mark" transform="translate(338 276)">
-            <rect width="16" height="16" rx="4" class="brand-mark-badge"/>
-            <path d="M14.23 12.004a2.236 2.236 0 0 1-2.235 2.236 2.236 2.236 0 0 1-2.236-2.236 2.236 2.236 0 0 1 2.235-2.236 2.236 2.236 0 0 1 2.236 2.236zm2.648-10.69c-1.346 0-3.107.96-4.888 2.622-1.78-1.653-3.542-2.602-4.887-2.602-.41 0-.783.093-1.106.278-1.375.793-1.683 3.264-.973 6.365C1.98 8.917 0 10.42 0 12.004c0 1.59 1.99 3.097 5.043 4.03-.704 3.113-.39 5.588.988 6.38.32.187.69.275 1.102.275 1.345 0 3.107-.96 4.888-2.624 1.78 1.654 3.542 2.603 4.887 2.603.41 0 .783-.09 1.106-.275 1.374-.792 1.683-3.263.973-6.365C22.02 15.096 24 13.59 24 12.004c0-1.59-1.99-3.097-5.043-4.032.704-3.11.39-5.587-.988-6.38-.318-.184-.688-.277-1.092-.278zm-.005 1.09v.006c.225 0 .406.044.558.127.666.382.955 1.835.73 3.704-.054.46-.142.945-.25 1.44-.96-.236-2.006-.417-3.107-.534-.66-.905-1.345-1.727-2.035-2.447 1.592-1.48 3.087-2.292 4.105-2.295zm-9.77.02c1.012 0 2.514.808 4.11 2.28-.686.72-1.37 1.537-2.02 2.442-1.107.117-2.154.298-3.113.538-.112-.49-.195-.964-.254-1.42-.23-1.868.054-3.32.714-3.707.19-.09.4-.127.563-.132zm4.882 3.05c.455.468.91.992 1.36 1.564-.44-.02-.89-.034-1.345-.034-.46 0-.915.01-1.36.034.44-.572.895-1.096 1.345-1.565zM12 8.1c.74 0 1.477.034 2.202.093.406.582.802 1.203 1.183 1.86.372.64.71 1.29 1.018 1.946-.308.655-.646 1.31-1.013 1.95-.38.66-.773 1.288-1.18 1.87-.728.063-1.466.098-2.21.098-.74 0-1.477-.035-2.202-.093-.406-.582-.802-1.204-1.183-1.86-.372-.64-.71-1.29-1.018-1.946.303-.657.646-1.313 1.013-1.954.38-.66.773-1.286 1.18-1.868.728-.064 1.466-.098 2.21-.098zm-3.635.254c-.24.377-.48.763-.704 1.16-.225.39-.435.782-.635 1.174-.265-.656-.49-1.31-.676-1.947.64-.15 1.315-.283 2.015-.386zm7.26 0c.695.103 1.365.23 2.006.387-.18.632-.405 1.282-.66 1.933-.2-.39-.41-.783-.64-1.174-.225-.392-.465-.774-.705-1.146zm3.063.675c.484.15.944.317 1.375.498 1.732.74 2.852 1.708 2.852 2.476-.005.768-1.125 1.74-2.857 2.475-.42.18-.88.342-1.355.493-.28-.958-.646-1.956-1.1-2.98.45-1.017.81-2.01 1.085-2.964zm-13.395.004c.278.96.645 1.957 1.1 2.98-.45 1.017-.812 2.01-1.086 2.964-.484-.15-.944-.318-1.37-.5-1.732-.737-2.852-1.706-2.852-2.474 0-.768 1.12-1.742 2.852-2.476.42-.18.88-.342 1.356-.494zm11.678 4.28c.265.657.49 1.312.676 1.948-.64.157-1.316.29-2.016.39.24-.375.48-.762.705-1.158.225-.39.435-.788.636-1.18zm-9.945.02c.2.392.41.783.64 1.175.23.39.465.772.705 1.143-.695-.102-1.365-.23-2.006-.386.18-.63.406-1.282.66-1.933zM17.92 16.32c.112.493.2.968.254 1.423.23 1.868-.054 3.32-.714 3.708-.147.09-.338.128-.563.128-1.012 0-2.514-.807-4.11-2.28.686-.72 1.37-1.536 2.02-2.44 1.107-.118 2.154-.3 3.113-.54zm-11.83.01c.96.234 2.006.415 3.107.532.66.905 1.345 1.727 2.035 2.446-1.595 1.483-3.092 2.295-4.11 2.295-.22-.005-.406-.05-.553-.132-.666-.38-.955-1.834-.73-3.703.054-.46.142-.944.25-1.438zm4.56.64c.44.02.89.034 1.345.034.46 0 .915-.01 1.36-.034-.44.572-.895 1.095-1.345 1.565-.455-.47-.91-.993-1.36-1.565z" transform="translate(3 3) scale(0.4166666666666667)" fill="#61DAFB"/>
-            <rect width="16" height="16" rx="4" class="brand-mark-frame"/>
-          </g>
-          <text data-node-label="" data-detail-anchor="" x="295" y="300" class="t-primary" font-size="10.2" font-weight="600" text-anchor="middle">React 18 SPA</text>
-        <text data-detail="context" x="295" y="316" class="t-muted" font-size="9" text-anchor="middle">Vite + Zustand</text>
+          <text data-node-label="" data-detail-anchor="" x="110" y="270" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">IT Ops Portal</text>
+        <text data-detail="context" x="110" y="286" class="t-muted" font-size="9" text-anchor="middle">Asset Dashboard</text>
         </g>
 
-        <g id="node-gateway" data-node-id="gateway" data-node-label="API Gateway" tabindex="0" role="button" aria-label="Focus API Gateway, Helmet · Rate-Limit, EOMS Server Runtime / Docker Environment, Node.js" aria-pressed="false" data-node-kind="security" data-node-sublabel="Helmet · Rate-Limit" data-node-context="EOMS Server Runtime / Docker Environment" data-node-brand="Node.js" data-node-brand-id="node-js" data-node-brand-status="preset" data-node-brand-source="https://nodejs.org/en/about/branding">
-          <title>API Gateway · Helmet · Rate-Limit · EOMS Server Runtime / Docker Environment · Node.js</title>
-          <rect x="435" y="270" width="140" height="64" rx="6" class="c-mask"/>
-          <rect x="435" y="270" width="140" height="64" rx="6" class="c-security" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(441 276) scale(0.6875)">
-            <path d="M8 2.2 13 4v3.5c0 3.1-1.8 5.4-5 6.5-3.2-1.1-5-3.4-5-6.5V4Z"/>
-            <path d="m5.8 8 1.5 1.5 3-3"/>
-          </g>
-          <g aria-hidden="true" data-brand-mark="node-js" data-brand-title="Node.js" data-brand-status="preset" data-brand-source="https://nodejs.org/en/about/branding" class="brand-mark" transform="translate(553 276)">
-            <rect width="16" height="16" rx="4" class="brand-mark-badge"/>
-            <path d="M11.998,24c-0.321,0-0.641-0.084-0.922-0.247l-2.936-1.737c-0.438-0.245-0.224-0.332-0.08-0.383 c0.585-0.203,0.703-0.25,1.328-0.604c0.065-0.037,0.151-0.023,0.218,0.017l2.256,1.339c0.082,0.045,0.197,0.045,0.272,0l8.795-5.076 c0.082-0.047,0.134-0.141,0.134-0.238V6.921c0-0.099-0.053-0.192-0.137-0.242l-8.791-5.072c-0.081-0.047-0.189-0.047-0.271,0 L3.075,6.68C2.99,6.729,2.936,6.825,2.936,6.921v10.15c0,0.097,0.054,0.189,0.139,0.235l2.409,1.392 c1.307,0.654,2.108-0.116,2.108-0.89V7.787c0-0.142,0.114-0.253,0.256-0.253h1.115c0.139,0,0.255,0.112,0.255,0.253v10.021 c0,1.745-0.95,2.745-2.604,2.745c-0.508,0-0.909,0-2.026-0.551L2.28,18.675c-0.57-0.329-0.922-0.945-0.922-1.604V6.921 c0-0.659,0.353-1.275,0.922-1.603l8.795-5.082c0.557-0.315,1.296-0.315,1.848,0l8.794,5.082c0.57,0.329,0.924,0.944,0.924,1.603 v10.15c0,0.659-0.354,1.273-0.924,1.604l-8.794,5.078C12.643,23.916,12.324,24,11.998,24z M19.099,13.993 c0-1.9-1.284-2.406-3.987-2.763c-2.731-0.361-3.009-0.548-3.009-1.187c0-0.528,0.235-1.233,2.258-1.233 c1.807,0,2.473,0.389,2.747,1.607c0.024,0.115,0.129,0.199,0.247,0.199h1.141c0.071,0,0.138-0.031,0.186-0.081 c0.048-0.054,0.074-0.123,0.067-0.196c-0.177-2.098-1.571-3.076-4.388-3.076c-2.508,0-4.004,1.058-4.004,2.833 c0,1.925,1.488,2.457,3.895,2.695c2.88,0.282,3.103,0.703,3.103,1.269c0,0.983-0.789,1.402-2.642,1.402 c-2.327,0-2.839-0.584-3.011-1.742c-0.02-0.124-0.126-0.215-0.253-0.215h-1.137c-0.141,0-0.254,0.112-0.254,0.253 c0,1.482,0.806,3.248,4.655,3.248C17.501,17.007,19.099,15.91,19.099,13.993z" transform="translate(3 3) scale(0.4166666666666667)" fill="#5FA04E"/>
-            <rect width="16" height="16" rx="4" class="brand-mark-frame"/>
-          </g>
-          <text data-node-label="" data-detail-anchor="" x="505" y="300" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">API Gateway</text>
-        <text data-detail="context" x="505" y="316" class="t-muted" font-size="9" text-anchor="middle">Helmet · Rate-Limit</text>
-        </g>
-
-        <g id="node-auth_guard" data-node-id="auth_guard" data-node-label="Auth &amp; RBAC" tabindex="0" role="button" aria-label="Focus Auth &amp; RBAC, JWT · 60+ Perms, EOMS Server Runtime / Docker Environment › Application &amp; Domain Services Tier" aria-pressed="false" data-node-kind="security" data-node-sublabel="JWT · 60+ Perms" data-node-tag="Security Guard" data-node-context="EOMS Server Runtime / Docker Environment › Application &amp; Domain Services Tier">
-          <title>Auth &amp; RBAC · JWT · 60+ Perms · EOMS Server Runtime / Docker Environment › Application &amp; Domain Services Tier · Security Guard</title>
-          <rect x="435" y="110" width="140" height="64" rx="6" class="c-mask"/>
-          <rect x="435" y="110" width="140" height="64" rx="6" class="c-security" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(441 116) scale(0.6875)">
-            <path d="M8 2.2 13 4v3.5c0 3.1-1.8 5.4-5 6.5-3.2-1.1-5-3.4-5-6.5V4Z"/>
-            <path d="m5.8 8 1.5 1.5 3-3"/>
-          </g>
-          <text data-node-label="" data-detail-anchor="" x="505" y="140" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Auth &amp; RBAC</text>
-        <text data-detail="context" x="505" y="156" class="t-muted" font-size="9" text-anchor="middle">JWT · 60+ Perms</text>
-        <text data-detail="fine" x="505" y="166" class="t-security" font-size="7" text-anchor="middle">Security Guard</text>
-        </g>
-
-        <g id="node-onboarding_ctl" data-node-id="onboarding_ctl" data-node-label="Onboarding Engine" tabindex="0" role="button" aria-label="Focus Onboarding Engine, Workflows &amp; Tasks, EOMS Server Runtime / Docker Environment › Application &amp; Domain Services Tier" aria-pressed="false" data-node-kind="backend" data-node-sublabel="Workflows &amp; Tasks" data-node-context="EOMS Server Runtime / Docker Environment › Application &amp; Domain Services Tier">
-          <title>Onboarding Engine · Workflows &amp; Tasks · EOMS Server Runtime / Docker Environment › Application &amp; Domain Services Tier</title>
-          <rect x="660" y="110" width="140" height="64" rx="6" class="c-mask"/>
-          <rect x="660" y="110" width="140" height="64" rx="6" class="c-backend" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(666 116) scale(0.6875)">
+        <g id="node-asset_ctrl" data-node-id="asset_ctrl" data-node-label="Asset Controller" tabindex="0" role="button" aria-label="Focus Asset Controller, allocate() Handler, IT Admin Tier" aria-pressed="false" data-node-kind="backend" data-node-sublabel="allocate() Handler" data-node-tag="Request Guard" data-node-context="IT Admin Tier">
+          <title>Asset Controller · allocate() Handler · IT Admin Tier · Request Guard</title>
+          <rect x="270" y="240" width="140" height="64" rx="6" class="c-mask"/>
+          <rect x="270" y="240" width="140" height="64" rx="6" class="c-backend" data-animate="node" style="--step:1" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(276 246) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="730" y="140" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Onboarding Engine</text>
-        <text data-detail="context" x="730" y="156" class="t-muted" font-size="9" text-anchor="middle">Workflows &amp; Tasks</text>
+          <text data-node-label="" data-detail-anchor="" x="340" y="270" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Asset Controller</text>
+        <text data-detail="context" x="340" y="286" class="t-muted" font-size="9" text-anchor="middle">allocate() Handler</text>
+        <text data-detail="fine" x="340" y="296" class="t-backend" font-size="7" text-anchor="middle">Request Guard</text>
         </g>
 
-        <g id="node-asset_ctl" data-node-id="asset_ctl" data-node-label="Asset Manager" tabindex="0" role="button" aria-label="Focus Asset Manager, Pessimistic Lock, EOMS Server Runtime / Docker Environment › Application &amp; Domain Services Tier" aria-pressed="false" data-node-kind="backend" data-node-sublabel="Pessimistic Lock" data-node-tag="t.LOCK.UPDATE" data-node-context="EOMS Server Runtime / Docker Environment › Application &amp; Domain Services Tier">
-          <title>Asset Manager · Pessimistic Lock · EOMS Server Runtime / Docker Environment › Application &amp; Domain Services Tier · t.LOCK.UPDATE</title>
-          <rect x="660" y="270" width="140" height="64" rx="6" class="c-mask"/>
-          <rect x="660" y="270" width="140" height="64" rx="6" class="c-backend" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(666 276) scale(0.6875)">
+        <g id="node-lock_mgr" data-node-id="lock_mgr" data-node-label="Lock Coordinator" tabindex="0" role="button" aria-label="Focus Lock Coordinator, SELECT FOR UPDATE, Concurrency &amp; State Engine" aria-pressed="false" data-node-kind="backend" data-node-sublabel="SELECT FOR UPDATE" data-node-tag="Pessimistic Lock" data-node-context="Concurrency &amp; State Engine">
+          <title>Lock Coordinator · SELECT FOR UPDATE · Concurrency &amp; State Engine · Pessimistic Lock</title>
+          <rect x="510" y="240" width="150" height="64" rx="6" class="c-mask"/>
+          <rect x="510" y="240" width="150" height="64" rx="6" class="c-backend" data-animate="node" style="--step:2" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(516 246) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="730" y="300" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Asset Manager</text>
-        <text data-detail="context" x="730" y="316" class="t-muted" font-size="9" text-anchor="middle">Pessimistic Lock</text>
-        <text data-detail="fine" x="730" y="326" class="t-backend" font-size="7" text-anchor="middle">t.LOCK.UPDATE</text>
+          <text data-node-label="" data-detail-anchor="" x="585" y="270" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Lock Coordinator</text>
+        <text data-detail="context" x="585" y="286" class="t-muted" font-size="9" text-anchor="middle">SELECT FOR UPDATE</text>
+        <text data-detail="fine" x="585" y="296" class="t-backend" font-size="7" text-anchor="middle">Pessimistic Lock</text>
         </g>
 
-        <g id="node-doc_ctl" data-node-id="doc_ctl" data-node-label="Document Vault" tabindex="0" role="button" aria-label="Focus Document Vault, Multer &amp; POSH, EOMS Server Runtime / Docker Environment › Application &amp; Domain Services Tier" aria-pressed="false" data-node-kind="backend" data-node-sublabel="Multer &amp; POSH" data-node-context="EOMS Server Runtime / Docker Environment › Application &amp; Domain Services Tier">
-          <title>Document Vault · Multer &amp; POSH · EOMS Server Runtime / Docker Environment › Application &amp; Domain Services Tier</title>
-          <rect x="660" y="430" width="140" height="64" rx="6" class="c-mask"/>
-          <rect x="660" y="430" width="140" height="64" rx="6" class="c-backend" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(666 436) scale(0.6875)">
+        <g id="node-state_machine" data-node-id="state_machine" data-node-label="State Evaluator" tabindex="0" role="button" aria-label="Focus State Evaluator, AVAILABLE -&gt; ALLOCATED, Concurrency &amp; State Engine" aria-pressed="false" data-node-kind="backend" data-node-sublabel="AVAILABLE -&gt; ALLOCATED" data-node-tag="Status Guard" data-node-context="Concurrency &amp; State Engine">
+          <title>State Evaluator · AVAILABLE -&gt; ALLOCATED · Concurrency &amp; State Engine · Status Guard</title>
+          <rect x="760" y="160" width="150" height="64" rx="6" class="c-mask"/>
+          <rect x="760" y="160" width="150" height="64" rx="6" class="c-backend" data-animate="node" style="--step:3" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(766 166) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="730" y="460" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Document Vault</text>
-        <text data-detail="context" x="730" y="476" class="t-muted" font-size="9" text-anchor="middle">Multer &amp; POSH</text>
+          <text data-node-label="" data-detail-anchor="" x="835" y="190" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">State Evaluator</text>
+        <text data-detail="context" x="835" y="206" class="t-muted" font-size="9" text-anchor="middle">AVAILABLE -&gt; ALLOCATED</text>
+        <text data-detail="fine" x="835" y="216" class="t-backend" font-size="7" text-anchor="middle">Status Guard</text>
         </g>
 
-        <g id="node-audit_svc" data-node-id="audit_svc" data-node-label="Audit Service" tabindex="0" role="button" aria-label="Focus Audit Service, Append-Only Log, EOMS Server Runtime / Docker Environment › Application &amp; Domain Services Tier" aria-pressed="false" data-node-kind="backend" data-node-sublabel="Append-Only Log" data-node-tag="Forensic Trace" data-node-context="EOMS Server Runtime / Docker Environment › Application &amp; Domain Services Tier">
-          <title>Audit Service · Append-Only Log · EOMS Server Runtime / Docker Environment › Application &amp; Domain Services Tier · Forensic Trace</title>
-          <rect x="890" y="110" width="140" height="64" rx="6" class="c-mask"/>
-          <rect x="890" y="110" width="140" height="64" rx="6" class="c-backend" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(896 116) scale(0.6875)">
+        <g id="node-barcode_tracker" data-node-id="barcode_tracker" data-node-label="Serial Unit" tabindex="0" role="button" aria-label="Focus Serial Unit, AssetAllocation Record, Concurrency &amp; State Engine" aria-pressed="false" data-node-kind="backend" data-node-sublabel="AssetAllocation Record" data-node-tag="Binding Engine" data-node-context="Concurrency &amp; State Engine">
+          <title>Serial Unit · AssetAllocation Record · Concurrency &amp; State Engine · Binding Engine</title>
+          <rect x="760" y="320" width="150" height="64" rx="6" class="c-mask"/>
+          <rect x="760" y="320" width="150" height="64" rx="6" class="c-backend" data-animate="node" style="--step:4" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(766 326) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="960" y="140" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Audit Service</text>
-        <text data-detail="context" x="960" y="156" class="t-muted" font-size="9" text-anchor="middle">Append-Only Log</text>
-        <text data-detail="fine" x="960" y="166" class="t-backend" font-size="7" text-anchor="middle">Forensic Trace</text>
+          <text data-node-label="" data-detail-anchor="" x="835" y="350" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Serial Unit</text>
+        <text data-detail="context" x="835" y="366" class="t-muted" font-size="9" text-anchor="middle">AssetAllocation Record</text>
+        <text data-detail="fine" x="835" y="376" class="t-backend" font-size="7" text-anchor="middle">Binding Engine</text>
         </g>
 
-        <g id="node-mysql" data-node-id="mysql" data-node-label="MySQL 8.0" tabindex="0" role="button" aria-label="Focus MySQL 8.0, InnoDB ACID DB, EOMS Server Runtime / Docker Environment › Persistence &amp; Storage Tier, MySQL" aria-pressed="false" data-node-kind="database" data-node-sublabel="InnoDB ACID DB" data-node-context="EOMS Server Runtime / Docker Environment › Persistence &amp; Storage Tier" data-node-brand="MySQL" data-node-brand-id="mysql" data-node-brand-status="preset" data-node-brand-source="https://www.mysql.com/about/legal/logos.html">
-          <title>MySQL 8.0 · InnoDB ACID DB · EOMS Server Runtime / Docker Environment › Persistence &amp; Storage Tier · MySQL</title>
-          <rect x="890" y="270" width="140" height="64" rx="6" class="c-mask"/>
-          <rect x="890" y="270" width="140" height="64" rx="6" class="c-database" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(896 276) scale(0.6875)">
+        <g id="node-asset_db" data-node-id="asset_db" data-node-label="Assets &amp; Allocations" tabindex="0" role="button" aria-label="Focus Assets &amp; Allocations, MySQL InnoDB Row-Locked, Durable Store &amp; Notifier" aria-pressed="false" data-node-kind="database" data-node-sublabel="MySQL InnoDB Row-Locked" data-node-context="Durable Store &amp; Notifier">
+          <title>Assets &amp; Allocations · MySQL InnoDB Row-Locked · Durable Store &amp; Notifier</title>
+          <rect x="1010" y="160" width="150" height="64" rx="6" class="c-mask"/>
+          <rect x="1010" y="160" width="150" height="64" rx="6" class="c-database" data-animate="node" style="--step:5" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(1016 166) scale(0.6875)">
             <ellipse cx="8" cy="4" rx="5" ry="2"/>
             <path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/>
           </g>
-          <g aria-hidden="true" data-brand-mark="mysql" data-brand-title="MySQL" data-brand-status="preset" data-brand-source="https://www.mysql.com/about/legal/logos.html" class="brand-mark" transform="translate(1008 276)">
-            <rect width="16" height="16" rx="4" class="brand-mark-badge"/>
-            <path d="M16.405 5.501c-.115 0-.193.014-.274.033v.013h.014c.054.104.146.18.214.273.054.107.1.214.154.32l.014-.015c.094-.066.14-.172.14-.333-.04-.047-.046-.094-.08-.14-.04-.067-.126-.1-.18-.153zM5.77 18.695h-.927a50.854 50.854 0 00-.27-4.41h-.008l-1.41 4.41H2.45l-1.4-4.41h-.01a72.892 72.892 0 00-.195 4.41H0c.055-1.966.192-3.81.41-5.53h1.15l1.335 4.064h.008l1.347-4.064h1.095c.242 2.015.384 3.86.428 5.53zm4.017-4.08c-.378 2.045-.876 3.533-1.492 4.46-.482.716-1.01 1.073-1.583 1.073-.153 0-.34-.046-.566-.138v-.494c.11.017.24.026.386.026.268 0 .483-.075.647-.222.197-.18.295-.382.295-.605 0-.155-.077-.47-.23-.944L6.23 14.615h.91l.727 2.36c.164.536.233.91.205 1.123.4-1.064.678-2.227.835-3.483zm12.325 4.08h-2.63v-5.53h.885v4.85h1.745zm-3.32.135l-1.016-.5c.09-.076.177-.158.255-.25.433-.506.648-1.258.648-2.253 0-1.83-.718-2.746-2.155-2.746-.704 0-1.254.232-1.65.697-.43.508-.646 1.256-.646 2.245 0 .972.19 1.686.574 2.14.35.41.877.615 1.583.615.264 0 .506-.033.725-.098l1.325.772.36-.622zM15.5 17.588c-.225-.36-.337-.94-.337-1.736 0-1.393.424-2.09 1.27-2.09.443 0 .77.167.977.5.224.362.336.936.336 1.723 0 1.404-.424 2.108-1.27 2.108-.445 0-.77-.167-.978-.5zm-1.658-.425c0 .47-.172.856-.516 1.156-.344.3-.803.45-1.384.45-.543 0-1.064-.172-1.573-.515l.237-.476c.438.22.833.328 1.19.328.332 0 .593-.073.783-.22a.754.754 0 00.3-.615c0-.33-.23-.61-.648-.845-.388-.213-1.163-.657-1.163-.657-.422-.307-.632-.636-.632-1.177 0-.45.157-.81.47-1.085.315-.278.72-.415 1.22-.415.512 0 .98.136 1.4.41l-.213.476a2.726 2.726 0 00-1.064-.23c-.283 0-.502.068-.654.206a.685.685 0 00-.248.524c0 .328.234.61.666.85.393.215 1.187.67 1.187.67.433.305.648.63.648 1.168zm9.382-5.852c-.535-.014-.95.04-1.297.188-.1.04-.26.04-.274.167.055.053.063.14.11.214.08.134.218.313.346.407.14.11.28.216.427.31.26.16.555.255.81.416.145.094.293.213.44.313.073.05.12.14.214.172v-.02c-.046-.06-.06-.147-.105-.214-.067-.067-.134-.127-.2-.193a3.223 3.223 0 00-.695-.675c-.214-.146-.682-.35-.77-.595l-.013-.014c.146-.013.32-.066.46-.106.227-.06.435-.047.67-.106.106-.027.213-.06.32-.094v-.06c-.12-.12-.21-.283-.334-.395a8.867 8.867 0 00-1.104-.823c-.21-.134-.476-.22-.697-.334-.08-.04-.214-.06-.26-.127-.12-.146-.19-.34-.275-.514a17.69 17.69 0 01-.547-1.163c-.12-.262-.193-.523-.34-.763-.69-1.137-1.437-1.826-2.586-2.5-.247-.14-.543-.2-.856-.274-.167-.008-.334-.02-.5-.027-.11-.047-.216-.174-.31-.235-.38-.24-1.364-.76-1.644-.072-.18.434.267.862.422 1.082.115.153.26.328.34.5.047.116.06.235.107.356.106.294.207.622.347.897.073.14.153.287.247.413.054.073.146.107.167.227-.094.136-.1.334-.154.5-.24.757-.146 1.693.194 2.25.107.166.362.534.703.393.3-.12.234-.5.32-.835.02-.08.007-.133.048-.187v.015c.094.188.188.367.274.555.206.328.566.668.867.895.16.12.287.328.487.402v-.02h-.015c-.043-.058-.1-.086-.154-.133a3.445 3.445 0 01-.35-.4 8.76 8.76 0 01-.747-1.218c-.11-.21-.202-.436-.29-.643-.04-.08-.04-.2-.107-.24-.1.146-.247.273-.32.453-.127.288-.14.642-.188 1.01-.027.007-.014 0-.027.014-.214-.052-.287-.274-.367-.46-.2-.475-.233-1.238-.06-1.785.047-.14.247-.582.167-.716-.042-.127-.174-.2-.247-.303a2.478 2.478 0 01-.24-.427c-.16-.374-.24-.788-.414-1.162-.08-.173-.22-.354-.334-.513-.127-.18-.267-.307-.368-.52-.033-.073-.08-.194-.027-.274.014-.054.042-.075.094-.09.088-.072.335.022.422.062.247.1.455.194.662.334.094.066.195.193.315.226h.14c.214.047.455.014.655.073.355.114.675.28.962.46a5.953 5.953 0 012.085 2.286c.08.154.115.295.188.455.14.33.313.663.455.982.14.315.275.636.476.897.1.14.502.213.682.286.133.06.34.115.46.188.23.14.454.3.67.454.11.076.443.243.463.378z" transform="translate(3 3) scale(0.4166666666666667)" fill="#4479A1"/>
-            <rect width="16" height="16" rx="4" class="brand-mark-frame"/>
-          </g>
-          <text data-node-label="" data-detail-anchor="" x="960" y="300" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">MySQL 8.0</text>
-        <text data-detail="context" x="960" y="316" class="t-muted" font-size="9" text-anchor="middle">InnoDB ACID DB</text>
+          <text data-node-label="" data-detail-anchor="" x="1085" y="190" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Assets &amp; Allocations</text>
+        <text data-detail="context" x="1085" y="206" class="t-muted" font-size="9" text-anchor="middle">MySQL InnoDB Row-Locked</text>
         </g>
 
-        <g id="node-doc_storage" data-node-id="doc_storage" data-node-label="Document Store" tabindex="0" role="button" aria-label="Focus Document Store, Sanitized Files, EOMS Server Runtime / Docker Environment › Persistence &amp; Storage Tier" aria-pressed="false" data-node-kind="cloud" data-node-sublabel="Sanitized Files" data-node-tag="Encrypted" data-node-context="EOMS Server Runtime / Docker Environment › Persistence &amp; Storage Tier">
-          <title>Document Store · Sanitized Files · EOMS Server Runtime / Docker Environment › Persistence &amp; Storage Tier · Encrypted</title>
-          <rect x="890" y="430" width="140" height="64" rx="6" class="c-mask"/>
-          <rect x="890" y="430" width="140" height="64" rx="6" class="c-cloud" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="cloud" class="semantic-sigil s-cloud" transform="translate(896 436) scale(0.6875)">
-            <path d="M4.3 12.5h7.3a2.4 2.4 0 0 0 .2-4.8 4 4 0 0 0-7.5-1.3A3.1 3.1 0 0 0 4.3 12.5Z"/>
+        <g id="node-it_notifier" data-node-id="it_notifier" data-node-label="Alert Dispatcher" tabindex="0" role="button" aria-label="Focus Alert Dispatcher, Employee Notification, Durable Store &amp; Notifier" aria-pressed="false" data-node-kind="messagebus" data-node-sublabel="Employee Notification" data-node-context="Durable Store &amp; Notifier">
+          <title>Alert Dispatcher · Employee Notification · Durable Store &amp; Notifier</title>
+          <rect x="1010" y="320" width="150" height="64" rx="6" class="c-mask"/>
+          <rect x="1010" y="320" width="150" height="64" rx="6" class="c-messagebus" data-animate="node" style="--step:6" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="messagebus" class="semantic-sigil s-messagebus" transform="translate(1016 326) scale(0.6875)">
+            <path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"/>
+            <circle cx="5" cy="4.5" r="1" class="sigil-fill"/>
+            <circle cx="10.5" cy="8" r="1" class="sigil-fill"/>
+            <circle cx="7" cy="11.5" r="1" class="sigil-fill"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="960" y="460" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Document Store</text>
-        <text data-detail="context" x="960" y="476" class="t-muted" font-size="9" text-anchor="middle">Sanitized Files</text>
-        <text data-detail="fine" x="960" y="486" class="t-cloud" font-size="7" text-anchor="middle">Encrypted</text>
-        </g>
-
-        <g id="node-sla_daemon" data-node-id="sla_daemon" data-node-label="SLA Daemon" tabindex="0" role="button" aria-label="Focus SLA Daemon, Overdue Alerts, EOMS Server Runtime / Docker Environment" aria-pressed="false" data-node-kind="backend" data-node-sublabel="Overdue Alerts" data-node-tag="Scheduled" data-node-context="EOMS Server Runtime / Docker Environment">
-          <title>SLA Daemon · Overdue Alerts · EOMS Server Runtime / Docker Environment · Scheduled</title>
-          <rect x="1115" y="270" width="130" height="64" rx="6" class="c-mask"/>
-          <rect x="1115" y="270" width="130" height="64" rx="6" class="c-backend" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(1121 276) scale(0.6875)">
-            <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
-          </g>
-          <text data-node-label="" data-detail-anchor="" x="1180" y="300" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">SLA Daemon</text>
-        <text data-detail="context" x="1180" y="316" class="t-muted" font-size="9" text-anchor="middle">Overdue Alerts</text>
-        <text data-detail="fine" x="1180" y="326" class="t-backend" font-size="7" text-anchor="middle">Scheduled</text>
+          <text data-node-label="" data-detail-anchor="" x="1085" y="350" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Alert Dispatcher</text>
+        <text data-detail="context" x="1085" y="366" class="t-muted" font-size="9" text-anchor="middle">Employee Notification</text>
         </g>
 
         <!-- Connection labels -->
-        <g data-detail="context" data-edge-from="clients" data-edge-to="spa" data-edge-label="HTTPS" data-edge-key="0" data-edge-id="users-to-spa">
-          <rect x="178" y="282" width="34" height="14" rx="3" class="c-mask"/>
-          <text x="195" y="292" class="t-backend" font-size="8" text-anchor="middle">HTTPS</text>
+        <g data-detail="context" data-edge-from="it_admin" data-edge-to="asset_ctrl" data-edge-label="POST /allocate" data-edge-key="0" data-edge-id="admin-to-ctrl">
+          <rect x="186.4" y="252" width="77.2" height="14" rx="3" class="c-mask"/>
+          <text x="225" y="262" class="t-backend" font-size="8" text-anchor="middle">POST /allocate</text>
         </g>
-        <g data-detail="context" data-edge-from="mfa" data-edge-to="spa" data-edge-label="TOTP Code" data-edge-key="1" data-edge-id="mfa-to-spa">
-          <rect x="168.4" y="202" width="53.199999999999996" height="14" rx="3" class="c-mask"/>
-          <text x="195" y="212" class="t-security" font-size="8" text-anchor="middle">TOTP Code</text>
+        <g data-detail="context" data-edge-from="asset_ctrl" data-edge-to="lock_mgr" data-edge-label="Acquire lock" data-edge-key="1" data-edge-id="ctrl-to-lock">
+          <rect x="426.2" y="252" width="67.6" height="14" rx="3" class="c-mask"/>
+          <text x="460" y="262" class="t-muted" font-size="8" text-anchor="middle">Acquire lock</text>
         </g>
-        <g data-detail="context" data-edge-from="spa" data-edge-to="gateway" data-edge-label="REST API" data-edge-key="2" data-edge-id="spa-to-gateway">
-          <rect x="373.3" y="282" width="48.4" height="14" rx="3" class="c-mask"/>
-          <text x="397.5" y="292" class="t-backend" font-size="8" text-anchor="middle">REST API</text>
+        <g data-detail="context" data-edge-from="lock_mgr" data-edge-to="state_machine" data-edge-label="Verify state" data-edge-key="2" data-edge-id="lock-to-state">
+          <rect x="676.2" y="212" width="67.6" height="14" rx="3" class="c-mask"/>
+          <text x="710" y="222" class="t-muted" font-size="8" text-anchor="middle">Verify state</text>
         </g>
-        <g data-detail="context" data-edge-from="gateway" data-edge-to="auth_guard" data-edge-label="Verify JWT" data-edge-key="3" data-edge-id="gateway-to-auth">
-          <rect x="476" y="250" width="58" height="14" rx="3" class="c-mask"/>
-          <text x="505" y="260" class="t-security" font-size="8" text-anchor="middle">Verify JWT</text>
+        <g data-detail="context" data-edge-from="lock_mgr" data-edge-to="barcode_tracker" data-edge-label="Bind serial" data-edge-key="3" data-edge-id="lock-to-barcode">
+          <rect x="629.1" y="328" width="62.8" height="14" rx="3" class="c-mask"/>
+          <text x="660.5" y="338" class="t-muted" font-size="8" text-anchor="middle">Bind serial</text>
         </g>
-        <g data-detail="context" data-edge-from="auth_guard" data-edge-to="onboarding_ctl" data-edge-label="Authorize" data-edge-key="4" data-edge-id="auth-to-onboarding">
-          <rect x="590.9" y="122" width="53.199999999999996" height="14" rx="3" class="c-mask"/>
-          <text x="617.5" y="132" class="t-muted" font-size="8" text-anchor="middle">Authorize</text>
+        <g data-detail="context" data-edge-from="state_machine" data-edge-to="asset_db" data-edge-label="Release &amp; commit" data-edge-key="4" data-edge-id="state-to-db">
+          <rect x="916.6" y="172" width="86.8" height="14" rx="3" class="c-mask"/>
+          <text x="960" y="182" class="t-muted" font-size="8" text-anchor="middle">Release &amp; commit</text>
         </g>
-        <g data-detail="context" data-edge-from="gateway" data-edge-to="asset_ctl" data-edge-label="Dispatch" data-edge-key="5" data-edge-id="gateway-to-asset">
-          <rect x="593.3" y="282" width="48.4" height="14" rx="3" class="c-mask"/>
-          <text x="617.5" y="292" class="t-muted" font-size="8" text-anchor="middle">Dispatch</text>
-        </g>
-        <g data-detail="context" data-edge-from="gateway" data-edge-to="doc_ctl" data-edge-label="Upload Doc" data-edge-key="6" data-edge-id="gateway-to-doc">
-          <rect x="541.5" y="338" width="58" height="14" rx="3" class="c-mask"/>
-          <text x="570.5" y="348" class="t-muted" font-size="8" text-anchor="middle">Upload Doc</text>
-        </g>
-        <g data-detail="context" data-edge-from="onboarding_ctl" data-edge-to="audit_svc" data-edge-label="logAudit()" data-edge-key="7" data-edge-id="onboarding-to-audit">
-          <rect x="816" y="122" width="58" height="14" rx="3" class="c-mask"/>
-          <text x="845" y="132" class="t-muted" font-size="8" text-anchor="middle">logAudit()</text>
-        </g>
-        <g data-detail="context" data-edge-from="asset_ctl" data-edge-to="mysql" data-edge-label="t.LOCK.UPDATE" data-edge-key="8" data-edge-id="asset-to-mysql">
-          <rect x="808.8" y="282" width="72.4" height="14" rx="3" class="c-mask"/>
-          <text x="845" y="292" class="t-backend" font-size="8" text-anchor="middle">t.LOCK.UPDATE</text>
-        </g>
-        <g data-detail="context" data-edge-from="audit_svc" data-edge-to="mysql" data-edge-label="Audit Trail" data-edge-key="9" data-edge-id="audit-to-mysql">
-          <rect x="928.6" y="178" width="62.8" height="14" rx="3" class="c-mask"/>
-          <text x="960" y="188" class="t-messagebus" font-size="8" text-anchor="middle">Audit Trail</text>
-        </g>
-        <g data-detail="context" data-edge-from="doc_ctl" data-edge-to="doc_storage" data-edge-label="Stream Files" data-edge-key="10" data-edge-id="doc-to-storage">
-          <rect x="811.2" y="442" width="67.6" height="14" rx="3" class="c-mask"/>
-          <text x="845" y="452" class="t-muted" font-size="8" text-anchor="middle">Stream Files</text>
-        </g>
-        <g data-detail="context" data-edge-from="sla_daemon" data-edge-to="mysql" data-edge-label="Poll Overdue" data-edge-key="11" data-edge-id="sla-to-mysql">
-          <rect x="1038.7" y="282" width="67.6" height="14" rx="3" class="c-mask"/>
-          <text x="1072.5" y="292" class="t-muted" font-size="8" text-anchor="middle">Poll Overdue</text>
+        <g data-detail="context" data-edge-from="barcode_tracker" data-edge-to="it_notifier" data-edge-label="Dispatch alert" data-edge-key="5" data-edge-id="barcode-to-notify">
+          <rect x="921.4" y="332" width="77.2" height="14" rx="3" class="c-mask"/>
+          <text x="960" y="342" class="t-messagebus" font-size="8" text-anchor="middle">Dispatch alert</text>
         </g>
 
         <!-- Boundary labels (foreground masks keep routes out of titles) -->
-        <g data-graph-role="structural-frame-label" data-composition-frame-id="0" data-composition-frame-kind="region" data-composition-frame-label="EOMS Server Runtime / Docker Environment">
-          <rect data-graph-role="structural-frame-label-mask" x="409" y="72" width="226" height="16" rx="3" class="c-mask"/>
-          <text data-boundary-label="" x="413" y="85" class="t-cloud" font-size="9" font-weight="600">EOMS Server Runtime / Docker Environment</text>
+        <g data-graph-role="structural-frame-label" data-composition-frame-id="0" data-composition-frame-kind="region" data-composition-frame-label="IT Admin Tier">
+          <rect data-graph-role="structural-frame-label-mask" x="14" y="220" width="80.2" height="16" rx="3" class="c-mask"/>
+          <text data-boundary-label="" x="18" y="233" class="t-cloud" font-size="9" font-weight="600">IT Admin Tier</text>
         </g>
 
-        <g data-graph-role="structural-frame-label" data-composition-frame-id="1" data-composition-frame-kind="security-group" data-composition-frame-label="Application &amp; Domain Services Tier">
-          <rect data-graph-role="structural-frame-label-mask" x="409" y="90" width="193.6" height="16" rx="3" class="c-mask"/>
-          <text data-boundary-label="" x="413" y="103" class="t-security" font-size="9" font-weight="600">Application &amp; Domain Services Tier</text>
+        <g data-graph-role="structural-frame-label" data-composition-frame-id="1" data-composition-frame-kind="security-group" data-composition-frame-label="Concurrency &amp; State Engine">
+          <rect data-graph-role="structural-frame-label-mask" x="484" y="140" width="150.4" height="16" rx="3" class="c-mask"/>
+          <text data-boundary-label="" x="488" y="153" class="t-security" font-size="9" font-weight="600">Concurrency &amp; State Engine</text>
         </g>
 
-        <g data-graph-role="structural-frame-label" data-composition-frame-id="2" data-composition-frame-kind="security-group" data-composition-frame-label="Persistence &amp; Storage Tier">
-          <rect data-graph-role="structural-frame-label-mask" x="864" y="250" width="150.4" height="16" rx="3" class="c-mask"/>
-          <text data-boundary-label="" x="868" y="263" class="t-security" font-size="9" font-weight="600">Persistence &amp; Storage Tier</text>
+        <g data-graph-role="structural-frame-label" data-composition-frame-id="2" data-composition-frame-kind="region" data-composition-frame-label="Durable Store &amp; Notifier">
+          <rect data-graph-role="structural-frame-label-mask" x="984" y="140" width="139.6" height="16" rx="3" class="c-mask"/>
+          <text data-boundary-label="" x="988" y="153" class="t-cloud" font-size="9" font-weight="600">Durable Store &amp; Notifier</text>
         </g>
 
         <!-- Legend -->
         <g data-legend="" data-legend-bridge="">
-          <text x="40" y="544" class="t-primary" font-size="12" font-weight="650">Legend</text>
-          <g data-legend-semantic-kind="frontend" data-legend-kind="frontend" data-legend-label="Frontend" data-legend-x="40" data-legend-baseline="564" data-legend-width="83">
-            <rect x="40" y="555" width="16" height="10" rx="2.5" class="c-frontend" stroke-width="1"/>
-            <text x="62" y="564" class="t-muted" font-size="10" font-weight="500">Frontend</text>
+          <text x="40" y="436" class="t-primary" font-size="12" font-weight="650">Legend</text>
+          <g data-legend-semantic-kind="frontend" data-legend-kind="frontend" data-legend-label="Frontend" data-legend-x="40" data-legend-baseline="456" data-legend-width="83">
+            <rect x="40" y="447" width="16" height="10" rx="2.5" class="c-frontend" stroke-width="1"/>
+            <text x="62" y="456" class="t-muted" font-size="10" font-weight="500">Frontend</text>
           </g>
-          <g data-legend-semantic-kind="backend" data-legend-kind="backend" data-legend-label="Backend" data-legend-x="145" data-legend-baseline="564" data-legend-width="78">
-            <rect x="145" y="555" width="16" height="10" rx="2.5" class="c-backend" stroke-width="1"/>
-            <text x="167" y="564" class="t-muted" font-size="10" font-weight="500">Backend</text>
+          <g data-legend-semantic-kind="backend" data-legend-kind="backend" data-legend-label="Backend" data-legend-x="145" data-legend-baseline="456" data-legend-width="78">
+            <rect x="145" y="447" width="16" height="10" rx="2.5" class="c-backend" stroke-width="1"/>
+            <text x="167" y="456" class="t-muted" font-size="10" font-weight="500">Backend</text>
           </g>
-          <g data-legend-semantic-kind="database" data-legend-kind="database" data-legend-label="Database" data-legend-x="245" data-legend-baseline="564" data-legend-width="83">
-            <rect x="245" y="555" width="16" height="10" rx="2.5" class="c-database" stroke-width="1"/>
-            <text x="267" y="564" class="t-muted" font-size="10" font-weight="500">Database</text>
+          <g data-legend-semantic-kind="database" data-legend-kind="database" data-legend-label="Database" data-legend-x="245" data-legend-baseline="456" data-legend-width="83">
+            <rect x="245" y="447" width="16" height="10" rx="2.5" class="c-database" stroke-width="1"/>
+            <text x="267" y="456" class="t-muted" font-size="10" font-weight="500">Database</text>
           </g>
-          <g data-legend-semantic-kind="cloud" data-legend-kind="cloud" data-legend-label="Cloud" data-legend-x="350" data-legend-baseline="564" data-legend-width="68">
-            <rect x="350" y="555" width="16" height="10" rx="2.5" class="c-cloud" stroke-width="1"/>
-            <text x="372" y="564" class="t-muted" font-size="10" font-weight="500">Cloud</text>
-          </g>
-          <g data-legend-semantic-kind="security" data-legend-kind="security" data-legend-label="Security" data-legend-x="440" data-legend-baseline="564" data-legend-width="83">
-            <rect x="440" y="555" width="16" height="10" rx="2.5" class="c-security" stroke-width="1"/>
-            <text x="462" y="564" class="t-muted" font-size="10" font-weight="500">Security</text>
-          </g>
-          <g data-legend-semantic-kind="external" data-legend-kind="external" data-legend-label="External" data-legend-x="545" data-legend-baseline="564" data-legend-width="83">
-            <rect x="545" y="555" width="16" height="10" rx="2.5" class="c-external" stroke-width="1"/>
-            <text x="567" y="564" class="t-muted" font-size="10" font-weight="500">External</text>
+          <g data-legend-semantic-kind="messagebus" data-legend-kind="messagebus" data-legend-label="Message bus" data-legend-x="350" data-legend-baseline="456" data-legend-width="98">
+            <rect x="350" y="447" width="16" height="10" rx="2.5" class="c-messagebus" stroke-width="1"/>
+            <text x="372" y="456" class="t-muted" font-size="10" font-weight="500">Message bus</text>
           </g>
         </g>
       </svg>
@@ -5621,37 +5510,33 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       <div class="card">
         <div class="card-header">
           <div class="card-dot cyan"></div>
-          <h3>Presentation &amp; Gateway</h3>
+          <h3>Zero Double-Allocation</h3>
         </div>
         <ul>
-          <li>&bull; React 18 SPA with Zustand and Axios interceptors</li>
-          <li>&bull; Express API Gateway with Helmet, CORS, and Rate Limiting</li>
-          <li>&bull; Dual mode: live Express API or static mock adapter</li>
+          <li>&bull; Pessimistic row-locking blocks competing concurrent IT assignments</li>
+          <li>&bull; Ensures strict single-owner integrity for all hardware</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot amber"></div>
+          <h3>Finite State Validation</h3>
+        </div>
+        <ul>
+          <li>&bull; Enforces AVAILABLE to ALLOCATED to RETURNED lifecycle</li>
+          <li>&bull; Rejects allocation requests if asset is in MAINTENANCE or RETIRED</li>
         </ul>
       </div>
 
       <div class="card">
         <div class="card-header">
           <div class="card-dot emerald"></div>
-          <h3>Domain Engine &amp; Concurrency</h3>
+          <h3>Audit Binding</h3>
         </div>
         <ul>
-          <li>&bull; Pessimistic row locking (t.LOCK.UPDATE) on asset allocations</li>
-          <li>&bull; Atomic multi-step onboarding plan provisioning</li>
-          <li>&bull; Server-side POSH Act 2013 compliance scoring</li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-dot rose"></div>
-          <h3>Security &amp; Persistence</h3>
-        </div>
-        <ul>
-          <li>&bull; JWT authentication with RFC 6238 TOTP MFA &amp; backup codes</li>
-          <li>&bull; Role-based access control with 60+ granular permissions</li>
-          <li>&bull; MySQL 8.0 InnoDB engine with 34 relational tables</li>
-          <li>&bull; Append-only immutable audit trail for compliance verification</li>
+          <li>&bull; Records asset serial number, condition notes, and IT technician ID</li>
+          <li>&bull; Triggers immediate onboarding checklist task updates</li>
         </ul>
       </div>
     </div>

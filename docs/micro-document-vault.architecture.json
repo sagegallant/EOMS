@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Document Vault & Integrity Micro-Architecture",
+    "output": "micro-document-vault.html",
+    "quality_profile": "showcase",
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "views": [
+      {
+        "id": "upload-pipeline",
+        "label": "Secure document ingestion & hashing",
+        "focus": ["client", "upload_guard", "integrity_hasher", "storage_vault", "doc_db"],
+        "note": "MIME type verification, SHA-256 fingerprinting, and path-traversal sanitized quarantine disk storage."
+      },
+      {
+        "id": "download-streaming",
+        "label": "Role-gated streaming & audit",
+        "focus": ["client", "upload_guard", "stream_gateway", "compliance_audit"],
+        "note": "Authorization-gated file retrieval streaming chunks with zero memory buffer leakage."
+      }
+    ]
+  },
+  "components": [
+    { "id": "client", "type": "frontend", "label": "Client Portal", "sublabel": "Document Ingestion UI", "pos": [40, 240], "size": [140, 64] },
+    { "id": "upload_guard", "type": "security", "label": "Upload Guard", "sublabel": "Multer MIME & Size Filter", "pos": [270, 240], "size": [140, 64], "tag": "10MB Max Limit" },
+    { "id": "integrity_hasher", "type": "backend", "label": "Integrity Engine", "sublabel": "SHA-256 Checksum", "pos": [510, 240], "size": [150, 64], "tag": "Tamper-Evident" },
+    { "id": "storage_vault", "type": "database", "label": "Quarantine Vault", "sublabel": "Sanitized Disk Storage", "pos": [760, 160], "size": [150, 64], "tag": "Path Safe" },
+    { "id": "stream_gateway", "type": "backend", "label": "Stream Gateway", "sublabel": "Role-Gated Download", "pos": [760, 320], "size": [150, 64], "tag": "Chunked Stream" },
+    { "id": "doc_db", "type": "database", "label": "Document Metadata", "sublabel": "MySQL Documents Table", "pos": [1010, 160], "size": [150, 64] },
+    { "id": "compliance_audit", "type": "messagebus", "label": "Compliance Audit", "sublabel": "Verification Event Stream", "pos": [1010, 320], "size": [150, 64] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Ingress & Filter Tier", "wraps": ["client", "upload_guard"] },
+    { "kind": "security-group", "label": "File Inspection & Storage Vault", "wraps": ["integrity_hasher", "storage_vault", "stream_gateway"] },
+    { "kind": "region", "label": "Durable Records & Audit Tier", "wraps": ["doc_db", "compliance_audit"] }
+  ],
+  "connections": [
+    { "id": "client-to-upload", "from": "client", "to": "upload_guard", "label": "Multipart POST", "variant": "emphasis" },
+    { "id": "guard-to-hasher", "from": "upload_guard", "to": "integrity_hasher", "label": "Inspect buffer" },
+    { "id": "hasher-to-vault", "from": "integrity_hasher", "to": "storage_vault", "label": "Store payload", "fromSide": "right", "toSide": "left" },
+    { "id": "hasher-to-stream", "from": "integrity_hasher", "to": "stream_gateway", "label": "Register path", "fromSide": "bottom", "toSide": "left", "labelDy": 20 },
+    { "id": "vault-to-db", "from": "storage_vault", "to": "doc_db", "label": "Save metadata", "fromSide": "right", "toSide": "left" },
+    { "id": "stream-to-audit", "from": "stream_gateway", "to": "compliance_audit", "label": "Log access", "variant": "dashed", "fromSide": "right", "toSide": "left" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Tamper-Proof Integrity", "items": ["SHA-256 cryptographic digest computed on upload stream", "Bit-exact verification prevents silent document alteration"] },
+    { "dot": "amber", "title": "Path Traversal Defense", "items": ["Filenames sanitized with UUIDv4 seeds to block ../ escapes", "Strict MIME whitelist: PDF, DOCX, PNG, JPEG"] },
+    { "dot": "emerald", "title": "Secure Streaming", "items": ["Direct file system access blocked; downloads require signed JWT", "Memory-efficient chunked streaming directly to HTTP response"] }
+  ]
+}
