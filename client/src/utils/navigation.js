@@ -4,9 +4,7 @@ export const NAV = {
       { label: 'Dashboard',    to: '/dashboard',      icon: 'grid' },
       { label: 'Employees',   to: '/employees',      icon: 'users' },
       { label: 'Onboarding',  to: '/onboarding',     icon: 'route' },
-      { label: 'Tasks',       to: '/tasks',           icon: 'check' },
       { label: 'Documents',   to: '/documents',       icon: 'file' },
-      { label: 'Training',    to: '/training',        icon: 'cap' },
       { label: 'Assets',      to: '/assets',          icon: 'laptop' },
     ]},
     { section: 'System', items: [
@@ -22,9 +20,7 @@ export const NAV = {
       { label: 'Dashboard',   to: '/dashboard',       icon: 'grid' },
       { label: 'Employees',   to: '/employees',       icon: 'users' },
       { label: 'Onboarding',  to: '/onboarding',      icon: 'route' },
-      { label: 'Tasks',       to: '/tasks',            icon: 'check' },
       { label: 'Documents',   to: '/documents',        icon: 'file' },
-      { label: 'Training',    to: '/training',         icon: 'cap' },
       { label: 'Assets',      to: '/assets',           icon: 'laptop' },
     ]},
     { section: 'Insight', items: [
@@ -39,9 +35,7 @@ export const NAV = {
     { section: 'Team', items: [
       { label: 'Dashboard',   to: '/dashboard',        icon: 'grid' },
       { label: 'My Team',     to: '/employees',        icon: 'users' },
-      { label: 'Tasks',       to: '/tasks',             icon: 'check' },
       { label: 'Documents',   to: '/documents',         icon: 'file' },
-      { label: 'Training',    to: '/training',          icon: 'cap' },
     ]},
     { section: 'General', items: [
       { label: 'Notifications', to: '/notifications',  icon: 'bell' },
@@ -52,7 +46,6 @@ export const NAV = {
   IT_ADMIN: [
     { section: 'Ops', items: [
       { label: 'Dashboard',   to: '/dashboard',        icon: 'grid' },
-      { label: 'Queue',       to: '/tasks',             icon: 'check' },
       { label: 'Assets',      to: '/assets',            icon: 'laptop' },
       { label: 'Employees',   to: '/employees',         icon: 'users' },
     ]},
@@ -65,7 +58,6 @@ export const NAV = {
     { section: 'Compliance', items: [
       { label: 'Dashboard',   to: '/dashboard',        icon: 'grid' },
       { label: 'Documents',   to: '/documents',         icon: 'file' },
-      { label: 'Training',    to: '/training',          icon: 'cap' },
       { label: 'Employees',   to: '/employees',         icon: 'users' },
     ]},
     { section: 'Governance', items: [
@@ -80,9 +72,7 @@ export const NAV = {
       { label: 'Dashboard',   to: '/dashboard',       icon: 'grid' },
       { label: 'Employees',   to: '/employees',       icon: 'users' },
       { label: 'Onboarding',  to: '/onboarding',      icon: 'route' },
-      { label: 'Tasks',       to: '/tasks',            icon: 'check' },
       { label: 'Documents',   to: '/documents',        icon: 'file' },
-      { label: 'Training',    to: '/training',         icon: 'cap' },
       { label: 'Assets',      to: '/assets',           icon: 'laptop' },
     ]},
     { section: 'Insight', items: [
@@ -94,15 +84,11 @@ export const NAV = {
   ],
   EMPLOYEE: [
     { section: 'My Journey', items: [
-      { label: 'Dashboard',   to: '/dashboard',        icon: 'grid' },
-      { label: 'Tasks',       to: '/tasks',             icon: 'check' },
-      { label: 'Documents',   to: '/documents',         icon: 'file' },
+      { label: 'Dashboard', to: '/profile',        icon: 'grid' },
       { label: 'Training',    to: '/training',          icon: 'cap' },
-      { label: 'Assets',      to: '/assets',            icon: 'laptop' },
     ]},
     { section: 'Account', items: [
       { label: 'Notifications', to: '/notifications',  icon: 'bell' },
-      { label: 'Profile',     to: '/profile',           icon: 'user' },
       { label: 'Settings',    to: '/settings',          icon: 'gear' },
       { label: 'Help',        to: '/help',              icon: 'help' },
     ]},
