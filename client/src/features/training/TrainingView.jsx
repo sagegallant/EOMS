@@ -21,8 +21,10 @@ import {
 } from 'lucide-react';
 import { trainingApi } from '../../api/training';
 import { useAuthStore } from '../../store/authStore';
+import TasksView from '../tasks/TasksView';
 
 export default function TrainingView() {
+  const [expandedCourseId, setExpandedCourseId] = useState(null);
   const { user } = useAuthStore();
   const [courses, setCourses] = useState([]);
   const [records, setRecords] = useState([]);
@@ -122,13 +124,7 @@ export default function TrainingView() {
   });
 
   const completed = mergedCourses.filter((c) => c.status === 'completed' || c.progress === 100).length;
-
-  const completionBars = mergedCourses.map((c) => ({
-    label: c.title.slice(0, 32) + (c.title.length > 32 ? '…' : ''),
-    value: c.progress,
-    displayValue: `${c.progress}%`,
-    color: c.progress === 100 ? 'var(--chart-1)' : c.progress > 50 ? 'var(--sage-500)' : 'var(--sage-300)',
-  }));
+  const avgProgress = mergedCourses.length ? Math.round(mergedCourses.reduce((sum, c) => sum + c.progress, 0) / mergedCourses.length) : 0;
 
   const visible = mergedCourses.filter((c) => {
     if (filter === 'ALL') return true;
@@ -137,33 +133,122 @@ export default function TrainingView() {
     return true;
   });
 
+  const [activeTab, setActiveTab] = useState('training');
+
   return (
     <div style={{ display: 'grid', gap: 'var(--sp-5)' }}>
       <PageHeader
-        title="Training & Compliance"
-        subtitle={`${completed} of ${mergedCourses.length} compliance modules completed`}
-        actions={
+        title="Training & Tasks"
+        subtitle="Manage your learning modules and daily tasks"
+        action={
           <Button variant="outline" size="sm" icon={RefreshCw} onClick={loadData} disabled={loading}>
             Refresh
           </Button>
         }
       />
 
-      {error && (
-        <Card $p="var(--sp-4)" style={{ borderColor: 'var(--danger-border)', background: 'var(--danger-bg)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--danger)' }}>
-            <AlertCircle size={18} />
-            <span style={{ fontSize: '0.875rem' }}>{error}</span>
-          </div>
-        </Card>
-      )}
+      <div style={{ display: 'flex', gap: 16, borderBottom: '1px solid var(--border-subtle)', marginBottom: 8 }}>
+        <button
+          onClick={() => setActiveTab('training')}
+          style={{
+            padding: '12px 16px',
+            background: 'none',
+            border: 'none',
+            borderBottom: activeTab === 'training' ? '2px solid var(--primary)' : '2px solid transparent',
+            color: activeTab === 'training' ? 'var(--primary)' : 'var(--text-secondary)',
+            fontWeight: activeTab === 'training' ? 600 : 500,
+            cursor: 'pointer',
+            fontSize: '0.9375rem',
+            transition: 'all var(--t-fast)'
+          }}
+        >
+          Training Modules
+        </button>
+        <button
+          onClick={() => setActiveTab('tasks')}
+          style={{
+            padding: '12px 16px',
+            background: 'none',
+            border: 'none',
+            borderBottom: activeTab === 'tasks' ? '2px solid var(--primary)' : '2px solid transparent',
+            color: activeTab === 'tasks' ? 'var(--primary)' : 'var(--text-secondary)',
+            fontWeight: activeTab === 'tasks' ? 600 : 500,
+            cursor: 'pointer',
+            fontSize: '0.9375rem',
+            transition: 'all var(--t-fast)'
+          }}
+        >
+          Assigned Tasks
+        </button>
+      </div>
 
-      {completionBars.length > 0 && (
-        <Card $p="var(--sp-5)">
-          <h2 className="section-title" style={{ marginBottom: 14 }}>Module Completion Overview</h2>
-          <HorizontalBar items={completionBars} maxValue={100} />
-        </Card>
-      )}
+      {activeTab === 'tasks' ? (
+        <TasksView />
+      ) : (
+        <>
+          {error && (
+            <Card $p="var(--sp-4)" style={{ borderColor: 'var(--danger-border)', background: 'var(--danger-bg)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--danger)' }}>
+                <AlertCircle size={18} />
+                <span style={{ fontSize: '0.875rem' }}>{error}</span>
+              </div>
+            </Card>
+          )}
+
+          {/* 4-Column Metrics Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--sp-4)' }}>
+            <Card $p="var(--sp-5)" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>In Progress</span>
+                <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--sage-100)', display: 'grid', placeItems: 'center', color: 'var(--sage-800)' }}>
+                  <RefreshCw size={16} />
+                </div>
+              </div>
+              <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1, marginBottom: 8 }}>
+                {mergedCourses.length - completed}
+              </div>
+              <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>Active modules</div>
+            </Card>
+            
+            <Card $p="var(--sp-5)" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Modules</span>
+                <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--sage-100)', display: 'grid', placeItems: 'center', color: 'var(--sage-800)' }}>
+                  <GraduationCap size={16} />
+                </div>
+              </div>
+              <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1, marginBottom: 8 }}>
+                {mergedCourses.length}
+              </div>
+              <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>Across all categories</div>
+            </Card>
+
+            <Card $p="var(--sp-5)" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Completed</span>
+                <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--sage-100)', display: 'grid', placeItems: 'center', color: 'var(--sage-800)' }}>
+                  <CheckCircle2 size={16} />
+                </div>
+              </div>
+              <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1, marginBottom: 8 }}>
+                {completed}
+              </div>
+              <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>Fully verified</div>
+            </Card>
+
+            <Card $p="var(--sp-5)" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Avg Progress</span>
+                <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--sage-100)', display: 'grid', placeItems: 'center', color: 'var(--sage-800)' }}>
+                  <Award size={16} />
+                </div>
+              </div>
+              <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1, marginBottom: 8 }}>
+                {avgProgress}%
+              </div>
+              <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>Across all plans</div>
+            </Card>
+          </div>
 
       <Card $p="var(--sp-5)">
         <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
@@ -202,16 +287,25 @@ export default function TrainingView() {
                 <div
                   style={{
                     display: 'flex',
-                    alignItems: 'center',
-                    gap: 14,
-                    padding: '12px 14px',
+                    flexDirection: 'column',
                     borderRadius: 'var(--r-md)',
                     border: '1px solid var(--border-subtle)',
                     background: 'var(--bg-surface)',
                     transition: 'all var(--t-fast)',
-                    flexWrap: 'wrap',
+                    overflow: 'hidden',
                   }}
                 >
+                  <div
+                    onClick={() => setExpandedCourseId(expandedCourseId === course.courseId ? null : course.courseId)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 14,
+                      padding: '12px 14px',
+                      cursor: 'pointer',
+                      flexWrap: 'wrap',
+                    }}
+                  >
                   <RadialProgress
                     value={course.progress}
                     size={52}
@@ -246,17 +340,56 @@ export default function TrainingView() {
                       variant={isDone ? 'ghost' : 'soft'}
                       size="xs"
                       icon={isDone ? CheckCircle2 : PlayCircle}
-                      onClick={() => handleOpenQuiz(course)}
+                      onClick={(e) => { e.stopPropagation(); handleOpenQuiz(course); }}
                     >
                       {isDone ? 'Retake Quiz' : course.progress === 0 ? 'Take Quiz' : 'Continue Quiz'}
                     </Button>
                   </div>
+                  </div>
+                  
+                  {/* Expanded Tasks List */}
+                  {expandedCourseId === course.courseId && course.Tasks && course.Tasks.length > 0 && (
+                    <div style={{ borderTop: '1px solid var(--border-subtle)', padding: '12px 14px', background: 'var(--bg-subtle)' }}>
+                      <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 8 }}>
+                        Module Checklist ({course.Tasks.filter(t => t.status === 'completed').length}/{course.Tasks.length} Completed)
+                      </div>
+                      <div style={{ display: 'grid', gap: 6 }}>
+                        {Array.from(new Map(course.Tasks.map(t => [t.title, t])).values()).map((t) => {
+                          const isTaskDone = t.status === 'completed';
+                          return (
+                            <div key={t.taskId} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--bg-surface)', borderRadius: 'var(--r-md)', border: '1px solid var(--border-subtle)' }}>
+                              <button
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  try {
+                                    setCourses(prev => prev.map(c => c.courseId === course.courseId ? { ...c, Tasks: c.Tasks.map(task => task.taskId === t.taskId ? { ...task, status: isTaskDone ? 'in_progress' : 'completed' } : task) } : c));
+                                    await fetch(`/api/tasks/${t.taskId}/progress`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: isTaskDone ? 'in_progress' : 'completed', employeeId: user?.employeeId }) }).catch(() => {});
+                                  } catch (e) {}
+                                }}
+                                style={{ 
+                                  background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+                                  color: isTaskDone ? 'var(--chart-1)' : 'var(--text-muted)',
+                                  display: 'flex', alignItems: 'center', transition: 'color var(--t-fast)'
+                                }}
+                              >
+                                <CheckCircle2 size={20} />
+                              </button>
+                              <div style={{ flex: 1, fontSize: '0.875rem' }}>{t.title}</div>
+                              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t.estimatedMinutes}m</div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </AnimatedItem>
             );
           })}
         </AnimatedList>
       </Card>
+      </>
+      )}
 
       {/* Interactive Quiz Engine Modal */}
       <Modal
@@ -415,6 +548,7 @@ export default function TrainingView() {
           </div>
         ) : null}
       </Modal>
+
     </div>
   );
 }

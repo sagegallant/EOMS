@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, Button, Badge, AnimatedList, AnimatedItem, PageHeader } from '../../components/common/ui';
 import { MiniDonut, HorizontalBar } from '../../components/common/charts';
+import { PieChart, Pie, Cell } from 'recharts';
 import { CheckCircle2, Clock, AlertCircle, Laptop, BookOpen, FileText, CheckSquare, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { taskApi } from '../../api/tasks';
@@ -37,7 +38,18 @@ export default function TasksView() {
       setEffectiveEmployeeId(empId);
 
       const res = await taskApi.list(empId ? { employeeId: empId } : {});
-      setTasks(res.data || []);
+      
+      // Deduplicate tasks by title to prevent repeated items from complex backend joins or duplicated seed data
+      const uniqueTasks = [];
+      const seenTitles = new Set();
+      (res.data || []).forEach(t => {
+        if (!seenTitles.has(t.title)) {
+          seenTitles.add(t.title);
+          uniqueTasks.push(t);
+        }
+      });
+      
+      setTasks(uniqueTasks);
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Failed to load tasks from server.');
     } finally {
@@ -114,6 +126,20 @@ export default function TasksView() {
 
   const uniqueCategories = ['ALL', ...new Set(tasks.map(t => t.category).filter(Boolean))];
 
+  // Completed by category for PieChart
+  const completedCategoryCounts = {};
+  completed.forEach(t => {
+    const cat = t.category || 'general';
+    completedCategoryCounts[cat] = (completedCategoryCounts[cat] || 0) + 1;
+  });
+  
+  const pieData = Object.entries(completedCategoryCounts).map(([label, value]) => ({
+    name: label.charAt(0).toUpperCase() + label.slice(1).replace('_', ' '),
+    value,
+  })).sort((a, b) => b.value - a.value);
+
+  const COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)'];
+
   return (
     <div style={{ display:'grid', gap:'var(--sp-5)' }}>
       <PageHeader
@@ -136,25 +162,30 @@ export default function TasksView() {
 
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'var(--sp-4)' }}>
         <Card $p="var(--sp-4)">
-          <div className="label-caps" style={{ marginBottom:12 }}>Completion Velocity</div>
+          <div className="label-caps" style={{ marginBottom:12 }}>Completion Velocity (By Category)</div>
           <div style={{ display:'flex', alignItems:'center', gap:16 }}>
-            <MiniDonut
-              value={completed.length}
-              total={tasks.length || 1}
-              label={`${completed.length}`}
-              sublabel={`/ ${tasks.length}`}
-              size={72}
-              color="var(--chart-1)"
-            />
-            <div style={{ fontSize:'0.8125rem', display:'grid', gap:6 }}>
-              <div style={{ display:'flex', justifyContent:'space-between', gap:16 }}>
-                <span style={{ color:'var(--text-muted)' }}>Completed</span>
-                <span style={{ fontWeight:700, color:'var(--sage-700)', fontFeatureSettings:'"tnum" 1' }}>{completed.length}</span>
+            <div style={{ width: 72, height: 72, position: 'relative', flexShrink: 0 }}>
+              <PieChart width={72} height={72}>
+                <Pie data={pieData} cx={36} cy={36} innerRadius={22} outerRadius={36} dataKey="value" stroke="none">
+                  {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                  {pieData.length === 0 && <Cell key="empty" fill="var(--bg-sunken)" />}
+                </Pie>
+              </PieChart>
+              <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', pointerEvents:'none' }}>
+                <span style={{ fontSize:14, fontWeight:700 }}>{completed.length}</span>
               </div>
-              <div style={{ display:'flex', justifyContent:'space-between', gap:16 }}>
-                <span style={{ color:'var(--text-muted)' }}>Pending</span>
-                <span style={{ fontWeight:700, color:'var(--text-primary)' }}>{pending.length}</span>
-              </div>
+            </div>
+            <div style={{ fontSize:'0.8125rem', display:'grid', gap:6, flex:1 }}>
+              {pieData.map((d, i) => (
+                <div key={d.name} style={{ display:'flex', justifyContent:'space-between', gap:16 }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                    <span style={{ width:8, height:8, borderRadius:4, background:COLORS[i%COLORS.length] }} />
+                    <span style={{ color:'var(--text-muted)' }}>{d.name}</span>
+                  </div>
+                  <span style={{ fontWeight:700, color:'var(--text-primary)' }}>{d.value}</span>
+                </div>
+              ))}
+              {pieData.length === 0 && <div style={{ color:'var(--text-muted)' }}>No completed tasks</div>}
             </div>
           </div>
         </Card>

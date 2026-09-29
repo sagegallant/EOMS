@@ -9,15 +9,26 @@ import { onboardingApi } from '../../../api/onboarding';
 import { taskApi } from '../../../api/tasks';
 import { employeeApi } from '../../../api/employees';
 
-const WEEKLY = [
-  { day: 'Mon', value: 2 },
-  { day: 'Tue', value: 4 },
-  { day: 'Wed', value: 1 },
-  { day: 'Thu', value: 3 },
-  { day: 'Fri', value: 5 },
-  { day: 'Sat', value: 0 },
-  { day: 'Sun', value: 2 },
-];
+const getChartDataForWeek = (offsetWeeks = 0) => {
+  const data = [];
+  const today = new Date();
+  today.setDate(today.getDate() - (offsetWeeks * 7));
+  
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const dayStr = d.toLocaleDateString('en-US', { weekday: 'short' });
+    
+    // Generate pseudo-random task completion counts based on date to keep it consistent
+    const pseudoRandom = Math.floor(Math.sin(d.getTime()) * 3 + 3); 
+    
+    data.push({
+      day: dayStr,
+      value: (i === 0 && offsetWeeks === 0) ? 0 : pseudoRandom // 0 for today if current week
+    });
+  }
+  return data;
+};
 
 export default function EmployeeDashboard() {
   const { user } = useAuthStore();
@@ -29,6 +40,7 @@ export default function EmployeeDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [updatingTaskId, setUpdatingTaskId] = useState(null);
+  const [selectedWeek, setSelectedWeek] = useState('current');
 
   const loadData = async () => {
     setLoading(true);
@@ -116,8 +128,10 @@ export default function EmployeeDashboard() {
 
   const completedTasks = tasks.filter(t => t.TaskProgresses?.some(p => (p.employeeId === employee?.employeeId || p.employeeId === user?.employeeId) && p.status === 'completed'));
 
+  const chartData = getChartDataForWeek(selectedWeek === 'current' ? 0 : 1);
+
   return (
-    <div style={{ display:'grid', gap:'var(--sp-5)' }}>
+    <div style={{ display:'grid', gap:'var(--sp-4)' }}>
       {/* ── Greeting header ── */}
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:12 }}>
         <div>
@@ -142,28 +156,28 @@ export default function EmployeeDashboard() {
       )}
 
       {/* ── Main 3-col: Hero + Chart + Dark panel ── */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1.2fr 1fr', gap:'var(--sp-4)' }}>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1.2fr 1fr', gap:'var(--sp-3)' }}>
 
         {/* Employee hero card */}
         <Card $p="0" style={{ overflow:'hidden', borderRadius:'var(--r-xl)' }}>
-          <div style={{ background:'linear-gradient(150deg, var(--sage-700) 0%, var(--sage-400) 100%)', padding:'var(--sp-5)', display:'flex', flexDirection:'column', gap:12 }}>
-            <Avatar name={empName} size={56} />
+          <div style={{ background:'linear-gradient(150deg, var(--sage-700) 0%, var(--sage-400) 100%)', padding:'var(--sp-4)', display:'flex', flexDirection:'column', gap:8 }}>
+            <Avatar name={empName} size={48} />
             <div>
               <div style={{ fontSize:'1.125rem', fontWeight:700, color:'#fff' }}>{empName}</div>
               <div style={{ fontSize:'0.8125rem', color:'rgba(255,255,255,0.75)', marginTop:2 }}>{jobTitle}</div>
               <div style={{ fontSize:'0.75rem', color:'rgba(255,255,255,0.55)', marginTop:1 }}>{deptName} · {workLocation}</div>
             </div>
-            <div style={{ background:'rgba(255,255,255,0.18)', borderRadius:'var(--r-full)', padding:'6px 14px', display:'inline-flex', alignItems:'center', gap:8, backdropFilter:'blur(4px)', width:'fit-content' }}>
-              <span style={{ color:'#fff', fontSize:'0.875rem', fontWeight:700 }}>
+            <div style={{ background:'rgba(255,255,255,0.18)', borderRadius:'var(--r-full)', padding:'4px 10px', display:'inline-flex', alignItems:'center', gap:6, backdropFilter:'blur(4px)', width:'fit-content' }}>
+              <span style={{ color:'#fff', fontSize:'0.8125rem', fontWeight:700 }}>
                 {plan?.startDate ? `Started ${plan.startDate}` : 'Onboarding Active'}
               </span>
             </div>
           </div>
-          <div style={{ padding:'var(--sp-4)', display:'flex', justifyContent:'center' }}>
+          <div style={{ padding:'var(--sp-3)', display:'flex', justifyContent:'center' }}>
             <CircularArc
               value={progress}
               max={100}
-              size={130}
+              size={90}
               strokeWidth={10}
               color="var(--sage-600)"
               centerContent={
@@ -186,11 +200,16 @@ export default function EmployeeDashboard() {
                 <span className="caption">of {tasks.length} total tasks</span>
               </div>
             </div>
-            <Badge tone={progress >= 50 ? 'sage' : 'warning'}>
-              {progress >= 50 ? 'On Track' : 'In Progress'}
-            </Badge>
+            <select
+              value={selectedWeek}
+              onChange={(e) => setSelectedWeek(e.target.value)}
+              style={{ padding:'4px 8px', borderRadius:'var(--r-md)', border:'1px solid var(--border-subtle)', background:'var(--bg-surface)', fontSize:'0.75rem', cursor:'pointer' }}
+            >
+              <option value="current">This Week</option>
+              <option value="last">Last Week</option>
+            </select>
           </div>
-          <VerticalBarChart data={WEEKLY} xKey="day" dataKey="value" height={150} activeIndex={4} />
+          <VerticalBarChart data={chartData} xKey="day" dataKey="value" height={150} activeIndex={selectedWeek === 'current' ? 4 : -1} />
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginTop:12 }}>
             <div style={{ background:'var(--sage-50)', borderRadius:'var(--r-md)', padding:'8px 10px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
               <span className="meta">Completed</span>
@@ -227,35 +246,25 @@ export default function EmployeeDashboard() {
             );
           })}
           <button
-            onClick={() => navigate('/tasks')}
+            onClick={() => navigate('/training')}
             style={{ marginTop:14, width:'100%', padding:'8px', borderRadius:'var(--r-md)', border:'1px solid rgba(255,255,255,0.15)', background:'rgba(255,255,255,0.05)', color:'rgba(255,255,255,0.7)', fontSize:'0.8125rem', cursor:'pointer', transition:'all var(--t-fast)' }}
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#fff'; }}
             onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
           >
-            All checklist tasks ({tasks.length}) ↗
+            Go to Training Modules ↗
           </button>
         </DarkPanel>
       </div>
 
       {/* ── Direct links ── */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:'var(--sp-4)' }}>
-        <Card $hoverable onClick={() => navigate('/documents')} style={{ cursor:'pointer', display:'flex', alignItems:'center', gap:14, padding:'var(--sp-4)' }}>
-          <div style={{ width:40, height:40, borderRadius:'var(--r-lg)', background:'var(--sage-100)', color:'var(--sage-800)', display:'grid', placeItems:'center' }}>
-            <FileText size={20} />
-          </div>
-          <div>
-            <div style={{ fontWeight:600, fontSize:'0.9375rem' }}>Statutory Documents</div>
-            <div className="meta">Upload PAN, Aadhaar, Bank Details</div>
-          </div>
-        </Card>
-
-        <Card $hoverable onClick={() => navigate('/assets')} style={{ cursor:'pointer', display:'flex', alignItems:'center', gap:14, padding:'var(--sp-4)' }}>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(2, 1fr)', gap:'var(--sp-4)' }}>
+        <Card $hoverable onClick={() => navigate('/profile')} style={{ cursor:'pointer', display:'flex', alignItems:'center', gap:14, padding:'var(--sp-4)' }}>
           <div style={{ width:40, height:40, borderRadius:'var(--r-lg)', background:'var(--sage-100)', color:'var(--sage-800)', display:'grid', placeItems:'center' }}>
             <Laptop size={20} />
           </div>
           <div>
-            <div style={{ fontWeight:600, fontSize:'0.9375rem' }}>Hardware Provisioning</div>
-            <div className="meta">Acknowledge assigned workstation</div>
+            <div style={{ fontWeight:600, fontSize:'0.9375rem' }}>My Profile & Assets</div>
+            <div className="meta">View your assigned hardware & documents</div>
           </div>
         </Card>
 
