@@ -29,11 +29,11 @@ export function MiniDonut({ value=0, total=100, label, sublabel, color='var(--ch
   const data = [{ v:pct },{ v:100-pct }];
   return (
     <div style={{ position:'relative', width:size, height:size, flexShrink:0 }}>
-      <PieChart width={size} height={size}>
-        <Pie data={data} cx={size/2-1} cy={size/2-1} innerRadius={(size/2)-strokeWidth-2} outerRadius={(size/2)-2}
-          startAngle={90} endAngle={-270} dataKey="v" strokeWidth={0}
+      <PieChart width={size} height={size} style={{ overflow: 'visible' }}>
+        <Pie data={data} cx="50%" cy="50%" innerRadius={(size/2)-strokeWidth-6} outerRadius={(size/2)-6}
+          startAngle={90} endAngle={-270} dataKey="v" stroke="none"
           isAnimationActive animationBegin={0} animationDuration={900} animationEasing="ease-out">
-          <Cell fill={color} /><Cell fill="var(--bg-sunken)" />
+          <Cell fill={color} stroke="none" /><Cell fill="var(--bg-sunken)" stroke="none" />
         </Pie>
       </PieChart>
       <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', pointerEvents:'none' }}>

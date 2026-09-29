@@ -46,11 +46,14 @@ export default function ReportsView() {
     { label: 'Training Complete', value: trainingCompletion, color: 'var(--chart-4)' },
   ];
 
-  const deptChartData = deptStats.map(d => ({
-    dept: d.deptName.length > 14 ? d.deptName.slice(0, 14) + '…' : d.deptName,
-    count: d.totalHeadcount || 0,
-    onboarding: d.onboardingCount || 0,
-  }));
+  const deptChartData = deptStats.map(d => {
+    const dName = d.deptName || 'Unknown';
+    return {
+      dept: dName.length > 14 ? dName.slice(0, 14) + '…' : dName,
+      count: d.totalHeadcount || 0,
+      onboarding: d.onboardingCount || 0,
+    };
+  });
 
   const exportCSV = () => {
     if (!summary) return;
