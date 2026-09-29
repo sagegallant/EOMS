@@ -206,12 +206,12 @@ export async function seed() {
 
   // ── 4. Positions ────────────────────────────────────────────────────
   const positions = await Position.bulkCreate([
-    { deptId: D['Platform Engineering'], jobTitle: 'Engineering Director', jobGrade: 'M2' },
+    { deptId: D['Platform Engineering'], jobTitle: 'Engineering Manager', jobGrade: 'M2' },
     { deptId: D['Platform Engineering'], jobTitle: 'Senior Software Engineer (SDE-II)', jobGrade: 'L3' },
     { deptId: D['Platform Engineering'], jobTitle: 'Lead Frontend Architect', jobGrade: 'L4' },
     { deptId: D['Cloud & Infrastructure Operations'], jobTitle: 'Cloud Infrastructure Specialist', jobGrade: 'L3' },
     { deptId: D['Product & UI/UX Design'], jobTitle: 'Senior Product Designer', jobGrade: 'L3' },
-    { deptId: D['People Operations (Human Resources)'], jobTitle: 'Head of People Operations', jobGrade: 'M2' },
+    { deptId: D['People Operations (Human Resources)'], jobTitle: 'HR Manager', jobGrade: 'M2' },
     { deptId: D['People Operations (Human Resources)'], jobTitle: 'Senior Talent Integration Partner', jobGrade: 'L2' },
     { deptId: D['IT & Systems Engineering'], jobTitle: 'Lead IT Systems Engineer', jobGrade: 'L3' },
     { deptId: D['Legal, POSH & Compliance'], jobTitle: 'Corporate Legal & POSH Officer', jobGrade: 'L3' },
@@ -223,17 +223,17 @@ export async function seed() {
   const employees = await Employee.bulkCreate([
     // Leadership & Admins
     {
-      userId: U.admin, positionId: P['Engineering Director'], firstName: 'Rajesh',
+      userId: U.admin, positionId: P['Engineering Manager'], firstName: 'Rajesh',
       lastName: 'Nambiar', hireDate: '2022-01-10', status: 'active',
       workLocation: 'Bengaluru', workEmail: 'rajesh.nambiar@eoms.in'
     },
     {
-      userId: U['priya.patel'], positionId: P['Head of People Operations'], firstName: 'Priya',
+      userId: U['priya.patel'], positionId: P['HR Manager'], firstName: 'Priya',
       lastName: 'Patel', hireDate: '2023-03-01', status: 'active',
       workLocation: 'Bengaluru', workEmail: 'priya.patel@eoms.in'
     },
     {
-      userId: U['vikram.malhotra'], positionId: P['Engineering Director'], firstName: 'Vikram',
+      userId: U['vikram.malhotra'], positionId: P['Engineering Manager'], firstName: 'Vikram',
       lastName: 'Malhotra', hireDate: '2023-06-15', status: 'active',
       workLocation: 'Bengaluru', workEmail: 'vikram.malhotra@eoms.in'
     },
@@ -305,12 +305,12 @@ export async function seed() {
       workLocation: 'Bengaluru', workEmail: 'alex.johnson@eoms.io'
     },
     {
-      userId: U['sarah.williams'], positionId: P['Head of People Operations'], firstName: 'Sarah',
+      userId: U['sarah.williams'], positionId: P['HR Manager'], firstName: 'Sarah',
       lastName: 'Williams', hireDate: '2023-03-01', status: 'active',
       workLocation: 'Bengaluru', workEmail: 'sarah.williams@eoms.io'
     },
     {
-      userId: U['michael.chen'], positionId: P['Engineering Director'], firstName: 'Michael',
+      userId: U['michael.chen'], positionId: P['Engineering Manager'], firstName: 'Michael',
       lastName: 'Chen', hireDate: '2023-06-15', status: 'active',
       workLocation: 'Bengaluru', workEmail: 'michael.chen@eoms.io'
     },

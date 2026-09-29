@@ -231,6 +231,13 @@ export function handleStaticRequest(config) {
   if (url === '/documents' && method === 'get') {
     return respond(200, { data: documents });
   }
+  if (url === '/documents/types' && method === 'get') {
+    return respond(200, { data: [
+      { typeId: 1, typeName: 'Identity Proof (Aadhaar/PAN)', isMandatory: true },
+      { typeId: 2, typeName: 'Address Proof', isMandatory: true },
+      { typeId: 3, typeName: 'Educational Certificates', isMandatory: false }
+    ]});
+  }
   if (url === '/documents/upload' && method === 'post') {
     const newDoc = {
       documentId: documents.length + 1,

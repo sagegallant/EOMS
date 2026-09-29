@@ -144,18 +144,7 @@ export const STATIC_EMPLOYEES = [
   },
 ];
 
-export const STATIC_CHECKLIST_TASKS = [
-  { taskId: 1, title: 'Upload Government Identity Proof (Aadhaar & PAN)', category: 'compliance', priority: 'critical', estimatedMinutes: 20, isMandatory: true, status: 'completed' },
-  { taskId: 2, title: 'Complete EPFO Form 11 & UAN declaration', category: 'administrative', priority: 'high', estimatedMinutes: 25, isMandatory: true, status: 'completed' },
-  { taskId: 3, title: 'Submit Relieving Letter from previous employer', category: 'administrative', priority: 'high', estimatedMinutes: 15, isMandatory: true, status: 'completed' },
-  { taskId: 4, title: 'Collect laptop from IT & complete hardware handover sign-off', category: 'it_setup', priority: 'critical', estimatedMinutes: 30, isMandatory: true, status: 'completed' },
-  { taskId: 5, title: 'Activate Google Workspace & 2FA corporate authenticator', category: 'it_setup', priority: 'critical', estimatedMinutes: 25, isMandatory: true, status: 'completed' },
-  { taskId: 6, title: 'Acknowledge POSH Act 2013 Policy & ICC Committee details', category: 'compliance', priority: 'critical', estimatedMinutes: 30, isMandatory: true, status: 'completed' },
-  { taskId: 7, title: 'Complete Information Security & DPDP Compliance Module', category: 'training', priority: 'critical', estimatedMinutes: 60, isMandatory: true, status: 'in_progress' },
-  { taskId: 8, title: 'Configure local Docker, Node.js & GitHub SSH keys', category: 'it_setup', priority: 'high', estimatedMinutes: 90, isMandatory: true, status: 'in_progress' },
-  { taskId: 9, title: 'Complete POSH Sensitization Interactive Course & Quiz', category: 'compliance', priority: 'critical', estimatedMinutes: 45, isMandatory: true, status: 'not_started' },
-  { taskId: 10, title: 'Conduct 30-Day Check-in & Feedback Survey with Manager', category: 'manager_meeting', priority: 'high', estimatedMinutes: 45, isMandatory: true, status: 'not_started' },
-];
+export const STATIC_CHECKLIST_TASKS = []; // Deprecated, tasks are now inside training courses
 
 export const STATIC_ASSETS = [
   {
@@ -323,6 +312,11 @@ export const STATIC_TRAINING_COURSES = [
     isMandatory: true,
     passingScore: 80,
     TrainingRecords: [{ status: 'in_progress', score: 85, progressPercent: 64 }],
+    Tasks: [
+      { taskId: 1, title: 'Acknowledge POSH Act 2013 Policy', estimatedMinutes: 15, status: 'completed' },
+      { taskId: 2, title: 'Interactive Video Scenario 1', estimatedMinutes: 15, status: 'completed' },
+      { taskId: 3, title: 'Interactive Video Scenario 2', estimatedMinutes: 15, status: 'not_started' },
+    ]
   },
   {
     courseId: 2,
@@ -332,6 +326,10 @@ export const STATIC_TRAINING_COURSES = [
     isMandatory: true,
     passingScore: 85,
     TrainingRecords: [{ status: 'completed', score: 92, progressPercent: 100 }],
+    Tasks: [
+      { taskId: 4, title: 'Data Privacy Guidelines Review', estimatedMinutes: 20, status: 'completed' },
+      { taskId: 5, title: 'Secure Development Lifecycle', estimatedMinutes: 40, status: 'completed' },
+    ]
   },
   {
     courseId: 3,
@@ -341,6 +339,11 @@ export const STATIC_TRAINING_COURSES = [
     isMandatory: true,
     passingScore: 80,
     TrainingRecords: [{ status: 'completed', score: 95, progressPercent: 100 }],
+    Tasks: [
+      { taskId: 6, title: 'Docker Setup & Key Configuration', estimatedMinutes: 30, status: 'completed' },
+      { taskId: 7, title: 'Microservices Architecture Video', estimatedMinutes: 30, status: 'completed' },
+      { taskId: 8, title: 'Code Review Standards', estimatedMinutes: 30, status: 'completed' },
+    ]
   },
   {
     courseId: 4,
@@ -350,6 +353,10 @@ export const STATIC_TRAINING_COURSES = [
     isMandatory: true,
     passingScore: 80,
     TrainingRecords: [{ status: 'completed', score: 100, progressPercent: 100 }],
+    Tasks: [
+      { taskId: 9, title: 'Ethics & Gift Policies', estimatedMinutes: 15, status: 'completed' },
+      { taskId: 10, title: 'Whistle-blower Mechanisms', estimatedMinutes: 15, status: 'completed' },
+    ]
   },
 ];
 
