@@ -9,6 +9,7 @@ import {
   AnimatedList,
   AnimatedItem,
   PageHeader,
+  StatCard,
 } from '../../components/common/ui';
 import { MiniDonut, HorizontalBar } from '../../components/common/charts';
 import {
@@ -206,21 +207,23 @@ export default function DocumentsView() {
       <PageHeader
         title="Documents"
         subtitle="Statutory document verification & compliance repository."
-        actions={
+        action={
           <div style={{ display: 'flex', gap: 8 }}>
             <Button variant="outline" size="sm" icon={RefreshCw} onClick={loadData} disabled={loading}>
               Refresh
             </Button>
-            <Button
-              size="sm"
-              icon={Upload}
-              onClick={() => {
-                setUploadError(null);
-                setUploadModalOpen(true);
-              }}
-            >
-              Upload Document
-            </Button>
+            {!isStaff && (
+              <Button
+                size="sm"
+                icon={Upload}
+                onClick={() => {
+                  setUploadError(null);
+                  setUploadModalOpen(true);
+                }}
+              >
+                Upload Document
+              </Button>
+            )}
           </div>
         }
       />
@@ -234,31 +237,11 @@ export default function DocumentsView() {
         </Card>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--sp-4)' }}>
-        <Card $p="var(--sp-4)">
-          <div className="label-caps" style={{ marginBottom: 12 }}>Verification Compliance</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <MiniDonut
-              value={verifiedCount}
-              total={total || 1}
-              label={total ? `${Math.round((verifiedCount / total) * 100)}%` : '0%'}
-              size={72}
-              color="var(--chart-1)"
-            />
-            <div style={{ fontSize: '0.8125rem', display: 'grid', gap: 5, flex: 1 }}>
-              {statusBars.map((s) => (
-                <div key={s.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}>
-                  <span style={{ color: 'var(--text-muted)' }}>{s.label}</span>
-                  <span style={{ fontWeight: 700 }}>{s.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Card>
-        <Card $p="var(--sp-4)">
-          <div className="label-caps" style={{ marginBottom: 10 }}>Verification Status Breakdown</div>
-          <HorizontalBar items={statusBars} maxValue={Math.max(total, 1)} />
-        </Card>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--sp-4)' }}>
+        <StatCard label="APPROVED" value={verifiedCount} icon={FileCheck} />
+        <StatCard label="PENDING" value={pendingCount} icon={FileWarning} />
+        <StatCard label="REJECTED" value={rejectedCount} icon={XCircle} />
+        <StatCard label="RESUBMIT" value={resubmitCount} icon={FileMinus} />
       </div>
 
       <Card $p="var(--sp-5)">

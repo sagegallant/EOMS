@@ -67,8 +67,17 @@ export default function AssetsView() {
         assetApi.list(),
         assetApi.listAllocations(),
       ]);
-      setAssets(assetsRes.data || []);
-      setAllocations(allocsRes.data || []);
+      let fetchedAssets = assetsRes.data || [];
+      let fetchedAllocs = allocsRes.data || [];
+
+      if (!isITOrAdmin && user?.employeeId) {
+        fetchedAllocs = fetchedAllocs.filter(al => Number(al.employeeId) === Number(user.employeeId));
+        const myAssetIds = new Set(fetchedAllocs.map(al => al.assetId));
+        fetchedAssets = fetchedAssets.filter(a => myAssetIds.has(a.assetId));
+      }
+
+      setAssets(fetchedAssets);
+      setAllocations(fetchedAllocs);
 
       if (isITOrAdmin) {
         try {

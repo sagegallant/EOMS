@@ -253,8 +253,8 @@ export default function EmployeeDirectory() {
             const jobTitle = emp.Position?.jobTitle || 'Team Member';
             const deptName = emp.Position?.Department?.deptName || 'General';
             const progress = emp.OnboardingPlan?.progressPercent ?? 0;
-            const statusTone = progress >= 75 ? 'sage' : progress >= 30 ? 'info' : 'warning';
-            const statusLabel = progress === 100 ? 'Completed' : progress >= 50 ? 'On Track' : 'In Progress';
+            const statusTone = emp.status === 'active' ? 'success' : progress >= 75 ? 'sage' : progress >= 30 ? 'info' : 'warning';
+            const statusLabel = emp.status === 'active' ? 'Active' : progress === 100 ? 'Completed' : progress >= 50 ? 'On Track' : 'In Progress';
 
             return (
               <AnimatedItem key={emp.employeeId}>
