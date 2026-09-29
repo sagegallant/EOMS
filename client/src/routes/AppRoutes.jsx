@@ -69,7 +69,7 @@ function DashboardRouter() {
   if (roles.some(r => ['HR_ADMIN', 'SYSTEM_ADMIN', 'HR_SPECIALIST', 'COMPLIANCE_OFFICER'].includes(r))) return <HRDashboard />;
   if (roles.includes('MANAGER') || roles.includes('DEPARTMENT_MANAGER')) return <ManagerDashboard />;
   if (roles.includes('IT_ADMIN')) return <ITDashboard />;
-  return <EmployeeDashboard />;
+  return <Navigate to="/profile" replace />;
 }
 
 export default function AppRoutes() {

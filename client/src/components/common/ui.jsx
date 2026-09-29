@@ -292,7 +292,7 @@ export function CircularArc({ value = 0, max = 100, size = 140, strokeWidth = 10
 ───────────────────────────────────────────────────────── */
 export function DarkPanel({ title, counter, children, subtitle }) {
   return (
-    <div style={{ background:'var(--dark-panel)', borderRadius:'var(--r-xl)', padding:'var(--sp-5)', height:'100%', display:'flex', flexDirection:'column', gap:'var(--sp-4)' }}>
+    <div style={{ background:'var(--dark-panel)', borderRadius:'var(--r-xl)', padding:'var(--sp-4)', height:'100%', display:'flex', flexDirection:'column', gap:'var(--sp-3)' }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
         <div>
           <div style={{ fontSize:'1rem', fontWeight:600, color:'#fff' }}>{title}</div>
@@ -314,9 +314,9 @@ export function DarkTaskItem({ title, subtitle, done = false, onClick, icon: Ico
   return (
     <div
       onClick={onClick}
-      style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 0', borderBottom:'1px solid rgba(255,255,255,0.07)', cursor: onClick ? 'pointer' : 'default' }}
+      style={{ display:'flex', alignItems:'center', gap:10, padding:'6px 0', borderBottom:'1px solid rgba(255,255,255,0.07)', cursor: onClick ? 'pointer' : 'default' }}
     >
-      <div style={{ width:32, height:32, borderRadius:'var(--r-md)', background: done ? 'var(--sage-700)' : 'rgba(255,255,255,0.08)', display:'grid', placeItems:'center', flexShrink:0, transition:'background var(--t-fast)' }}>
+      <div style={{ width:28, height:28, borderRadius:'var(--r-md)', background: done ? 'var(--sage-700)' : 'rgba(255,255,255,0.08)', display:'grid', placeItems:'center', flexShrink:0, transition:'background var(--t-fast)' }}>
         {done
           ? <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7L5.5 10L11.5 4" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
           : Icon ? <Icon size={14} style={{ color:'rgba(255,255,255,0.5)' }} /> : null
