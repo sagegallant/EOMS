@@ -14974,5 +14974,99 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       }
     });
   </script>
+
+  <!-- Standalone On-Hover Entity Explainer -->
+  <div id="standaloneExplainerCard" style="
+    position: fixed;
+    width: 360px;
+    background: #0f172a;
+    border: 1px solid #38bdf8;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 24px rgba(56,189,248,0.25);
+    border-radius: 10px;
+    padding: 14px 16px;
+    z-index: 99999;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.96) translateY(6px);
+    transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #f8fafc;
+  ">
+    <div id="saExpCategory" style="display:inline-block; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; padding:2px 7px; border-radius:4px; background:rgba(56,189,248,0.15); color:#38bdf8; margin-bottom:6px; border:1px solid rgba(56,189,248,0.3);">Component</div>
+    <div id="saExpName" style="font-size:14px; font-weight:700; color:#ffffff; line-height:1.2;">Entity Title</div>
+    <div id="saExpFullName" style="font-size:11.5px; font-weight:600; color:#cbd5e1; margin-top:2px; margin-bottom:10px;">Full Formal Name</div>
+    <div style="height:1px; background:#1e293b; margin-bottom:10px;"></div>
+    <div style="margin-bottom:8px;">
+      <div style="font-size:9.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#64748b; margin-bottom:3px;">PURPOSE</div>
+      <div id="saExpPurpose" style="font-size:11.5px; color:#94a3b8; line-height:1.45;">Purpose explanation...</div>
+    </div>
+    <div>
+      <div style="font-size:9.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#64748b; margin-bottom:3px;">HOW IT WORKS IN EOMS</div>
+      <div id="saExpEoms" style="font-size:11px; color:#34d399; background:rgba(52,211,153,0.08); border-left:2px solid #34d399; padding:6px 8px; border-radius:0 4px 4px 0; line-height:1.4;">EOMS working...</div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const DICT = {"client":{"name":"Client App","fullName":"Single Page Application (React 18 + Vite)","category":"Frontend Layer","purpose":"Interactive browser client managing authenticated user state and dashboard views.","eoms":"Built with React and Zustand state store. Attaches Authorization: Bearer <token> to API calls and handles automatic 401 token refresh."},"ratelimit":{"name":"Rate Limiter","fullName":"Ingress Request Rate Limiting (express-rate-limit)","category":"Security Perimeter","purpose":"Restricts incoming requests per IP address to block brute-force attacks and credential stuffing.","eoms":"Throttles /api/auth/login and /api/auth/mfa/verify to max 5 attempts/minute per IP, returning HTTP 429 Too Many Requests on breach."},"auth_ctrl":{"name":"Auth Controller","fullName":"Authentication & Session Controller","category":"Application Backend","purpose":"Central coordinator for user authentication, password validation, MFA challenges, and token issuance.","eoms":"Handles login requests, verifies bcrypt hashes, coordinates 2-step MFA state, and manages rotating refresh token cycles."},"bcrypt_engine":{"name":"Bcrypt Engine","fullName":"Blowfish Cryptographic Password Hasher","category":"Cryptographic Security","purpose":"Adaptive one-way password hashing algorithm with configurable computational work factor.","eoms":"Hashes passwords using 10 salt rounds (1024 iterations). Compares candidate passwords using constant-time comparison to prevent timing attacks."},"totp_engine":{"name":"TOTP MFA Engine","fullName":"Time-Based One-Time Password Engine (RFC 6238)","category":"Identity Security","purpose":"Computes and verifies time-synchronized 6-digit one-time passcodes from a shared secret.","eoms":"Uses otplib to verify codes against the current 30-second Unix time slice with ±1 step window tolerance to accommodate client clock drift."},"jwt_issuer":{"name":"JWT Token Engine","fullName":"JSON Web Token Issuer & Signer (HS256)","category":"Session Management","purpose":"Issues digitally signed, stateless authentication tokens carrying user identity and role claims.","eoms":"Signs short-lived 15-minute access tokens with HMAC-SHA256. Persists 7-day rotating refresh tokens in MySQL for session continuity."},"users_db":{"name":"Users Store","fullName":"MySQL Relational Users Database (:3306)","category":"Durable Storage","purpose":"Persistent storage for user identities, password hashes, MFA secrets, and role assignments.","eoms":"Maintains Users, MfaSecrets, and session states with strict relational foreign keys and index-optimized email lookups."},"audit_log":{"name":"Audit Logger","fullName":"Immutable Security Audit Pipeline","category":"Compliance & Audit","purpose":"Tamper-evident event recording capturing all critical security and administrative actions.","eoms":"Appends structured JSON records to AuditLogs table for logins, failed MFA attempts, role changes, and administrative overrides."},"auth_guard":{"name":"Auth Guard","fullName":"JWT Authentication Middleware (authenticateToken)","category":"Security Gatekeeper","purpose":"Intercepts incoming HTTP requests to verify bearer token validity and unpack user identity.","eoms":"Extracts Bearer token from Authorization header, validates HS256 signature, checks expiration, and attaches decoded payload to req.user."},"rbac_middleware":{"name":"RBAC Middleware","fullName":"Policy Enforcement Point (PEP - authorizePermission)","category":"Access Control","purpose":"Guards protected endpoints by requiring specific operational capabilities (e.g. employees:create).","eoms":"Checks user role against required permission. Halts unauthorized access immediately with HTTP 403 Forbidden."},"inmemory_cache":{"name":"In-Memory Cache","fullName":"Time-To-Live (TTL: 60s) Process Cache","category":"Performance Cache","purpose":"In-process RAM storage providing sub-millisecond capability resolution without repeated database queries.","eoms":"Caches resolved role-permission sets in memory for 60 seconds. Automatically evicts stale entries so admin role updates propagate within a minute."},"policy_resolver":{"name":"Policy Resolver","fullName":"Policy Decision Point (PDP - Permission Matrix Evaluator)","category":"Policy Evaluation","purpose":"Evaluates authorization matrices to produce binary grant/deny decisions for requested operations.","eoms":"Checks role permissions in memory cache; on cache-miss, executes optimized join query across Roles, Permissions, and RolePermissions."},"rbac_db":{"name":"Roles & Perms DB","fullName":"MySQL Relational Permission Storage","category":"Durable Storage","purpose":"Stores normalized role definitions, system permissions, and join mappings.","eoms":"Houses Roles, Permissions, and RolePermissions tables with unique capability indexes."},"route_handler":{"name":"Route Controller","fullName":"Protected API Business Logic Handler","category":"Application Backend","purpose":"Executes target domain logic only after identity and authorization requirements are fully satisfied.","eoms":"Performs domain operations (e.g. create employee, approve document) with guaranteed permission authority."},"hr_portal":{"name":"HR Portal","fullName":"HR Management Onboarding Client","category":"Frontend Layer","purpose":"Interface for HR specialists to submit new employee profiles and initiate onboarding workflows.","eoms":"Validates form inputs client-side and dispatches POST /api/employees with department, position, and personal details."},"validator":{"name":"Payload Guard","fullName":"Input Validation & Sanitization Layer","category":"Security & Validation","purpose":"Validates data structure, formats, and checks uniqueness before opening database transactions.","eoms":"Enforces strict schemas, checks for email collision, and sanitizes strings to prevent SQL/XSS injections."},"tx_coordinator":{"name":"Tx Coordinator","fullName":"Sequelize Managed Transaction Manager","category":"Database Coordination","purpose":"Coordinates multi-table operations under ACID guarantees with automatic commit/rollback.","eoms":"Opens a transaction with READ COMMITTED isolation. If any provisioning step fails, executes automatic ROLLBACK to prevent orphan records."},"entity_pipeline":{"name":"Entity Pipeline","fullName":"Atomic Multi-Entity Provisioning Unit","category":"Domain Orchestration","purpose":"Creates foundational employee records across multiple dependent relational tables.","eoms":"Within the transaction: creates User account, binds Employee profile, and seeds standard Day 1, Week 1, and Month 1 OnboardingTasks."},"asset_trigger":{"name":"Asset & Event Unit","fullName":"Hardware Pre-Allocation & Notification Hook","category":"Integration Unit","purpose":"Generates initial IT hardware requests and prepares post-commit event notifications.","eoms":"Creates AssetRequests for laptops and peripherals, queuing tasks for IT technicians."},"mysql_db":{"name":"MySQL InnoDB","fullName":"ACID Relational Storage Engine (:3306)","category":"Durable Storage","purpose":"Enterprise relational database engine guaranteeing data consistency and transaction durability.","eoms":"Maintains transactional tables with foreign key integrity and write-ahead redo logging."},"audit_notifier":{"name":"Event Dispatcher","fullName":"Post-Commit Asynchronous Event Dispatcher","category":"Messaging & Notification","purpose":"Dispatches external alerts and welcome communications strictly after database commit succeeds.","eoms":"Fires welcome emails and IT alerts only in the post-commit hook, guaranteeing zero phantom notices if a transaction fails."},"it_admin":{"name":"IT Ops Portal","fullName":"IT Hardware Management Dashboard","category":"Frontend Layer","purpose":"Interface for IT technicians to view asset inventory, scan barcodes, and allocate devices.","eoms":"Renders real-time asset availability and submits POST /api/assets/allocate with serial numbers and employee IDs."},"asset_ctrl":{"name":"Asset Controller","fullName":"Hardware Asset Lifecycle Controller","category":"Application Backend","purpose":"Processes asset allocation, maintenance updates, and return requests.","eoms":"Validates technician inputs and delegates concurrency control to the Lock Coordinator."},"lock_mgr":{"name":"Lock Coordinator","fullName":"Pessimistic Row-Level Lock Manager (SELECT ... FOR UPDATE)","category":"Concurrency Control","purpose":"Acquires an exclusive database lock on the asset record to prevent simultaneous double-allocation.","eoms":"Executes SELECT * FROM Assets WHERE id = :id FOR UPDATE, forcing concurrent requests to wait until the current allocation finishes."},"state_machine":{"name":"State Evaluator","fullName":"Hardware Lifecycle State Machine","category":"Domain Logic","purpose":"Enforces legal status transitions: AVAILABLE -> ALLOCATED -> RETURNED -> MAINTENANCE -> RETIRED.","eoms":"Verifies the asset is currently AVAILABLE; rejects allocation with HTTP 409 Conflict if already allocated or under repair."},"barcode_tracker":{"name":"Serial Unit","fullName":"AssetAllocation Record & Barcode Binder","category":"Tracking & Audit","purpose":"Creates historical audit bindings between the specific hardware unit and the employee.","eoms":"Inserts record into AssetAllocations table with timestamp, technician ID, condition notes, and serial number."},"asset_db":{"name":"Assets & Allocations","fullName":"MySQL InnoDB Row-Locked Inventory Store","category":"Durable Storage","purpose":"Stores physical asset records, specifications, serial numbers, and current assignment states.","eoms":"Commits asset status update to ALLOCATED and releases the row lock atomically upon transaction commit."},"it_notifier":{"name":"Alert Dispatcher","fullName":"Hardware Assignment Notification Service","category":"Notification Layer","purpose":"Alerts the employee that hardware has been assigned and marks onboarding checklist tasks complete.","eoms":"Updates corresponding 'Receive Equipment' checklist item and sends in-app notification to the onboardee."},"upload_guard":{"name":"Upload Guard","fullName":"Multer Upload Filter & Binary MIME Inspector","category":"Perimeter Security","purpose":"Throttles file sizes (10MB max) and validates binary magic bytes to prevent malware ingestion.","eoms":"Inspects stream buffer headers to confirm genuine PDF/DOCX/PNG format, rejecting disguised executables."},"integrity_hasher":{"name":"Integrity Engine","fullName":"Cryptographic SHA-256 Checksum Engine","category":"File Integrity","purpose":"Computes an immutable 256-bit cryptographic digest of the uploaded file to prove zero tampering.","eoms":"Calculates SHA-256 hash during file streaming and stores the hash in the Documents table for verification audits."},"storage_vault":{"name":"Quarantine Vault","fullName":"Path-Sanitized Local Disk Storage","category":"Secure Storage","purpose":"Stores uploaded files with randomized UUIDv4 filenames to completely eliminate directory traversal attacks.","eoms":"Saves files with UUID prefixes in uploads/ directory; canonicalizes paths to prevent ../ directory climbing exploits."},"stream_gateway":{"name":"Stream Gateway","fullName":"Role-Gated Chunked Stream Server","category":"Data Streaming","purpose":"Streams files in memory-efficient byte chunks directly to authorized HTTP responses.","eoms":"Checks user permissions and uses fs.createReadStream().pipe(res), maintaining a tiny memory footprint under concurrent loads."},"doc_db":{"name":"Document Metadata","fullName":"MySQL Documents & Verification Table","category":"Durable Storage","purpose":"Maintains document records including file paths, SHA-256 digests, verification status, and reviewer IDs.","eoms":"Stores relational metadata for compliance audits and employee record tracking."},"compliance_audit":{"name":"Compliance Audit","fullName":"Document Verification & Access Audit Log","category":"Audit & Compliance","purpose":"Records all document uploads, HR approvals, rejections, and download access events.","eoms":"Appends tamper-evident audit log entries for regulatory compliance and verification history."},"trainee_portal":{"name":"Trainee Portal","fullName":"Employee LMS & Training Interface","category":"Frontend Layer","purpose":"Interactive learning portal for completing compliance courses, reading materials, and taking quizzes.","eoms":"Fetches training modules, presents randomized questions, and submits answers via POST /api/training/modules/:id/quiz."},"lms_ctrl":{"name":"LMS Controller","fullName":"Training Module & Quiz Handler","category":"Application Backend","purpose":"Orchestrates module access, quiz submissions, and training prerequisite checks.","eoms":"Validates trainee eligibility, checks module prerequisites, and passes answers to the Blind Scorer."},"blind_scorer":{"name":"Blind Quiz Scorer","fullName":"Server-Side Blind Quiz Evaluation Engine","category":"Exam Integrity","purpose":"Grades quiz submissions against server-side answer keys with zero correct-answer exposure to the client.","eoms":"Client browser never receives answer keys; server compares choices in constant time, calculates percentage, and determines pass/fail."},"progress_aggregator":{"name":"Progress Aggregator","fullName":"Weighted Onboarding Completion Engine","category":"Reporting & Metrics","purpose":"Computes overall employee onboarding readiness percentage based on all completed requirements.","eoms":"Calculates (completed_tasks / total_tasks) * 100% in real-time, updating Employees.onboarding_progress in the database."},"training_db":{"name":"Training & Tasks Store","fullName":"MySQL Relational Training & Tasks Database","category":"Durable Storage","purpose":"Persists course catalogs, quiz questions, employee scores, task deadlines, and completion statuses.","eoms":"Maintains TrainingModules, QuizQuestions, EmployeeQuizAttempts, and OnboardingTasks tables."},"sla_scheduler":{"name":"SLA Scheduler","fullName":"Node-Cron Background Task Sweeper","category":"Automated Scheduler","purpose":"Runs background periodic sweeps to detect overdue onboarding tasks and milestone breaches.","eoms":"Executes an hourly cron job checking active tasks where due_date < NOW() and status != 'COMPLETED'."},"escalation_engine":{"name":"Escalation Monitor","fullName":"SLA Breach Evaluator & Escalation Manager","category":"Workflow Automation","purpose":"Identifies breached milestones and triggers tiered escalation workflows.","eoms":"Transitions overdue tasks to OVERDUE status and builds escalation payloads for managers and mentors."},"alert_service":{"name":"Alert Service","fullName":"Multi-Channel Escalation Alert Builder","category":"Notification Service","purpose":"Formats urgent escalation alerts tailored for managers, HR coordinators, and assigned onboarding buddies.","eoms":"Generates prioritized alert payloads with task details, employee name, days overdue, and resolution links."},"notification_queue":{"name":"Notification Stream","fullName":"In-App & Email Dispatch Queue","category":"Messaging & Alerts","purpose":"Delivers notifications to user dashboards and dispatches outbound escalation emails.","eoms":"Writes to Notifications table and delivers real-time alert updates to connected clients."}};
+      const card = document.getElementById('standaloneExplainerCard');
+      const cat = document.getElementById('saExpCategory');
+      const name = document.getElementById('saExpName');
+      const fullName = document.getElementById('saExpFullName');
+      const purpose = document.getElementById('saExpPurpose');
+      const eoms = document.getElementById('saExpEoms');
+
+      function attachExplainer() {
+        const nodes = document.querySelectorAll('[data-node-id]');
+        nodes.forEach(node => {
+          node.style.cursor = 'help';
+          node.addEventListener('mouseenter', () => {
+            const id = node.getAttribute('data-node-id');
+            const data = DICT[id];
+            if (!data) return;
+
+            cat.textContent = data.category;
+            name.textContent = data.name;
+            fullName.textContent = data.fullName;
+            purpose.textContent = data.purpose;
+            eoms.textContent = data.eoms;
+
+            const rect = node.getBoundingClientRect();
+            let left = rect.right + 14;
+            let top = rect.top;
+
+            if (left + 360 > window.innerWidth - 20) {
+              left = rect.left - 360 - 14;
+            }
+            if (left < 10) left = 10;
+            if (top + 240 > window.innerHeight - 20) {
+              top = Math.max(10, window.innerHeight - 240 - 20);
+            }
+            if (top < 10) top = 10;
+
+            card.style.left = left + 'px';
+            card.style.top = top + 'px';
+            card.style.opacity = '1';
+            card.style.visibility = 'visible';
+            card.style.transform = 'scale(1) translateY(0)';
+          });
+
+          node.addEventListener('mouseleave', () => {
+            card.style.opacity = '0';
+            card.style.visibility = 'hidden';
+            card.style.transform = 'scale(0.96) translateY(6px)';
+          });
+        });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', attachExplainer);
+      } else {
+        attachExplainer();
+      }
+    })();
+  </script>
+
 </body>
 </html>
