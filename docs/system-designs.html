@@ -3,15 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EOMS — Dedicated Micro-Architecture Portal</title>
+  <title>EOMS — Dedicated Micro-Architecture Portal & Glossary</title>
   <style>
     :root {
       --bg: #090d16;
-      --surface: #111827;
-      --surface-border: #1f293d;
+      --surface: #0f172a;
+      --surface-border: #1e293b;
       --primary: #38bdf8;
       --primary-glow: rgba(56, 189, 248, 0.15);
-      --text: #f3f4f6;
+      --accent: #818cf8;
+      --emerald: #34d399;
+      --amber: #fbbf24;
+      --rose: #f43f5e;
+      --text: #f8fafc;
       --text-muted: #94a3b8;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -27,26 +31,32 @@
     header {
       background: var(--surface);
       border-bottom: 1px solid var(--surface-border);
-      padding: 12px 24px;
+      padding: 10px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-shrink: 0;
-      gap: 16px;
+      gap: 12px;
       flex-wrap: wrap;
     }
-    .brand-title {
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      color: #fff;
+    .brand {
       display: flex;
       align-items: center;
       gap: 10px;
     }
+    .brand-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
     .badge {
-      font-size: 11px;
-      font-weight: 600;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
       padding: 2px 8px;
       border-radius: 999px;
       background: var(--primary-glow);
@@ -55,7 +65,7 @@
     }
     nav {
       display: flex;
-      gap: 6px;
+      gap: 4px;
       overflow-x: auto;
       padding-bottom: 2px;
     }
@@ -63,60 +73,287 @@
       background: transparent;
       border: 1px solid transparent;
       color: var(--text-muted);
-      padding: 8px 14px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
       cursor: pointer;
       white-space: nowrap;
       transition: all 0.15s ease;
     }
     .tab-btn:hover {
       color: #fff;
-      background: rgba(255, 255, 255, 0.04);
+      background: rgba(255, 255, 255, 0.05);
     }
     .tab-btn.active {
       color: #fff;
-      background: rgba(56, 189, 248, 0.12);
-      border-color: rgba(56, 189, 248, 0.3);
+      background: rgba(56, 189, 248, 0.14);
+      border-color: rgba(56, 189, 248, 0.35);
     }
     .actions {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
     .action-btn {
       color: var(--text-muted);
       font-size: 12px;
+      font-weight: 600;
       text-decoration: none;
       padding: 6px 12px;
       border: 1px solid var(--surface-border);
       border-radius: 6px;
+      cursor: pointer;
       transition: all 0.15s ease;
       background: rgba(255, 255, 255, 0.02);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
-    .action-btn:hover {
+    .action-btn:hover, .action-btn.active-panel {
       color: #fff;
       border-color: var(--primary);
+      background: rgba(56, 189, 248, 0.1);
     }
+
+    /* Quick hover terms strip */
+    .quick-glossary-bar {
+      background: #0b1120;
+      border-bottom: 1px solid var(--surface-border);
+      padding: 6px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 11px;
+      overflow-x: auto;
+      flex-shrink: 0;
+    }
+    .quick-glossary-bar .label {
+      color: var(--primary);
+      font-weight: 700;
+      white-space: nowrap;
+      text-transform: uppercase;
+      font-size: 10px;
+      letter-spacing: 0.05em;
+    }
+    .glossary-chips {
+      display: flex;
+      gap: 6px;
+    }
+    .term-chip {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #cbd5e1;
+      padding: 3px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      position: relative;
+      white-space: nowrap;
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+    .term-chip:hover {
+      border-color: var(--primary);
+      color: #fff;
+      background: rgba(56, 189, 248, 0.1);
+    }
+
+    /* Tooltip popup on hover */
+    .term-chip .tooltip-card {
+      visibility: hidden;
+      opacity: 0;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      transform: translateY(6px);
+      width: 320px;
+      background: #111827;
+      border: 1px solid #38bdf8;
+      box-shadow: 0 16px 36px rgba(0,0,0,0.6);
+      padding: 12px;
+      border-radius: 8px;
+      z-index: 1000;
+      white-space: normal;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      pointer-events: none;
+    }
+    .term-chip:hover .tooltip-card {
+      visibility: visible;
+      opacity: 1;
+      transform: translateY(10px);
+    }
+    .tooltip-card .title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 2px;
+    }
+    .tooltip-card .full-name {
+      font-size: 11px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+    .tooltip-card .desc {
+      font-size: 11px;
+      color: #94a3b8;
+      line-height: 1.45;
+      margin-bottom: 6px;
+    }
+    .tooltip-card .working {
+      font-size: 10.5px;
+      color: #34d399;
+      background: rgba(52, 211, 153, 0.08);
+      padding: 4px 6px;
+      border-radius: 4px;
+      line-height: 1.35;
+    }
+
     main {
       flex: 1;
       position: relative;
       background: #06090e;
+      display: flex;
     }
     iframe {
-      width: 100%;
+      flex: 1;
       height: 100%;
       border: none;
       display: block;
+    }
+
+    /* Dictionary Slide-over Drawer */
+    .dictionary-drawer {
+      position: absolute;
+      top: 0;
+      right: -520px;
+      width: 500px;
+      max-width: 90vw;
+      height: 100%;
+      background: #0f172a;
+      border-left: 1px solid var(--surface-border);
+      box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+      z-index: 500;
+      display: flex;
+      flex-direction: column;
+      transition: right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .dictionary-drawer.open {
+      right: 0;
+    }
+    .drawer-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--surface-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .drawer-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .drawer-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    .drawer-close:hover { color: #fff; background: rgba(255,255,255,0.06); }
+    .drawer-search {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--surface-border);
+      background: #0b1120;
+    }
+    .search-input {
+      width: 100%;
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+    }
+    .search-input:focus {
+      border-color: var(--primary);
+    }
+    .drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .dict-item {
+      background: #162032;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 12px 14px;
+      transition: border-color 0.15s ease;
+    }
+    .dict-item:hover {
+      border-color: rgba(56, 189, 248, 0.4);
+    }
+    .dict-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .dict-abbr {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .dict-category {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.06);
+      color: #94a3b8;
+    }
+    .dict-full {
+      font-size: 12px;
+      font-weight: 600;
+      color: #f1f5f9;
+      margin-bottom: 6px;
+    }
+    .dict-meaning {
+      font-size: 11.5px;
+      color: #94a3b8;
+      line-height: 1.45;
+      margin-bottom: 8px;
+    }
+    .dict-eoms {
+      font-size: 11px;
+      color: #34d399;
+      background: rgba(52, 211, 153, 0.08);
+      border-left: 2px solid #34d399;
+      padding: 6px 8px;
+      border-radius: 0 4px 4px 0;
+      line-height: 1.4;
     }
   </style>
 </head>
 <body>
   <header>
-    <div class="brand-title">
-      EOMS Micro-Architectures
-      <span class="badge">Archify Animated</span>
+    <div class="brand">
+      <div class="brand-title">
+        EOMS Micro-Architectures
+        <span class="badge">Archify Animated</span>
+      </div>
     </div>
     <nav>
       <button class="tab-btn active" data-src="micro-auth-security.html">1. Auth & MFA Security</button>
@@ -127,15 +364,115 @@
       <button class="tab-btn" data-src="micro-lms-sla-engine.html">6. LMS Quiz & SLA</button>
     </nav>
     <div class="actions">
-      <a id="openTab" class="action-btn" href="micro-auth-security.html" target="_blank" rel="noopener">Open Dedicated Window ↗</a>
+      <button id="toggleDictBtn" class="action-btn">
+        📖 Architecture Dictionary
+      </button>
+      <a id="openTab" class="action-btn" href="micro-auth-security.html" target="_blank" rel="noopener">Open Fullscreen ↗</a>
     </div>
   </header>
 
+  <!-- Quick hover strip -->
+  <div class="quick-glossary-bar">
+    <span class="label">Quick Hover Explainer:</span>
+    <div class="glossary-chips">
+      <div class="term-chip" data-term="MFA">MFA
+        <div class="tooltip-card">
+          <div class="title">MFA</div>
+          <div class="full-name">Multi-Factor Authentication</div>
+          <div class="desc">Requires two or more identity credentials before issuing access tokens.</div>
+          <div class="working">In EOMS: Primary password verified first; requires 6-digit TOTP before session JWT tokens are granted.</div>
+        </div>
+      </div>
+      <div class="term-chip" data-term="TOTP">TOTP
+        <div class="tooltip-card">
+          <div class="title">TOTP (RFC 6238)</div>
+          <div class="full-name">Time-Based One-Time Password</div>
+          <div class="desc">A shared secret and current 30-second Unix time slice generate an ephemeral 6-digit code.</div>
+          <div class="working">In EOMS: Handled via `otplib`. Calculates current step with ±1 step window tolerance for clock drift.</div>
+        </div>
+      </div>
+      <div class="term-chip" data-term="JWT">JWT
+        <div class="tooltip-card">
+          <div class="title">JWT (HS256)</div>
+          <div class="full-name">JSON Web Token</div>
+          <div class="desc">Digitally signed, stateless token containing claims like userId, role, and department.</div>
+          <div class="working">In EOMS: 15-minute access token in Authorization header; 7-day rotating refresh token in MySQL.</div>
+        </div>
+      </div>
+      <div class="term-chip" data-term="RBAC">RBAC
+        <div class="tooltip-card">
+          <div class="title">RBAC</div>
+          <div class="full-name">Role-Based Access Control</div>
+          <div class="desc">Restricts system access based on user roles and mapped capabilities.</div>
+          <div class="working">In EOMS: Users -> Roles -> RolePermissions -> Permissions. Middleware checks required capability.</div>
+        </div>
+      </div>
+      <div class="term-chip" data-term="TTL">TTL Cache
+        <div class="tooltip-card">
+          <div class="title">TTL (60s)</div>
+          <div class="full-name">Time-To-Live In-Memory Cache</div>
+          <div class="desc">Expiration duration for cached data in server memory.</div>
+          <div class="working">In EOMS: Resolves role permissions in sub-millisecond RAM. Automatically evicts after 60s to refresh permissions.</div>
+        </div>
+      </div>
+      <div class="term-chip" data-term="ACID">ACID Tx
+        <div class="tooltip-card">
+          <div class="title">ACID Transaction</div>
+          <div class="full-name">Atomicity, Consistency, Isolation, Durability</div>
+          <div class="desc">Guarantees that database multi-table modifications succeed completely or roll back entirely.</div>
+          <div class="working">In EOMS: User, Employee, Tasks, and Asset requests created in one atomic transaction; rolls back on failure.</div>
+        </div>
+      </div>
+      <div class="term-chip" data-term="FOR_UPDATE">SELECT FOR UPDATE
+        <div class="tooltip-card">
+          <div class="title">SELECT ... FOR UPDATE</div>
+          <div class="full-name">Pessimistic Row-Level Locking</div>
+          <div class="desc">Locks retrieved database rows until the transaction finishes, blocking concurrent writers.</div>
+          <div class="working">In EOMS: Prevents double-allocation of laptops by locking the hardware row during IT assignment.</div>
+        </div>
+      </div>
+      <div class="term-chip" data-term="SHA256">SHA-256
+        <div class="tooltip-card">
+          <div class="title">SHA-256</div>
+          <div class="full-name">Secure Hash Algorithm 256-bit</div>
+          <div class="desc">Cryptographic fingerprint guaranteeing tamper-proof file and password security.</div>
+          <div class="working">In EOMS: Hashes uploaded documents upon arrival to prove zero tampering during compliance audits.</div>
+        </div>
+      </div>
+      <div class="term-chip" data-term="SLA">SLA Sweeper
+        <div class="tooltip-card">
+          <div class="title">SLA Engine</div>
+          <div class="full-name">Service Level Agreement Scheduler</div>
+          <div class="desc">Automated monitoring system verifying that onboarding milestones meet their due dates.</div>
+          <div class="working">In EOMS: Node-Cron sweeps active tasks; flags overdue items and dispatches manager escalation notifications.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <main>
     <iframe id="diagramFrame" src="micro-auth-security.html" title="EOMS Micro Architecture"></iframe>
+
+    <!-- Dictionary Drawer -->
+    <aside id="dictDrawer" class="dictionary-drawer">
+      <div class="drawer-header">
+        <div class="drawer-title">
+          📖 Architecture Glossary
+          <span class="badge">Team Explainer</span>
+        </div>
+        <button id="closeDictBtn" class="drawer-close" aria-label="Close dictionary">&times;</button>
+      </div>
+      <div class="drawer-search">
+        <input type="text" id="dictSearch" class="search-input" placeholder="Search acronyms or concepts (e.g. TOTP, RBAC, ACID, SLA)...">
+      </div>
+      <div class="drawer-body" id="dictList">
+        <!-- Rendered via JS -->
+      </div>
+    </aside>
   </main>
 
   <script>
+    // Tab switching
     const frame = document.getElementById('diagramFrame');
     const openBtn = document.getElementById('openTab');
     const buttons = document.querySelectorAll('.tab-btn');
@@ -147,6 +484,218 @@
         const src = btn.getAttribute('data-src');
         frame.src = src;
         openBtn.href = src;
+      });
+    });
+
+    // Dictionary Data
+    const dictionary = [
+      {
+        abbr: "MFA",
+        category: "Security",
+        full: "Multi-Factor Authentication",
+        meaning: "A security measure requiring users to present two or more independent credentials before obtaining authorized access.",
+        eoms: "EOMS requires email + password as factor 1, followed by an RFC 6238 TOTP code or single-use recovery code as factor 2 before generating session tokens."
+      },
+      {
+        abbr: "TOTP",
+        category: "Security",
+        full: "Time-Based One-Time Password (RFC 6238)",
+        meaning: "An algorithm that computes a one-time passcode using a shared secret key and the current Unix timestamp.",
+        eoms: "EOMS pairs with Google/Microsoft Authenticator apps via otplib. Checks the current 30s window ± 1 step tolerance for network/clock differences."
+      },
+      {
+        abbr: "Bcrypt",
+        category: "Security",
+        full: "Blowfish Cryptographic Password Hasher",
+        meaning: "An adaptive key derivation function with built-in salting and configurable computational work factor to defeat rainbow tables and brute force.",
+        eoms: "EOMS hashes all passwords with 10 salt rounds (1024 rounds). Uses constant-time compare to eliminate timing side-channel attacks."
+      },
+      {
+        abbr: "JWT",
+        category: "Auth",
+        full: "JSON Web Token (RFC 7519)",
+        meaning: "An open standard representing digitally signed claims between two parties, allowing stateless authentication.",
+        eoms: "EOMS signs a 15-minute access token carrying userId, email, and role. Kept alive via 7-day rotating refresh tokens stored in MySQL."
+      },
+      {
+        abbr: "HS256",
+        category: "Cryptography",
+        full: "HMAC using SHA-256",
+        meaning: "A symmetric cryptographic signature algorithm using a shared secret key to guarantee token integrity.",
+        eoms: "Used to sign all JWT access tokens. If an attacker modifies the role or permissions inside the payload, the HS256 signature check fails."
+      },
+      {
+        abbr: "RBAC",
+        category: "Access Control",
+        full: "Role-Based Access Control",
+        meaning: "An authorization policy restricting access to resources based on assigned roles (Admin, HR, IT, Employee).",
+        eoms: "EOMS models roles and granular permissions in MySQL. Express middleware verifies if the user's role has the required operation grant."
+      },
+      {
+        abbr: "TTL",
+        category: "Performance",
+        full: "Time-To-Live In-Memory Cache",
+        meaning: "The duration an entry is kept in fast RAM cache before being refreshed from the primary database.",
+        eoms: "EOMS caches user role permissions in process RAM with a 60-second TTL, serving authorized requests in <1ms without hitting MySQL repeatedly."
+      },
+      {
+        abbr: "PEP / PDP",
+        category: "Architecture",
+        full: "Policy Enforcement Point & Policy Decision Point",
+        meaning: "PEP intercepts incoming requests; PDP evaluates authorization rules and returns a grant/deny decision.",
+        eoms: "authorizePermission middleware acts as the PEP. The resolver querying the cached role-permission matrix acts as the PDP."
+      },
+      {
+        abbr: "ACID",
+        category: "Database",
+        full: "Atomicity, Consistency, Isolation, Durability",
+        meaning: "The four pillars of reliable database transactions. Either all operations commit together, or none do.",
+        eoms: "When provisioning an employee, account creation, profile records, task checklists, and asset requests happen within one Sequelize transaction."
+      },
+      {
+        abbr: "SELECT ... FOR UPDATE",
+        category: "Concurrency",
+        full: "Pessimistic Row-Level Lock",
+        meaning: "An SQL clause that locks target database rows until the transaction finishes, blocking concurrent writers.",
+        eoms: "When IT allocates a laptop, EOMS locks the asset row to eliminate race conditions and prevent two technicians from assigning the same hardware."
+      },
+      {
+        abbr: "MIME",
+        category: "File Security",
+        full: "Multipurpose Internet Mail Extensions",
+        meaning: "A standard header classifying media types (e.g. application/pdf, image/png) to prevent arbitrary file execution.",
+        eoms: "Multer filter verifies the file's binary magic bytes, rejecting malicious executable scripts masquerading as PDF or JPG."
+      },
+      {
+        abbr: "SHA-256",
+        category: "Integrity",
+        full: "Secure Hash Algorithm 256-Bit",
+        meaning: "A one-way cryptographic hash producing an immutable 64-character fingerprint of any input.",
+        eoms: "Computed during document upload and verified during downloads to guarantee employee contracts and ID proofs were never altered."
+      },
+      {
+        abbr: "Path Traversal",
+        category: "Security",
+        full: "Directory Climbing Prevention (CWE-22)",
+        meaning: "An exploit where inputs like ../../../etc/passwd climb out of the upload folder to access private server files.",
+        eoms: "EOMS sanitizes filenames with UUIDv4 random prefixes and canonicalizes paths strictly inside the uploads/ root directory."
+      },
+      {
+        abbr: "Chunked Stream",
+        category: "Performance",
+        full: "HTTP Chunked Stream Piping",
+        meaning: "Streaming files as continuous byte chunks rather than loading the entire file into server RAM first.",
+        eoms: "EOMS uses Node.js fs.createReadStream().pipe(res), maintaining a tiny memory footprint even during multi-megabyte downloads."
+      },
+      {
+        abbr: "LMS",
+        category: "Training",
+        full: "Learning Management System",
+        meaning: "A platform managing training courses, learning materials, and knowledge assessments for personnel.",
+        eoms: "Handles required onboarding courses (Company Policy, Security Basics), tracking module completion and prerequisites."
+      },
+      {
+        abbr: "Blind Quiz Grading",
+        category: "Integrity",
+        full: "Server-Side Blind Quiz Evaluation",
+        meaning: "Grading architecture where correct answers are strictly stored on the server and never sent to the client browser.",
+        eoms: "The trainee only receives questions and options. When answers are submitted, the server scores them internally, blocking browser DevTools cheating."
+      },
+      {
+        abbr: "SLA",
+        category: "Workflow",
+        full: "Service Level Agreement Sweeper",
+        meaning: "Target completion deadline for an onboarding task (e.g. Day 1 tasks due within 24h of joining).",
+        eoms: "Node-Cron runs an hourly job sweeping tasks where dueDate < NOW(). Automatically triggers escalation emails and notifications."
+      },
+      {
+        abbr: "Rollup Engine",
+        category: "Reporting",
+        full: "Onboarding Progress Aggregator",
+        meaning: "A weighted scoring module that compiles completed checklist items into an overall onboarding readiness percentage.",
+        eoms: "Calculates (completed_tasks / total_tasks) * 100% in real-time, updating the employee's onboarding progress bar in the dashboard."
+      },
+      {
+        abbr: "SPA",
+        category: "Frontend",
+        full: "Single Page Application",
+        meaning: "A web app that loads a single HTML page and dynamically updates content without full page refreshes.",
+        eoms: "Built using React 18 and Vite. Route transitions are handled instantaneously in JavaScript via react-router-dom."
+      },
+      {
+        abbr: "Zustand",
+        category: "Frontend",
+        full: "Zustand Global State Store",
+        meaning: "A small, fast, and scalable state-management solution for React using simplified hooks.",
+        eoms: "Manages authenticated user sessions, theme preferences, and notifications without React Context re-render penalties."
+      }
+    ];
+
+    // Render dictionary items
+    const dictList = document.getElementById('dictList');
+    const searchInput = document.getElementById('dictSearch');
+
+    function renderDictionary(filter = "") {
+      const q = filter.toLowerCase().trim();
+      const filtered = dictionary.filter(item => 
+        item.abbr.toLowerCase().includes(q) ||
+        item.full.toLowerCase().includes(q) ||
+        item.category.toLowerCase().includes(q) ||
+        item.meaning.toLowerCase().includes(q) ||
+        item.eoms.toLowerCase().includes(q)
+      );
+
+      if (filtered.length === 0) {
+        dictList.innerHTML = `<div style="color: #64748b; font-size: 13px; text-align: center; padding: 40px 0;">No matching terms found.</div>`;
+        return;
+      }
+
+      dictList.innerHTML = filtered.map(item => `
+        <div class="dict-item">
+          <div class="dict-header">
+            <span class="dict-abbr">${item.abbr}</span>
+            <span class="dict-category">${item.category}</span>
+          </div>
+          <div class="dict-full">${item.full}</div>
+          <div class="dict-meaning">${item.meaning}</div>
+          <div class="dict-eoms"><strong>In EOMS:</strong> ${item.eoms}</div>
+        </div>
+      `).join('');
+    }
+
+    renderDictionary();
+
+    searchInput.addEventListener('input', (e) => {
+      renderDictionary(e.target.value);
+    });
+
+    // Drawer Toggle
+    const dictDrawer = document.getElementById('dictDrawer');
+    const toggleDictBtn = document.getElementById('toggleDictBtn');
+    const closeDictBtn = document.getElementById('closeDictBtn');
+
+    toggleDictBtn.addEventListener('click', () => {
+      dictDrawer.classList.toggle('open');
+      toggleDictBtn.classList.toggle('active-panel');
+      if (dictDrawer.classList.contains('open')) {
+        searchInput.focus();
+      }
+    });
+
+    closeDictBtn.addEventListener('click', () => {
+      dictDrawer.classList.remove('open');
+      toggleDictBtn.classList.remove('active-panel');
+    });
+
+    // Clicking quick chip opens drawer filtered to that term
+    document.querySelectorAll('.term-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const term = chip.getAttribute('data-term');
+        dictDrawer.classList.add('open');
+        toggleDictBtn.classList.add('active-panel');
+        searchInput.value = term;
+        renderDictionary(term);
+        searchInput.focus();
       });
     });
   </script>
