@@ -102,6 +102,7 @@ CREATE TABLE `employees` (
   `user_id` INT NOT NULL UNIQUE,
   `position_id` INT NOT NULL,
   `manager_id` INT NULL,
+  `buddy_id` INT NULL,
   `first_name` VARCHAR(100) NOT NULL,
   `last_name` VARCHAR(100) NOT NULL,
   `hire_date` DATE NOT NULL,
@@ -113,7 +114,8 @@ CREATE TABLE `employees` (
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT `fk_emp_user` FOREIGN KEY (`user_id`) REFERENCES `system_users` (`user_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_emp_pos` FOREIGN KEY (`position_id`) REFERENCES `positions` (`position_id`) ON DELETE RESTRICT,
-  CONSTRAINT `fk_emp_mgr` FOREIGN KEY (`manager_id`) REFERENCES `employees` (`employee_id`) ON DELETE SET NULL
+  CONSTRAINT `fk_emp_mgr` FOREIGN KEY (`manager_id`) REFERENCES `employees` (`employee_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_emp_buddy` FOREIGN KEY (`buddy_id`) REFERENCES `employees` (`employee_id`) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 DROP TABLE IF EXISTS `emergency_contacts`;

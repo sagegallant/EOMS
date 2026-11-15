@@ -12,7 +12,7 @@ import {
   STATIC_NOTIFICATIONS,
   STATIC_REPORTS_SUMMARY,
   STATIC_AUDIT_LOGS,
-} from './staticData';
+} from './staticData.js';
 
 // Clone datasets into memory so interactive user actions persist during the session
 let employees = [...STATIC_EMPLOYEES];
@@ -115,28 +115,138 @@ export function handleStaticRequest(config) {
   }
 
   // 4. Employees
+  const empDeactivateMatch = url.match(/^\/employees\/(\d+)\/deactivate$/);
+  if (empDeactivateMatch && method === 'patch') {
+    const id = Number(empDeactivateMatch[1]);
+    const emp = employees.find(e => e.employeeId === id);
+    if (!emp) return respond(404, { code: 'NOT_FOUND', message: 'Employee not found.' });
+
+    const today = new Date().toISOString().slice(0, 10);
+    emp.status = 'terminated';
+    emp.endDate = today;
+    emp.is_active = 0;
+    emp.SystemUser = {
+      ...(emp.SystemUser || {}),
+      userId: emp.userId,
+      isActive: false,
+      is_active: 0,
+    };
+    return respond(200, {
+      message: 'Employee deactivated successfully.',
+      data: {
+        employeeId: emp.employeeId,
+        status: 'terminated',
+        endDate: today,
+        isActive: false,
+        is_active: 0,
+      },
+    });
+  }
+
+  const empReactivateMatch = url.match(/^\/employees\/(\d+)\/reactivate$/);
+  if (empReactivateMatch && method === 'patch') {
+    const id = Number(empReactivateMatch[1]);
+    const emp = employees.find(e => e.employeeId === id);
+    if (!emp) return respond(404, { code: 'NOT_FOUND', message: 'Employee not found.' });
+
+    emp.status = 'active';
+    emp.endDate = null;
+    emp.is_active = 1;
+    emp.SystemUser = {
+      ...(emp.SystemUser || {}),
+      userId: emp.userId,
+      isActive: true,
+      is_active: 1,
+    };
+    return respond(200, {
+      message: 'Employee reactivated successfully.',
+      data: {
+        employeeId: emp.employeeId,
+        status: 'active',
+        endDate: null,
+        isActive: true,
+        is_active: 1,
+      },
+    });
+  }
+
   const empIdMatch = url.match(/^\/employees\/(\d+)$/);
   if (empIdMatch && method === 'get') {
     const id = Number(empIdMatch[1]);
     const emp = employees.find(e => e.employeeId === id) || employees[0];
     return respond(200, { data: emp });
   }
-  if (url.startsWith('/employees') && method === 'get') {
-    return respond(200, { data: employees });
+
+  if (empIdMatch && method === 'patch') {
+    const id = Number(empIdMatch[1]);
+    const emp = employees.find(e => e.employeeId === id);
+    if (!emp) return respond(404, { code: 'NOT_FOUND', message: 'Employee not found.' });
+
+    let body = {};
+    try { body = typeof config.data === 'string' ? JSON.parse(config.data) : (config.data || {}); } catch { /* ignore */ }
+    Object.assign(emp, body);
+    if (body.isActive !== undefined || body.is_active !== undefined) {
+      const activeFlag = body.isActive !== undefined ? Boolean(body.isActive) : Boolean(body.is_active);
+      emp.is_active = activeFlag ? 1 : 0;
+      emp.SystemUser = { ...(emp.SystemUser || {}), isActive: activeFlag, is_active: activeFlag ? 1 : 0 };
+    }
+    return respond(200, { message: 'Employee updated successfully.', data: emp });
   }
+
+  if (empIdMatch && method === 'delete') {
+    const id = Number(empIdMatch[1]);
+    const idx = employees.findIndex(e => e.employeeId === id);
+    if (idx === -1) return respond(404, { code: 'NOT_FOUND', message: 'Employee not found.' });
+    employees.splice(idx, 1);
+    return respond(200, { message: 'Employee permanently removed.' });
+  }
+
+  if (url.startsWith('/employees') && method === 'get') {
+    const queryMatch = url.match(/[?&]status=([^&]+)/);
+    const statusParam = queryMatch ? decodeURIComponent(queryMatch[1]).toLowerCase() : null;
+
+    let result = [...employees];
+    if (statusParam && statusParam !== 'all') {
+      if (statusParam === 'active') {
+        result = result.filter(e => e.status !== 'terminated' && e.SystemUser?.isActive !== false && e.is_active !== 0);
+      } else if (statusParam === 'inactive' || statusParam === 'terminated') {
+        result = result.filter(e => e.status === 'terminated' || e.SystemUser?.isActive === false || e.is_active === 0);
+      }
+    }
+    return respond(200, { data: result });
+  }
+
   if (url === '/employees' && method === 'post') {
     let body = {};
     try { body = typeof config.data === 'string' ? JSON.parse(config.data) : (config.data || {}); } catch { /* ignore */ }
+    const nextEmpId = Math.max(...employees.map(e => e.employeeId || 0), 0) + 1;
+    const nextUserId = Math.max(...employees.map(e => e.userId || 0), 0) + 1;
+    const position = STATIC_POSITIONS.find(p => p.positionId === Number(body.positionId)) || STATIC_POSITIONS[0];
+
     const newEmp = {
-      employeeId: employees.length + 1,
-      userId: employees.length + 1,
+      employeeId: nextEmpId,
+      userId: nextUserId,
       firstName: body.firstName || 'New',
       lastName: body.lastName || 'Hire',
       workEmail: body.workEmail || 'new.hire@eoms.in',
       workLocation: body.workLocation || 'Bengaluru (Hybrid)',
       status: 'onboarding',
+      is_active: 1,
       hireDate: body.hireDate || new Date().toISOString().split('T')[0],
-      Position: STATIC_POSITIONS.find(p => p.positionId === Number(body.positionId)) || STATIC_POSITIONS[0],
+      Position: {
+        ...position,
+        jobTitle: position.jobTitle || position.title || 'Specialist',
+        title: position.title || position.jobTitle || 'Specialist',
+        Department: position.Department || { deptName: 'General' },
+      },
+      SystemUser: {
+        userId: nextUserId,
+        username: (body.workEmail || 'new.hire').split('@')[0],
+        email: body.workEmail || 'new.hire@eoms.in',
+        isActive: true,
+        is_active: 1,
+        Roles: [{ roleName: 'EMPLOYEE' }],
+      },
       OnboardingPlan: { progressPercent: 0, status: 'in_progress' },
     };
     employees.unshift(newEmp);

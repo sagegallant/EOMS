@@ -69,6 +69,23 @@
   --info-border:   #BFDBFE;
   --info-text:     #1D4ED8;
 
+  /* ── Task Priorities (MASTER.md) ───────────────────────── */
+  --priority-critical-bg:     #FEF2F2;
+  --priority-critical-border: #FECACA;
+  --priority-critical-text:   #B91C1C;
+
+  --priority-high-bg:         #FFFBEB;
+  --priority-high-border:     #FDE68A;
+  --priority-high-text:       #B45309;
+
+  --priority-medium-bg:       #EFF6FF;
+  --priority-medium-border:   #BFDBFE;
+  --priority-medium-text:     #2563EB;
+
+  --priority-low-bg:          #F3F4F6;
+  --priority-low-border:      #E5E7EB;
+  --priority-low-text:        #4B5563;
+
   /* ── Chart Colors ──────────────────────────────────────── */
   --chart-1: #2B7A4B;
   --chart-2: #6DBE8D;

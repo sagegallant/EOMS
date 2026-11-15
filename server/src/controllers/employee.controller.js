@@ -26,7 +26,22 @@ export async function listEmployees(req, res, next) {
     const { search, status, departmentId, workLocation } = req.query;
 
     const where = {};
-    if (status) where.status = status;
+    const systemUserInclude = {
+      model: SystemUser,
+      attributes: ['userId', 'username', 'email', 'isActive'],
+      include: [{ model: Role, attributes: ['roleId', 'roleName'], through: { attributes: [] } }],
+    };
+
+    if (status && status !== 'all') {
+      if (status === 'active') {
+        where.status = { [Op.ne]: 'terminated' };
+        systemUserInclude.where = { isActive: true };
+      } else if (status === 'inactive' || status === 'terminated') {
+        systemUserInclude.where = { isActive: false };
+      } else {
+        where.status = status;
+      }
+    }
     if (workLocation) where.workLocation = { [Op.like]: `%${workLocation}%` };
 
     if (search) {
@@ -52,7 +67,8 @@ export async function listEmployees(req, res, next) {
         positionInclude,
         { model: OnboardingPlan, attributes: ['planId', 'progressPercent', 'status', 'targetCompletionDate'] },
         { model: Employee, as: 'Manager', attributes: ['employeeId', 'firstName', 'lastName', 'workEmail'] },
-        { model: SystemUser, attributes: ['userId', 'username', 'email'] },
+        { model: Employee, as: 'Buddy', attributes: ['employeeId', 'firstName', 'lastName', 'workEmail'], required: false },
+        systemUserInclude,
       ],
       order: [['hireDate', 'DESC']],
     });
@@ -70,6 +86,7 @@ export async function getEmployeeById(req, res, next) {
         { model: Position, include: [{ model: Department }] },
         { model: OnboardingPlan },
         { model: Employee, as: 'Manager', attributes: ['employeeId', 'firstName', 'lastName', 'workEmail'] },
+        { model: Employee, as: 'Buddy', attributes: ['employeeId', 'firstName', 'lastName', 'workEmail'] },
         { model: EmergencyContact },
         {
           model: Document,
@@ -82,7 +99,7 @@ export async function getEmployeeById(req, res, next) {
           model: AssetAllocation,
           include: [{ model: Asset, include: [{ model: AssetModel }] }],
         },
-        { model: SystemUser, attributes: ['userId', 'username', 'email', 'lastLogin'] },
+        { model: SystemUser, attributes: ['userId', 'username', 'email', 'isActive', 'lastLogin'] },
       ],
     });
 
@@ -102,18 +119,27 @@ export async function createEmployee(req, res, next) {
       firstName,
       lastName,
       workEmail,
+      password,
       positionId,
       managerId,
+      buddyId,
       hireDate,
       workLocation = 'Bengaluru (Hybrid)',
       status = 'onboarding',
       emergencyContact,
     } = req.body;
 
-    if (!firstName || !lastName || !workEmail || !positionId || !hireDate) {
+    if (!firstName || !lastName || !workEmail || !password || !positionId || !hireDate) {
       return res.status(400).json({
         code: 'VALIDATION_ERROR',
-        message: 'First name, last name, email, position, and hire date are required.',
+        message: 'First name, last name, email, password, position, and hire date are required.',
+      });
+    }
+
+    if (typeof password !== 'string' || password.length < 8) {
+      return res.status(400).json({
+        code: 'VALIDATION_ERROR',
+        message: 'Password must be at least 8 characters long.',
       });
     }
 
@@ -137,12 +163,12 @@ export async function createEmployee(req, res, next) {
           username = `${baseUser}${counter++}`;
         }
 
-        const defaultPasswordHash = await bcrypt.hash('Password@123', 10);
+        const passwordHash = await bcrypt.hash(password, 10);
         systemUser = await SystemUser.create(
           {
             username,
             email: workEmail,
-            passwordHash: defaultPasswordHash,
+            passwordHash,
             isActive: true,
           },
           { transaction: t }
@@ -166,7 +192,8 @@ export async function createEmployee(req, res, next) {
         {
           userId: systemUser.userId,
           positionId,
-          managerId: managerId || null,
+          managerId: managerId ? Number(managerId) : null,
+          buddyId: buddyId ? Number(buddyId) : null,
           firstName,
           lastName,
           workEmail,
@@ -192,88 +219,7 @@ export async function createEmployee(req, res, next) {
         );
       }
 
-      // Automatically initialize Onboarding Plan (30-day target by default)
-      const targetDate = new Date(hireDate);
-      targetDate.setDate(targetDate.getDate() + 30);
-      const plan = await OnboardingPlan.create(
-        {
-          employeeId: employee.employeeId,
-          startDate: hireDate,
-          targetCompletionDate: targetDate.toISOString().split('T')[0],
-          progressPercent: 0,
-          status: 'in_progress',
-        },
-        { transaction: t }
-      );
-
-      // Initialize structured onboarding phases and tasks
-      const phases = [
-        {
-          phaseName: 'Pre-Boarding & Statutory Verification',
-          phaseOrder: 1,
-          dueOffsetDays: 0,
-          tasks: [
-            { title: 'Upload Government Identification (PAN & Aadhaar)', category: 'compliance', priority: 'high', minutes: 20 },
-            { title: 'Sign EOMS Statutory Code of Conduct', category: 'administrative', priority: 'medium', minutes: 15 },
-          ],
-        },
-        {
-          phaseName: 'Day One: Digital Workspace & IT Setup',
-          phaseOrder: 2,
-          dueOffsetDays: 1,
-          tasks: [
-            { title: 'Acknowledge Hardware Receipt & IT Provisioning', category: 'it_setup', priority: 'critical', minutes: 30 },
-            { title: 'Setup Company Email & VPN Credentials', category: 'it_setup', priority: 'high', minutes: 25 },
-          ],
-        },
-        {
-          phaseName: 'Week One: Culture & Regulatory Compliance',
-          phaseOrder: 3,
-          dueOffsetDays: 7,
-          tasks: [
-            { title: 'Complete POSH Act 2013 Awareness Assessment', category: 'training', priority: 'critical', minutes: 45 },
-            { title: 'Complete Information Security & DPDP Training', category: 'training', priority: 'high', minutes: 30 },
-          ],
-        },
-        {
-          phaseName: 'Month One: Goals, Reviews & Team Alignment',
-          phaseOrder: 4,
-          dueOffsetDays: 30,
-          tasks: [
-            { title: 'First 30-Day Check-in with Reporting Manager', category: 'manager_meeting', priority: 'medium', minutes: 45 },
-          ],
-        },
-      ];
-
-      for (const p of phases) {
-        const checklist = await Checklist.create(
-          {
-            planId: plan.planId,
-            phaseName: p.phaseName,
-            phaseOrder: p.phaseOrder,
-            dueOffsetDays: p.dueOffsetDays,
-          },
-          { transaction: t }
-        );
-
-        for (let order = 0; order < p.tasks.length; order++) {
-          const tDef = p.tasks[order];
-          await Task.create(
-            {
-              checklistId: checklist.checklistId,
-              title: tDef.title,
-              category: tDef.category,
-              priority: tDef.priority,
-              estimatedMinutes: tDef.minutes,
-              sortOrder: order + 1,
-              isMandatory: true,
-            },
-            { transaction: t }
-          );
-        }
-      }
-
-      return { employee, plan };
+      return { employee };
     });
 
     await logAudit({
@@ -283,11 +229,11 @@ export async function createEmployee(req, res, next) {
       targetId: result.employee.employeeId,
       ip: req.ip,
       userAgent: req.headers['user-agent'],
-      details: { firstName, lastName, workEmail, planId: result.plan.planId },
+      details: { firstName, lastName, workEmail },
     });
 
     res.status(201).json({
-      message: 'Employee registered successfully with initialized onboarding plan and tasks.',
+      message: 'Employee registered successfully.',
       data: result.employee,
     });
   } catch (e) {
@@ -301,19 +247,43 @@ export async function createEmployee(req, res, next) {
 
 export async function updateEmployee(req, res, next) {
   try {
-    const employee = await Employee.findByPk(req.params.id);
+    const employee = await Employee.findByPk(req.params.id, {
+      include: [{ model: SystemUser }],
+    });
     if (!employee) {
       return res.status(404).json({ code: 'NOT_FOUND', message: 'Employee not found.' });
     }
 
-    const { status, workLocation, managerId, positionId, workEmail, endDate } = req.body;
-    await employee.update({
-      ...(status && { status }),
-      ...(workLocation && { workLocation }),
-      ...(managerId !== undefined && { managerId }),
-      ...(positionId && { positionId }),
-      ...(workEmail && { workEmail }),
-      ...(endDate !== undefined && { endDate }),
+    const { status, workLocation, managerId, buddyId, positionId, workEmail, endDate, isActive, is_active } = req.body;
+    const targetActive = isActive !== undefined ? Boolean(isActive) : (is_active !== undefined ? Boolean(is_active) : (status === 'terminated' ? false : (status === 'active' ? true : undefined)));
+
+    // Admin self-protection guard on deactivation through update
+    const callerEmployeeId = req.user?.employeeId;
+    const callerUserId = req.user?.userId;
+    if (
+      (targetActive === false || status === 'terminated') &&
+      (callerEmployeeId === employee.employeeId || callerUserId === employee.userId || (req.user?.username && employee.SystemUser?.username === req.user.username))
+    ) {
+      return res.status(403).json({
+        code: 'FORBIDDEN',
+        message: 'Security Guard: Administrators cannot deactivate their own active account.',
+      });
+    }
+
+    await sequelize.transaction(async (t) => {
+      await employee.update({
+        ...(status && { status }),
+        ...(workLocation && { workLocation }),
+        ...(managerId !== undefined && { managerId: managerId ? Number(managerId) : null }),
+        ...(buddyId !== undefined && { buddyId: buddyId ? Number(buddyId) : null }),
+        ...(positionId && { positionId }),
+        ...(workEmail && { workEmail }),
+        ...(endDate !== undefined && { endDate }),
+      }, { transaction: t });
+
+      if (targetActive !== undefined && employee.SystemUser) {
+        await employee.SystemUser.update({ isActive: targetActive }, { transaction: t });
+      }
     });
 
     await logAudit({
@@ -356,6 +326,206 @@ export async function getPositions(req, res, next) {
       order: [['jobTitle', 'ASC']],
     });
     res.json({ data: positions });
+  } catch (e) {
+    next(e);
+  }
+}
+
+export async function deactivateEmployee(req, res, next) {
+  try {
+    const { id } = req.params;
+    const targetEmployeeId = Number(id);
+
+    const callerUserId = req.user?.userId;
+    const callerEmployeeId = req.user?.employeeId;
+
+    if (callerEmployeeId && callerEmployeeId === targetEmployeeId) {
+      return res.status(403).json({
+        code: 'FORBIDDEN',
+        message: 'Security Guard: Administrators cannot deactivate their own active account.',
+      });
+    }
+
+    const employee = await Employee.findByPk(targetEmployeeId, {
+      include: [{ model: SystemUser }],
+    });
+
+    if (!employee) {
+      return res.status(404).json({ code: 'NOT_FOUND', message: 'Employee not found.' });
+    }
+
+    if (
+      employee.userId === callerUserId ||
+      (req.user?.username && employee.SystemUser?.username === req.user.username)
+    ) {
+      return res.status(403).json({
+        code: 'FORBIDDEN',
+        message: 'Security Guard: Administrators cannot deactivate their own active account.',
+      });
+    }
+
+    if (employee.status === 'terminated' || (employee.SystemUser && !employee.SystemUser.isActive)) {
+      return res.status(400).json({
+        code: 'ALREADY_INACTIVE',
+        message: 'Employee is already deactivated/inactive.',
+      });
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+
+    await sequelize.transaction(async (t) => {
+      await employee.update(
+        { status: 'terminated', endDate: today },
+        { transaction: t }
+      );
+
+      if (employee.SystemUser) {
+        await employee.SystemUser.update(
+          { isActive: false },
+          { transaction: t }
+        );
+      }
+
+      await logAudit({
+        userId: req.user?.userId,
+        action: 'DEACTIVATE_EMPLOYEE',
+        targetTable: 'employees',
+        targetId: employee.employeeId,
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
+        details: { employeeId: employee.employeeId, userId: employee.userId, status: 'terminated', endDate: today },
+      }, { transaction: t });
+    });
+
+    res.json({
+      message: 'Employee deactivated successfully.',
+      data: {
+        employeeId: employee.employeeId,
+        status: 'terminated',
+        endDate: today,
+        isActive: false,
+      },
+    });
+  } catch (e) {
+    next(e);
+  }
+}
+
+export async function reactivateEmployee(req, res, next) {
+  try {
+    const { id } = req.params;
+    const targetEmployeeId = Number(id);
+
+    const employee = await Employee.findByPk(targetEmployeeId, {
+      include: [{ model: SystemUser }],
+    });
+
+    if (!employee) {
+      return res.status(404).json({ code: 'NOT_FOUND', message: 'Employee not found.' });
+    }
+
+    await sequelize.transaction(async (t) => {
+      await employee.update(
+        { status: 'active', endDate: null },
+        { transaction: t }
+      );
+
+      if (employee.SystemUser) {
+        await employee.SystemUser.update(
+          { isActive: true },
+          { transaction: t }
+        );
+      }
+
+      await logAudit({
+        userId: req.user?.userId,
+        action: 'REACTIVATE_EMPLOYEE',
+        targetTable: 'employees',
+        targetId: employee.employeeId,
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
+        details: { employeeId: employee.employeeId, userId: employee.userId, status: 'active' },
+      }, { transaction: t });
+    });
+
+    res.json({
+      message: 'Employee reactivated successfully.',
+      data: {
+        employeeId: employee.employeeId,
+        status: 'active',
+        endDate: null,
+        isActive: true,
+      },
+    });
+  } catch (e) {
+    next(e);
+  }
+}
+
+export async function deleteEmployee(req, res, next) {
+  try {
+    const { id } = req.params;
+    const targetEmployeeId = Number(id);
+
+    const callerUserId = req.user?.userId;
+    const callerEmployeeId = req.user?.employeeId;
+
+    if (callerEmployeeId && callerEmployeeId === targetEmployeeId) {
+      return res.status(403).json({
+        code: 'FORBIDDEN',
+        message: 'Security Guard: Administrators cannot delete their own active account.',
+      });
+    }
+
+    const employee = await Employee.findByPk(targetEmployeeId, {
+      include: [{ model: SystemUser }],
+    });
+
+    if (!employee) {
+      return res.status(404).json({ code: 'NOT_FOUND', message: 'Employee not found.' });
+    }
+
+    if (
+      employee.userId === callerUserId ||
+      (req.user?.username && employee.SystemUser?.username === req.user.username)
+    ) {
+      return res.status(403).json({
+        code: 'FORBIDDEN',
+        message: 'Security Guard: Administrators cannot delete their own active account.',
+      });
+    }
+
+    const empId = employee.employeeId;
+    const uId = employee.userId;
+
+    await sequelize.transaction(async (t) => {
+      // Clear manager and buddy assignments pointing to this employee
+      await Employee.update({ managerId: null }, { where: { managerId: empId }, transaction: t });
+      await Employee.update({ buddyId: null }, { where: { buddyId: empId }, transaction: t });
+
+      // Destroy Employee record (cascading cleanup to onboarding plans, tasks, documents, etc.)
+      await employee.destroy({ transaction: t });
+
+      // Expunge SystemUser credentials
+      if (uId) {
+        await SystemUser.destroy({ where: { userId: uId }, transaction: t });
+      }
+
+      await logAudit({
+        userId: req.user?.userId,
+        action: 'DELETE_EMPLOYEE',
+        targetTable: 'employees',
+        targetId: empId,
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
+        details: { employeeId: empId, userId: uId },
+      }, { transaction: t });
+    });
+
+    res.json({
+      message: 'Employee and associated credentials permanently expunged.',
+      data: { employeeId: empId },
+    });
   } catch (e) {
     next(e);
   }

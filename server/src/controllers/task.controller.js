@@ -80,11 +80,14 @@ export async function createTask(req, res, next) {
       priority = 'medium',
       isMandatory = true,
       sortOrder = 0,
+      employeeId,
     } = req.body;
 
     if (!checklistId || !title) {
       return res.status(400).json({ code: 'VALIDATION_ERROR', message: 'checklistId and title are required.' });
     }
+
+    const validPriority = ['low', 'medium', 'high', 'critical'].includes(priority) ? priority : 'medium';
 
     const task = await Task.create({
       checklistId,
@@ -93,10 +96,54 @@ export async function createTask(req, res, next) {
       category,
       assignedRole,
       estimatedMinutes,
-      priority,
+      priority: validPriority,
       isMandatory,
       sortOrder,
     });
+
+    // Check if checklist is tied to an onboarding plan and employee
+    const checklist = await Checklist.findByPk(checklistId, {
+      include: [{ model: OnboardingPlan }],
+    });
+
+    const targetEmpId = employeeId || checklist?.OnboardingPlan?.employeeId;
+
+    if (targetEmpId) {
+      await TaskProgress.create({
+        employeeId: targetEmpId,
+        taskId: task.taskId,
+        status: 'not_started',
+      });
+
+      // Recalculate plan progress percent if plan exists
+      const planId = checklist?.OnboardingPlan?.planId;
+      if (planId) {
+        const allTasks = await Task.findAll({
+          include: [{
+            model: Checklist,
+            where: { planId },
+            required: true,
+          }],
+        });
+
+        const completedCount = await TaskProgress.count({
+          where: {
+            employeeId: targetEmpId,
+            taskId: allTasks.map(t => t.taskId),
+            status: 'completed',
+          },
+        });
+
+        const recalculatedPercent = allTasks.length > 0
+          ? Math.round((completedCount / allTasks.length) * 100)
+          : 0;
+
+        await checklist.OnboardingPlan.update({
+          progressPercent: recalculatedPercent,
+          status: recalculatedPercent === 100 ? 'completed' : 'in_progress',
+        });
+      }
+    }
 
     await logAudit({
       userId: req.user?.userId,
@@ -105,7 +152,7 @@ export async function createTask(req, res, next) {
       targetId: task.taskId,
       ip: req.ip,
       userAgent: req.headers['user-agent'],
-      details: { checklistId, title, category },
+      details: { checklistId, title, category, priority: validPriority, employeeId: targetEmpId },
     });
 
     res.status(201).json({ message: 'Task created.', data: task });

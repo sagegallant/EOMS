@@ -21,7 +21,7 @@ router.get('/employee/:employeeId', requireAuth, getPlanByEmployeeId);
 router.get('/', requireAuth, listPlans);
 router.get('/:id', requireAuth, getPlanById);
 router.post('/sla-check', requireAuth, requireRole('HR_ADMIN', 'HR_SPECIALIST', 'SYSTEM_ADMIN'), checkSlaEndpoint);
-router.post('/', requireAuth, requireRole('HR_ADMIN', 'HR_SPECIALIST', 'RECRUITER'), createPlan);
+router.post('/', requireAuth, requireRole('HR_ADMIN', 'HR_SPECIALIST', 'SYSTEM_ADMIN', 'DEPARTMENT_MANAGER', 'MANAGER'), createPlan);
 router.patch('/:id', requireAuth, requireRole('HR_ADMIN', 'HR_SPECIALIST', 'DEPARTMENT_MANAGER'), updatePlan);
 
 export default router;

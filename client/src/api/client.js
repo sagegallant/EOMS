@@ -37,11 +37,13 @@ api.interceptors.response.use(
     // If backend server is unreachable or static hosting returns 404, fall back to static adapter
     const isOfflineOrStatic =
       (!err.response && (err.code === 'ERR_NETWORK' || err.message?.includes('Network Error'))) ||
-      (err.response?.status === 404 && (
+      ((err.response?.status === 404 || err.response?.status === 504) && (
         isStaticMode ||
         (typeof window !== 'undefined' && (
           window.location.hostname.includes('github.io') ||
-          window.location.protocol === 'file:'
+          window.location.protocol === 'file:' ||
+          window.location.hostname === 'localhost' ||
+          window.location.hostname === '127.0.0.1'
         ))
       ));
 

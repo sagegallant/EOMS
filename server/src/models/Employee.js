@@ -6,6 +6,7 @@ export const Employee = sequelize.define('Employee', {
   userId:       { type: DataTypes.INTEGER, allowNull: false, unique: true, field: 'user_id' },
   positionId:   { type: DataTypes.INTEGER, allowNull: false, field: 'position_id' },
   managerId:    { type: DataTypes.INTEGER, allowNull: true, field: 'manager_id' },
+  buddyId:      { type: DataTypes.INTEGER, allowNull: true, field: 'buddy_id' },
   firstName:    { type: DataTypes.STRING(100), allowNull: false, field: 'first_name' },
   lastName:     { type: DataTypes.STRING(100), allowNull: false, field: 'last_name' },
   hireDate:     { type: DataTypes.DATEONLY, allowNull: false, field: 'hire_date' },
@@ -21,6 +22,7 @@ Employee.associate = ({ SystemUser, Position, Employee, OnboardingPlan, Document
   Employee.belongsTo(SystemUser, { foreignKey: 'user_id' });
   Employee.belongsTo(Position,   { foreignKey: 'position_id' });
   Employee.belongsTo(Employee,   { as: 'Manager', foreignKey: 'manager_id' });
+  Employee.belongsTo(Employee,   { as: 'Buddy', foreignKey: 'buddy_id' });
   Employee.hasOne(OnboardingPlan,  { foreignKey: 'employee_id' });
   Employee.hasMany(Document,       { foreignKey: 'employee_id' });
   Employee.hasMany(TaskProgress,   { foreignKey: 'employee_id' });
