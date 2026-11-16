@@ -419,7 +419,8 @@ export function Collapsible({ title, children, defaultOpen = false, rightContent
 /* ─────────────────────────────────────────────────────────
    PAGE HEADER
 ───────────────────────────────────────────────────────── */
-export function PageHeader({ title, subtitle, action, breadcrumb }) {
+export function PageHeader({ title, subtitle, action, actions, breadcrumb }) {
+  const headerAction = action || actions;
   return (
     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:12, marginBottom:'var(--sp-5)' }}>
       <div>
@@ -427,10 +428,11 @@ export function PageHeader({ title, subtitle, action, breadcrumb }) {
         <h1 className="page-title">{title}</h1>
         {subtitle && <p className="caption" style={{ marginTop:3, maxWidth:480 }}>{subtitle}</p>}
       </div>
-      {action && <div style={{ flexShrink:0 }}>{action}</div>}
+      {headerAction && <div style={{ flexShrink:0 }}>{headerAction}</div>}
     </div>
   );
 }
+
 
 /* ─────────────────────────────────────────────────────────
    TOGGLE SWITCH
