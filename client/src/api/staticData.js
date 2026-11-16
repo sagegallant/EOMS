@@ -146,6 +146,41 @@ export const STATIC_EMPLOYEES = [
 
 export const STATIC_CHECKLIST_TASKS = []; // Deprecated, tasks are now inside training courses
 
+export const STATIC_ASSET_MODELS = [
+  {
+    modelId: 1,
+    modelName: 'MacBook Pro 16" M3 Max (36GB / 1TB)',
+    manufacturer: 'Apple',
+    categoryId: 1,
+    specs: '16-core GPU, 36GB Unified Memory, Liquid Retina XDR',
+    AssetCategory: { categoryId: 1, categoryName: 'Laptops & Workstations' },
+  },
+  {
+    modelId: 2,
+    modelName: 'ThinkPad T14s Gen 5 (32GB / 1TB)',
+    manufacturer: 'Lenovo',
+    categoryId: 1,
+    specs: 'AMD Ryzen 7 PRO 8840U, 32GB LPDDR5x, 1TB NVMe, OLED 2.8K',
+    AssetCategory: { categoryId: 1, categoryName: 'Laptops & Workstations' },
+  },
+  {
+    modelId: 3,
+    modelName: 'UltraSharp 27" 4K USB-C Hub (U2723QE)',
+    manufacturer: 'Dell',
+    categoryId: 2,
+    specs: 'IPS Black, 90W Power Delivery, RJ45 Ethernet, 4K UHD',
+    AssetCategory: { categoryId: 2, categoryName: 'Displays & Peripherals' },
+  },
+  {
+    modelId: 4,
+    modelName: 'YubiKey 5C NFC',
+    manufacturer: 'Yubico',
+    categoryId: 3,
+    specs: 'FIDO2 / WebAuthn, U2F, Smart Card (PIV), USB-C + NFC',
+    AssetCategory: { categoryId: 3, categoryName: 'Hardware Security Tokens' },
+  },
+];
+
 export const STATIC_ASSETS = [
   {
     assetId: 1,

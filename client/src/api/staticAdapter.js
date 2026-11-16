@@ -5,6 +5,7 @@ import {
   STATIC_DEPARTMENTS,
   STATIC_POSITIONS,
   STATIC_CHECKLIST_TASKS,
+  STATIC_ASSET_MODELS,
   STATIC_ASSETS,
   STATIC_DOCUMENTS,
   STATIC_TRAINING_COURSES,
@@ -299,6 +300,9 @@ export function handleStaticRequest(config) {
   }
 
   // 7. Assets & Allocations
+  if (url === '/assets/models' && method === 'get') {
+    return respond(200, { data: STATIC_ASSET_MODELS });
+  }
   if (url === '/assets/allocations' && method === 'get') {
     const allAllocations = assets.flatMap(a => a.AssetAllocations || []);
     return respond(200, { data: allAllocations });
@@ -306,6 +310,42 @@ export function handleStaticRequest(config) {
   if (url === '/assets' && method === 'get') {
     return respond(200, { data: assets });
   }
+  if (url === '/assets' && method === 'post') {
+    let body = {};
+    try { body = typeof config.data === 'string' ? JSON.parse(config.data) : (config.data || {}); } catch { /* ignore */ }
+    const model = STATIC_ASSET_MODELS.find(m => m.modelId === Number(body.modelId)) || STATIC_ASSET_MODELS[0];
+    const newAsset = {
+      assetId: Date.now(),
+      modelId: model.modelId,
+      serialNumber: body.serialNumber || `SN-${Date.now()}`,
+      assetTag: body.assetTag || `AST-${Date.now()}`,
+      status: 'in_stock',
+      purchasedAt: body.purchasedAt || new Date().toISOString().split('T')[0],
+      warrantyExpiry: body.warrantyExpiry || null,
+      AssetModel: model,
+      AssetAllocations: [],
+    };
+    assets.unshift(newAsset);
+    return respond(201, { message: 'Hardware asset registered.', data: newAsset });
+  }
+  const assetIdMatch = url.match(/^\/assets\/(\d+)$/);
+  if (assetIdMatch && method === 'delete') {
+    const assetId = Number(assetIdMatch[1]);
+    const targetAsset = assets.find(a => a.assetId === assetId);
+    if (!targetAsset) {
+      return respond(404, { code: 'NOT_FOUND', message: 'Asset not found.' });
+    }
+    const hasActiveAllocation = (targetAsset.AssetAllocations || []).some(al => !al.returnedAt);
+    if (hasActiveAllocation || targetAsset.status === 'allocated') {
+      return respond(409, {
+        code: 'CONFLICT',
+        message: 'Cannot delete an asset that is currently allocated to an employee. It must be returned first.',
+      });
+    }
+    assets = assets.filter(a => a.assetId !== assetId);
+    return respond(200, { message: 'Asset deleted successfully.', data: { assetId } });
+  }
+
   if (url === '/assets/allocate' && method === 'post') {
     let body = {};
     try { body = typeof config.data === 'string' ? JSON.parse(config.data) : (config.data || {}); } catch { /* ignore */ }

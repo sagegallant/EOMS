@@ -13,6 +13,7 @@ import { MiniDonut, HorizontalBar, StackedBarChart } from '../../components/comm
 import {
   Laptop,
   Plus,
+  Trash2,
   CheckCircle2,
   AlertCircle,
   RefreshCw,
@@ -42,9 +43,28 @@ export default function AssetsView() {
   const [assets, setAssets] = useState([]);
   const [allocations, setAllocations] = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [availableModels, setAvailableModels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [tab, setTab] = useState('ALL'); // 'ALL' | 'IN_STOCK' | 'ALLOCATED' | 'PENDING_ACK'
+
+  // Add Asset Modal
+  const [addAssetModalOpen, setAddAssetModalOpen] = useState(false);
+  const [addAssetForm, setAddAssetForm] = useState({
+    modelId: '',
+    assetTag: '',
+    serialNumber: '',
+    purchasedAt: '',
+    warrantyExpiry: '',
+  });
+  const [addSubmitting, setAddSubmitting] = useState(false);
+  const [addError, setAddError] = useState(null);
+
+  // Delete Asset Modal
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [assetToDelete, setAssetToDelete] = useState(null);
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
 
   // Allocation Modal
   const [allocateModalOpen, setAllocateModalOpen] = useState(false);
@@ -81,8 +101,12 @@ export default function AssetsView() {
 
       if (isITOrAdmin) {
         try {
-          const empRes = await employeeApi.list();
+          const [empRes, modelsRes] = await Promise.all([
+            employeeApi.list(),
+            assetApi.getModels(),
+          ]);
           setEmployees(empRes.data || []);
+          setAvailableModels(modelsRes.data || []);
         } catch {
           // non-critical
         }
@@ -98,6 +122,63 @@ export default function AssetsView() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  const handleAddAssetSubmit = async (e) => {
+    e.preventDefault();
+    if (!addAssetForm.modelId || !addAssetForm.assetTag || !addAssetForm.serialNumber) {
+      setAddError('Model, Asset Tag, and Serial Number are required.');
+      return;
+    }
+
+    try {
+      setAddSubmitting(true);
+      setAddError(null);
+      await assetApi.create({
+        modelId: Number(addAssetForm.modelId),
+        assetTag: addAssetForm.assetTag.trim(),
+        serialNumber: addAssetForm.serialNumber.trim(),
+        purchasedAt: addAssetForm.purchasedAt || undefined,
+        warrantyExpiry: addAssetForm.warrantyExpiry || undefined,
+      });
+      setAddAssetModalOpen(false);
+      setAddAssetForm({
+        modelId: '',
+        assetTag: '',
+        serialNumber: '',
+        purchasedAt: '',
+        warrantyExpiry: '',
+      });
+      await loadData();
+    } catch (err) {
+      console.error('Failed to create asset:', err);
+      setAddError(err?.response?.data?.message || 'Failed to register hardware asset.');
+    } finally {
+      setAddSubmitting(false);
+    }
+  };
+
+  const handleDeleteClick = (asset) => {
+    setDeleteError(null);
+    setAssetToDelete(asset);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!assetToDelete) return;
+    try {
+      setDeleteSubmitting(true);
+      setDeleteError(null);
+      await assetApi.delete(assetToDelete.assetId);
+      setDeleteModalOpen(false);
+      setAssetToDelete(null);
+      await loadData();
+    } catch (err) {
+      console.error('Failed to delete asset:', err);
+      setDeleteError(err?.response?.data?.message || 'Failed to delete asset.');
+    } finally {
+      setDeleteSubmitting(false);
+    }
+  };
 
   const handleAllocateSubmit = async (e) => {
     e.preventDefault();
@@ -124,6 +205,7 @@ export default function AssetsView() {
       setAllocateSubmitting(false);
     }
   };
+
 
   const handleAcknowledge = async (allocationId) => {
     try {
@@ -180,19 +262,40 @@ export default function AssetsView() {
               Refresh
             </Button>
             {isITOrAdmin && (
-              <Button
-                size="sm"
-                icon={Plus}
-                onClick={() => {
-                  setAllocateError(null);
-                  setAllocateModalOpen(true);
-                }}
-              >
-                Allocate Hardware
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  icon={Plus}
+                  onClick={() => {
+                    setAddError(null);
+                    setAddAssetForm({
+                      modelId: availableModels[0]?.modelId || '',
+                      assetTag: '',
+                      serialNumber: '',
+                      purchasedAt: new Date().toISOString().split('T')[0],
+                      warrantyExpiry: '',
+                    });
+                    setAddAssetModalOpen(true);
+                  }}
+                >
+                  Add Asset
+                </Button>
+                <Button
+                  size="sm"
+                  icon={Plus}
+                  onClick={() => {
+                    setAllocateError(null);
+                    setAllocateModalOpen(true);
+                  }}
+                >
+                  Allocate Hardware
+                </Button>
+              </>
             )}
           </div>
         }
+
       />
 
       {error && (
@@ -419,6 +522,18 @@ export default function AssetsView() {
                             Acknowledge
                           </Button>
                         )}
+
+                      {isITOrAdmin && (
+                        <Button
+                          size="xs"
+                          variant="dangerSoft"
+                          icon={Trash2}
+                          onClick={() => handleDeleteClick(a)}
+                          title="Delete Asset"
+                        >
+                          Delete
+                        </Button>
+                      )}
                     </div>
                   </AnimatedItem>
                 );
@@ -520,6 +635,218 @@ export default function AssetsView() {
           </div>
         </form>
       </Modal>
+
+      {/* Register Hardware Asset Modal */}
+      <Modal
+        isOpen={addAssetModalOpen}
+        onClose={() => setAddAssetModalOpen(false)}
+        title="Register Hardware Asset"
+        description="Add a newly procured hardware item to the central IT inventory."
+        footer={
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', width: '100%' }}>
+            <Button variant="outline" onClick={() => setAddAssetModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button icon={Plus} disabled={addSubmitting} onClick={handleAddAssetSubmit}>
+              {addSubmitting ? 'Registering...' : 'Register Asset'}
+            </Button>
+          </div>
+        }
+      >
+        <form onSubmit={handleAddAssetSubmit} style={{ display: 'grid', gap: 14 }}>
+          {addError && (
+            <div style={{ padding: '8px 12px', borderRadius: 'var(--r-md)', background: 'var(--danger-bg)', color: 'var(--danger)', fontSize: '0.8125rem' }}>
+              {addError}
+            </div>
+          )}
+
+          <div style={{ display: 'grid', gap: 6 }}>
+            <label style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Catalog Model *</label>
+            <select
+              value={addAssetForm.modelId}
+              onChange={(e) => setAddAssetForm({ ...addAssetForm, modelId: e.target.value })}
+              required
+              style={{
+                padding: '8px 12px',
+                borderRadius: 'var(--r-md)',
+                border: '1px solid var(--border-default)',
+                background: 'var(--bg-surface)',
+                color: 'var(--text-primary)',
+                fontSize: '0.875rem',
+              }}
+            >
+              <option value="">Select Catalog Model...</option>
+              {availableModels.map((m) => (
+                <option key={m.modelId} value={m.modelId}>
+                  {m.modelName} ({m.AssetCategory?.categoryName || 'General'})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div style={{ display: 'grid', gap: 6 }}>
+              <label style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Asset Tag *</label>
+              <input
+                type="text"
+                required
+                value={addAssetForm.assetTag}
+                onChange={(e) => setAddAssetForm({ ...addAssetForm, assetTag: e.target.value })}
+                placeholder="e.g. BLR-MBP-2026-112"
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: 'var(--r-md)',
+                  border: '1px solid var(--border-default)',
+                  fontSize: '0.875rem',
+                  background: 'var(--bg-surface)',
+                  color: 'var(--text-primary)',
+                }}
+              />
+            </div>
+            <div style={{ display: 'grid', gap: 6 }}>
+              <label style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Serial Number *</label>
+              <input
+                type="text"
+                required
+                value={addAssetForm.serialNumber}
+                onChange={(e) => setAddAssetForm({ ...addAssetForm, serialNumber: e.target.value })}
+                placeholder="e.g. C02XYZ2026M3"
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: 'var(--r-md)',
+                  border: '1px solid var(--border-default)',
+                  fontSize: '0.875rem',
+                  background: 'var(--bg-surface)',
+                  color: 'var(--text-primary)',
+                }}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div style={{ display: 'grid', gap: 6 }}>
+              <label style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Purchase Date</label>
+              <input
+                type="date"
+                value={addAssetForm.purchasedAt}
+                onChange={(e) => setAddAssetForm({ ...addAssetForm, purchasedAt: e.target.value })}
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: 'var(--r-md)',
+                  border: '1px solid var(--border-default)',
+                  fontSize: '0.875rem',
+                  background: 'var(--bg-surface)',
+                  color: 'var(--text-primary)',
+                }}
+              />
+            </div>
+            <div style={{ display: 'grid', gap: 6 }}>
+              <label style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Warranty Expiry</label>
+              <input
+                type="date"
+                value={addAssetForm.warrantyExpiry}
+                onChange={(e) => setAddAssetForm({ ...addAssetForm, warrantyExpiry: e.target.value })}
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: 'var(--r-md)',
+                  border: '1px solid var(--border-default)',
+                  fontSize: '0.875rem',
+                  background: 'var(--bg-surface)',
+                  color: 'var(--text-primary)',
+                }}
+              />
+            </div>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Delete Hardware Asset Confirmation Modal */}
+      <Modal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setAssetToDelete(null);
+        }}
+        title="Delete Hardware Asset"
+        description="Verify equipment status before removing from central inventory."
+        footer={
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', width: '100%' }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteModalOpen(false);
+                setAssetToDelete(null);
+              }}
+            >
+              Cancel
+            </Button>
+            {assetToDelete &&
+            (assetToDelete.status === 'allocated' ||
+              (assetToDelete.AssetAllocations || []).some((al) => !al.returnedAt)) ? (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setDeleteModalOpen(false);
+                  setAssetToDelete(null);
+                }}
+              >
+                Close
+              </Button>
+            ) : (
+              <Button
+                variant="danger"
+                icon={Trash2}
+                disabled={deleteSubmitting}
+                onClick={handleDeleteConfirm}
+              >
+                {deleteSubmitting ? 'Deleting...' : 'Delete Asset'}
+              </Button>
+            )}
+          </div>
+        }
+      >
+        <div style={{ display: 'grid', gap: 14 }}>
+          {deleteError && (
+            <div style={{ padding: '8px 12px', borderRadius: 'var(--r-md)', background: 'var(--danger-bg)', color: 'var(--danger)', fontSize: '0.8125rem' }}>
+              {deleteError}
+            </div>
+          )}
+
+          {assetToDelete &&
+          (assetToDelete.status === 'allocated' ||
+            (assetToDelete.AssetAllocations || []).some((al) => !al.returnedAt)) ? (
+            <div
+              style={{
+                display: 'flex',
+                gap: 12,
+                alignItems: 'flex-start',
+                padding: '12px',
+                borderRadius: 'var(--r-md)',
+                background: 'var(--warning-bg, #fef3c7)',
+                color: 'var(--warning-text, #92400e)',
+                border: '1px solid var(--warning-border, #fde68a)',
+              }}
+            >
+              <AlertCircle size={20} style={{ flexShrink: 0, marginTop: 2 }} />
+              <div>
+                <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>Active Allocation Protection</div>
+                <div style={{ fontSize: '0.8125rem', marginTop: 4 }}>
+                  Cannot delete <strong>{assetToDelete.assetTag}</strong> ({assetToDelete.AssetModel?.modelName}) because it is currently allocated to an employee.
+                  The hardware must be formally returned into stock before it can be deleted.
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+              Are you sure you want to delete hardware asset{' '}
+              <strong>{assetToDelete?.assetTag}</strong> ({assetToDelete?.AssetModel?.modelName}, Serial: {assetToDelete?.serialNumber})?
+              <br /><br />
+              This will permanently remove the equipment from inventory and record this action in the audit log.
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }
+

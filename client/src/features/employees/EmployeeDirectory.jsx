@@ -17,10 +17,13 @@ import {
   Trash2,
   RotateCcw,
   ShieldAlert,
+  Laptop,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { employeeApi } from '../../api/employees';
+import { assetApi } from '../../api/assets';
 import { useAuthStore } from '../../store/authStore';
+
 
 export default function EmployeeDirectory() {
   const [employees, setEmployees] = useState([]);
@@ -62,20 +65,32 @@ export default function EmployeeDirectory() {
 
   const { user } = useAuthStore();
   const isAdmin = user?.roles?.includes('SYSTEM_ADMIN');
+  const isITAdmin = user?.roles?.includes('IT_ADMIN');
+  const isITOnly = isITAdmin && !isAdmin;
   const canAdd = user?.roles?.some(r => ['HR_ADMIN', 'HR_SPECIALIST', 'SYSTEM_ADMIN'].includes(r));
+
+  const [allocations, setAllocations] = useState([]);
+  const [filterAllocatedOnly, setFilterAllocatedOnly] = useState(isITOnly);
 
   const loadData = async (statusOverride = filterStatus) => {
     setLoading(true);
     setError(null);
     try {
-      const [empRes, deptRes, posRes] = await Promise.all([
+      const calls = [
         employeeApi.list({ status: statusOverride }),
         employeeApi.getDepartments().catch(() => ({ data: [] })),
         employeeApi.getPositions().catch(() => ({ data: [] })),
-      ]);
+      ];
+      if (isITAdmin) {
+        calls.push(assetApi.listAllocations({ activeOnly: 'true' }).catch(() => ({ data: [] })));
+      }
+      const [empRes, deptRes, posRes, allocRes] = await Promise.all(calls);
       setEmployees(empRes.data || []);
       setDepartments(deptRes.data || []);
       setPositions(posRes.data || []);
+      if (allocRes) {
+        setAllocations(allocRes.data || []);
+      }
       if (posRes.data?.length > 0 && !newEmp.positionId) {
         setNewEmp(prev => ({ ...prev, positionId: posRes.data[0].positionId }));
       }
@@ -85,6 +100,7 @@ export default function EmployeeDirectory() {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     loadData();
@@ -201,6 +217,22 @@ export default function EmployeeDirectory() {
     return isManagerRole || isManagerTitle || isManagerGrade;
   });
 
+  // Allocation mapping for IT role
+  const allocationsByEmployee = {};
+  allocations.forEach((al) => {
+    if (!al.returnedAt) {
+      const empId = Number(al.employeeId);
+      if (!allocationsByEmployee[empId]) {
+        allocationsByEmployee[empId] = [];
+      }
+      allocationsByEmployee[empId].push(al);
+    }
+  });
+
+  const employeesWithHardwareCount = employees.filter(
+    (e) => (allocationsByEmployee[Number(e.employeeId)] || []).length > 0
+  ).length;
+
   const filtered = employees.filter(e => {
     const q = search.toLowerCase();
     const fullName = `${e.firstName} ${e.lastName}`.toLowerCase();
@@ -209,8 +241,10 @@ export default function EmployeeDirectory() {
 
     if (q && !fullName.includes(q) && !role.includes(q) && !e.workEmail?.toLowerCase().includes(q)) return false;
     if (filterDept !== 'ALL' && dept !== filterDept) return false;
+    if (isITAdmin && filterAllocatedOnly && !(allocationsByEmployee[Number(e.employeeId)]?.length > 0)) return false;
     return true;
   });
+
 
   // Dynamic Metrics derived from real data
   const onTrackCount = employees.filter(e => (e.OnboardingPlan?.progressPercent || 0) >= 50).length;
@@ -258,33 +292,63 @@ export default function EmployeeDirectory() {
 
       {/* Aggregate KPI Overview */}
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'var(--sp-4)' }}>
-        <Card $p="var(--sp-4)">
-          <div className="label-caps" style={{ marginBottom:12 }}>Onboarding Velocity</div>
-          <div style={{ display:'flex', alignItems:'center', gap:16 }}>
-            <MiniDonut
-              value={onTrackCount}
-              total={employees.length || 1}
-              label={`${onTrackCount}`}
-              sublabel="on track"
-              size={72}
-              color="var(--chart-1)"
-            />
-            <div style={{ fontSize:'0.8125rem', display:'grid', gap:6 }}>
-              <div style={{ display:'flex', justifyContent:'space-between', gap:12 }}>
-                <span style={{ color:'var(--text-muted)' }}>On Track (≥50%)</span>
-                <span style={{ fontWeight:700, color:'var(--sage-700)' }}>{onTrackCount}</span>
-              </div>
-              <div style={{ display:'flex', justifyContent:'space-between', gap:12 }}>
-                <span style={{ color:'var(--text-muted)' }}>In Progress (&lt;50%)</span>
-                <span style={{ fontWeight:700, color:'var(--warning-text)' }}>{justStartedCount}</span>
-              </div>
-              <div style={{ display:'flex', justifyContent:'space-between', gap:12 }}>
-                <span style={{ color:'var(--text-muted)' }}>Not Started</span>
-                <span style={{ fontWeight:700 }}>{notStartedCount}</span>
+        {isITOnly ? (
+          <Card $p="var(--sp-4)">
+            <div className="label-caps" style={{ marginBottom:12 }}>Hardware Provisioning Coverage</div>
+            <div style={{ display:'flex', alignItems:'center', gap:16 }}>
+              <MiniDonut
+                value={employeesWithHardwareCount}
+                total={employees.length || 1}
+                label={`${employeesWithHardwareCount}`}
+                sublabel="allocated"
+                size={72}
+                color="var(--chart-1)"
+              />
+              <div style={{ fontSize:'0.8125rem', display:'grid', gap:6 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', gap:12 }}>
+                  <span style={{ color:'var(--text-muted)' }}>Employees Allocated</span>
+                  <span style={{ fontWeight:700, color:'var(--sage-700)' }}>{employeesWithHardwareCount}</span>
+                </div>
+                <div style={{ display:'flex', justifyContent:'space-between', gap:12 }}>
+                  <span style={{ color:'var(--text-muted)' }}>Pending Equipment</span>
+                  <span style={{ fontWeight:700, color:'var(--warning-text)' }}>{Math.max(0, employees.length - employeesWithHardwareCount)}</span>
+                </div>
+                <div style={{ display:'flex', justifyContent:'space-between', gap:12 }}>
+                  <span style={{ color:'var(--text-muted)' }}>Active Devices</span>
+                  <span style={{ fontWeight:700 }}>{allocations.length}</span>
+                </div>
               </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+        ) : (
+          <Card $p="var(--sp-4)">
+            <div className="label-caps" style={{ marginBottom:12 }}>Onboarding Velocity</div>
+            <div style={{ display:'flex', alignItems:'center', gap:16 }}>
+              <MiniDonut
+                value={onTrackCount}
+                total={employees.length || 1}
+                label={`${onTrackCount}`}
+                sublabel="on track"
+                size={72}
+                color="var(--chart-1)"
+              />
+              <div style={{ fontSize:'0.8125rem', display:'grid', gap:6 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', gap:12 }}>
+                  <span style={{ color:'var(--text-muted)' }}>On Track (≥50%)</span>
+                  <span style={{ fontWeight:700, color:'var(--sage-700)' }}>{onTrackCount}</span>
+                </div>
+                <div style={{ display:'flex', justifyContent:'space-between', gap:12 }}>
+                  <span style={{ color:'var(--text-muted)' }}>In Progress (&lt;50%)</span>
+                  <span style={{ fontWeight:700, color:'var(--warning-text)' }}>{justStartedCount}</span>
+                </div>
+                <div style={{ display:'flex', justifyContent:'space-between', gap:12 }}>
+                  <span style={{ color:'var(--text-muted)' }}>Not Started</span>
+                  <span style={{ fontWeight:700 }}>{notStartedCount}</span>
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
 
         <Card $p="var(--sp-4)">
           <div className="label-caps" style={{ marginBottom:10 }}>By Department</div>
@@ -338,6 +402,31 @@ export default function EmployeeDirectory() {
             </button>
           ))}
         </div>
+
+        {isITAdmin && (
+          <button
+            type="button"
+            onClick={() => setFilterAllocatedOnly(v => !v)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '4px 12px',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              borderRadius: 'var(--r-full)',
+              border: '1.5px solid',
+              borderColor: filterAllocatedOnly ? 'var(--sage-600)' : 'var(--border-default)',
+              background: filterAllocatedOnly ? 'var(--sage-100)' : 'transparent',
+              color: filterAllocatedOnly ? 'var(--sage-900)' : 'var(--text-secondary)',
+              cursor: 'pointer',
+              transition: 'all var(--t-fast)',
+            }}
+          >
+            <Laptop size={12} />
+            {filterAllocatedOnly ? 'Allocated Only' : 'All Hardware Status'}
+          </button>
+        )}
 
         <Button variant="ghost" size="sm" icon={Filter} onClick={() => setShowFilters(v => !v)}>
           Filter {filterDept !== 'ALL' && '●'}
@@ -449,19 +538,57 @@ export default function EmployeeDirectory() {
                     <MapPin size={11} /> {emp.workLocation || 'Bengaluru'}
                   </div>
 
-                  <div style={{ width:85 }}>
-                    <div style={{ height:4, borderRadius:'var(--r-full)', background:'var(--sage-100)', overflow:'hidden' }}>
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${progress}%` }}
-                        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                        style={{ height:'100%', borderRadius:'inherit', background: isInactive ? 'var(--text-muted)' : 'var(--sage-600)' }}
-                      />
+                  {isITAdmin ? (
+                    <div style={{ minWidth: 160, maxWidth: 280 }}>
+                      {allocationsByEmployee[Number(emp.employeeId)]?.length > 0 ? (
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                          {allocationsByEmployee[Number(emp.employeeId)].map((al) => (
+                            <span
+                              key={al.allocationId}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 4,
+                                padding: '2px 8px',
+                                borderRadius: 'var(--r-sm)',
+                                background: 'var(--sage-100)',
+                                color: 'var(--sage-900)',
+                                fontSize: '0.6875rem',
+                                fontWeight: 600,
+                                border: '1px solid var(--sage-300)',
+                              }}
+                              title={`Tag: ${al.Asset?.assetTag || 'N/A'} | Serial: ${al.Asset?.serialNumber || 'N/A'}`}
+                            >
+                              <Laptop size={11} style={{ color: 'var(--sage-700)' }} />
+                              {al.Asset?.AssetModel?.modelName
+                                ? al.Asset.AssetModel.modelName.split(' ')[0]
+                                : 'Hardware'}{' '}
+                              ({al.Asset?.assetTag})
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                          No equipment
+                        </span>
+                      )}
                     </div>
-                    <div className="meta" style={{ marginTop:2, textAlign:'right', fontWeight:600, color: isInactive ? 'var(--text-muted)' : 'var(--sage-700)', fontFeatureSettings:'"tnum" 1' }}>
-                      {progress}%
+                  ) : (
+                    <div style={{ width: 85 }}>
+                      <div style={{ height: 4, borderRadius: 'var(--r-full)', background: 'var(--sage-100)', overflow: 'hidden' }}>
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${progress}%` }}
+                          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                          style={{ height: '100%', borderRadius: 'inherit', background: isInactive ? 'var(--text-muted)' : 'var(--sage-600)' }}
+                        />
+                      </div>
+                      <div className="meta" style={{ marginTop: 2, textAlign: 'right', fontWeight: 600, color: isInactive ? 'var(--text-muted)' : 'var(--sage-700)', fontFeatureSettings: '"tnum" 1' }}>
+                        {progress}%
+                      </div>
                     </div>
-                  </div>
+                  )}
+
 
                   <Badge tone={statusTone}>{statusLabel}</Badge>
 

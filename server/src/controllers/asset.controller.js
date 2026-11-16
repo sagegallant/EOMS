@@ -358,3 +358,64 @@ export async function returnAsset(req, res, next) {
   }
 }
 
+export async function listAssetModels(req, res, next) {
+  try {
+    const models = await AssetModel.findAll({
+      include: [{ model: AssetCategory }],
+      order: [['modelName', 'ASC']],
+    });
+    res.json({ data: models });
+  } catch (e) {
+    next(e);
+  }
+}
+
+export async function deleteAsset(req, res, next) {
+  const t = await sequelize.transaction();
+  try {
+    const assetId = req.params.id;
+    const asset = await Asset.findByPk(assetId, { transaction: t });
+    if (!asset) {
+      await t.rollback();
+      return res.status(404).json({ code: 'NOT_FOUND', message: 'Asset not found.' });
+    }
+
+    const activeAllocation = await AssetAllocation.findOne({
+      where: { assetId, returnedAt: null },
+      transaction: t,
+    });
+
+    if (activeAllocation) {
+      await t.rollback();
+      return res.status(409).json({
+        code: 'CONFLICT',
+        message: 'Cannot delete an asset that is currently allocated to an employee. It must be returned first.',
+      });
+    }
+
+    await AssetAllocation.destroy({
+      where: { assetId },
+      transaction: t,
+    });
+
+    await asset.destroy({ transaction: t });
+
+    await logAudit({
+      userId: req.user?.userId,
+      action: 'DELETE_ASSET',
+      targetTable: 'assets',
+      targetId: assetId,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      details: { assetTag: asset.assetTag, serialNumber: asset.serialNumber },
+    });
+
+    await t.commit();
+    res.json({ message: 'Asset deleted successfully.', data: { assetId } });
+  } catch (e) {
+    await t.rollback();
+    next(e);
+  }
+}
+
+

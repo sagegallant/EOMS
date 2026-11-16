@@ -3,10 +3,14 @@ import { api } from './client';
 export const assetApi = {
   list: (params = {}) =>
     api.get('/assets', { params }).then(r => r.data),
+  getModels: () =>
+    api.get('/assets/models').then(r => r.data),
   getById: (id) =>
     api.get(`/assets/${id}`).then(r => r.data),
   create: (data) =>
     api.post('/assets', data).then(r => r.data),
+  delete: (id) =>
+    api.delete(`/assets/${id}`).then(r => r.data),
   listAllocations: (params = {}) =>
     api.get('/assets/allocations', { params }).then(r => r.data),
   allocate: (data) =>
@@ -16,3 +20,4 @@ export const assetApi = {
   returnAsset: (id, data) =>
     api.patch(`/assets/allocations/${id}/return`, data).then(r => r.data),
 };
+
